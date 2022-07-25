@@ -148,10 +148,6 @@ class GitProcessorExec extends exec_1.Exec {
             return res.stdout;
         });
     }
-    diff(baseRef = '', sha = '', ...args) {
-        return __awaiter(this, void 0, void 0, function* () {
-        });
-    }
     getCurrentRepoRemoteUrl(token) {
         var _a;
         const { repo, owner } = github_1.context.repo;
@@ -244,11 +240,24 @@ function changedFiles() {
         }
     });
 }
+function terraform(tfToken = '') {
+    return __awaiter(this, void 0, void 0, function* () {
+        //   try {
+        //     if (tfToken) {
+        //     let terraform = new TerraformExec(tfToken);
+        //     await terraform.init('token')
+        //     if (diffs?.length == 0){
+        //       return
+        //     }
+        //   }
+        //  } catch (error: any) {
+        //    if (error instanceof Error) setFailed(error.message)
+        //  }
+    });
+}
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        (0, core_1.info)('Entering changedFiles');
         const diffs = yield changedFiles();
-        (0, core_1.info)(`Found diff: ${diffs}`);
     });
 }
 run();
