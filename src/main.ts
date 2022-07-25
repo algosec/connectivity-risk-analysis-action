@@ -6,7 +6,7 @@ import dedent from 'dedent'
 type GithubContext = typeof context
 
 const inputName = getInput('name')
-const ghToken = getInput('ghToken')
+const ghToken = getInput('GITHUB_TOKEN')
 
 greet(inputName, getRepoUrl(context))
 

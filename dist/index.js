@@ -43,7 +43,7 @@ const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
 const dedent_1 = __importDefault(__nccwpck_require__(5281));
 const inputName = (0, core_1.getInput)('name');
-const ghToken = (0, core_1.getInput)('ghToken');
+const ghToken = (0, core_1.getInput)('GITHUB_TOKEN');
 greet(inputName, getRepoUrl(github_1.context));
 getDiff()
     .then(files => {
