@@ -27,6 +27,7 @@ function greet(name: string, repoUrl: string) {
 
 function getRepoUrl({repo, serverUrl}: GithubContext): string {
   return `${serverUrl}/${repo.owner}/${repo.repo}`
+  console.log(`${serverUrl}/${repo.owner}/${repo.repo}`);
 }
 
 async function getDiff() {
