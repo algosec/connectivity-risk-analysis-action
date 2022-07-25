@@ -57,13 +57,14 @@ function greet(name, repoUrl) {
     console.log(`'Hello ${name}! You are running a GH Action in ${repoUrl}'`);
 }
 function getRepoUrl({ repo, serverUrl }) {
-    return `${serverUrl}/${repo.owner}/${repo.repo}`;
     console.log(`${serverUrl}/${repo.owner}/${repo.repo}`);
+    return `${serverUrl}/${repo.owner}/${repo.repo}`;
 }
 function getDiff() {
     return __awaiter(this, void 0, void 0, function* () {
         if (ghToken && github_1.context.payload.pull_request) {
             const octokit = (0, github_1.getOctokit)(ghToken);
+            core.debug(ghToken);
             const result = yield octokit.rest.repos.compareCommits({
                 repo: github_1.context.repo.repo,
                 owner: github_1.context.repo.owner,

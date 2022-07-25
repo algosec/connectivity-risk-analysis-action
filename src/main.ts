@@ -26,14 +26,15 @@ function greet(name: string, repoUrl: string) {
 }
 
 function getRepoUrl({repo, serverUrl}: GithubContext): string {
-  return `${serverUrl}/${repo.owner}/${repo.repo}`
   console.log(`${serverUrl}/${repo.owner}/${repo.repo}`);
+  return `${serverUrl}/${repo.owner}/${repo.repo}`
 }
 
 async function getDiff() {
   if (ghToken && context.payload.pull_request) {
     const octokit = getOctokit(ghToken)
-
+    core.debug(ghToken)
+    
     const result = await octokit.rest.repos.compareCommits({
       repo: context.repo.repo,
       owner: context.repo.owner,
