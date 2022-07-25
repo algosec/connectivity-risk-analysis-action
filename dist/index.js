@@ -207,14 +207,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
 const git_1 = __nccwpck_require__(3374);
-const dedent_1 = __importDefault(__nccwpck_require__(5281));
 const ghToken = (0, core_1.getInput)('GITHUB_TOKEN');
 function changedFiles() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -222,13 +218,7 @@ function changedFiles() {
             if (ghToken && github_1.context.payload.pull_request) {
                 const octokit = (0, github_1.getOctokit)(ghToken);
                 let git = new git_1.GitProcessorExec();
-                const diffs = yield git.getDiff(octokit, github_1.context).then(files => {
-                    console.log((0, dedent_1.default)(`
-     Your PR diff:
-     ${JSON.stringify(files, undefined, 2)}
-     `));
-                    return files;
-                });
+                const diffs = yield git.getDiff(octokit, github_1.context);
                 if ((diffs === null || diffs === void 0 ? void 0 : diffs.length) == 0) {
                     return;
                 }
@@ -6239,73 +6229,6 @@ function removeHook(state, name, method) {
   }
 
   state.registry[name].splice(index, 1);
-}
-
-
-/***/ }),
-
-/***/ 5281:
-/***/ ((module) => {
-
-"use strict";
-
-
-function dedent(strings) {
-
-  var raw = void 0;
-  if (typeof strings === "string") {
-    // dedent can be used as a plain function
-    raw = [strings];
-  } else {
-    raw = strings.raw;
-  }
-
-  // first, perform interpolation
-  var result = "";
-  for (var i = 0; i < raw.length; i++) {
-    result += raw[i].
-    // join lines when there is a suppressed newline
-    replace(/\\\n[ \t]*/g, "").
-
-    // handle escaped backticks
-    replace(/\\`/g, "`");
-
-    if (i < (arguments.length <= 1 ? 0 : arguments.length - 1)) {
-      result += arguments.length <= i + 1 ? undefined : arguments[i + 1];
-    }
-  }
-
-  // now strip indentation
-  var lines = result.split("\n");
-  var mindent = null;
-  lines.forEach(function (l) {
-    var m = l.match(/^(\s+)\S+/);
-    if (m) {
-      var indent = m[1].length;
-      if (!mindent) {
-        // this is the first indented line
-        mindent = indent;
-      } else {
-        mindent = Math.min(mindent, indent);
-      }
-    }
-  });
-
-  if (mindent !== null) {
-    result = lines.map(function (l) {
-      return l[0] === " " ? l.slice(mindent) : l;
-    }).join("\n");
-  }
-
-  // dedent eats leading and trailing whitespace too
-  result = result.trim();
-
-  // handle escaped newlines at the end to ensure they don't get stripped too
-  return result.replace(/\\n/g, "\n");
-}
-
-if (true) {
-  module.exports = dedent;
 }
 
 

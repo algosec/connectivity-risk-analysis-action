@@ -12,19 +12,11 @@ async function changedFiles(){
   try {
     if (ghToken && context.payload.pull_request) {
       const octokit = getOctokit(ghToken)
-    let git = new GitProcessorExec();
-    const diffs = await git.getDiff(octokit, context).then(files => {
-      console.log(
-       dedent(`
-     Your PR diff:
-     ${JSON.stringify(files, undefined, 2)}
-     `)
-      )
-      return files;
-    });
-    if (diffs?.length == 0){
-      return
-    }
+      let git = new GitProcessorExec();
+      const diffs = await git.getDiff(octokit, context)
+      if (diffs?.length == 0){
+          return
+      }
   }
  
  } catch (error: any) {
