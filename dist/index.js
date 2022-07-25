@@ -28,7 +28,7 @@ function getDiff(octokit, context) {
             per_page: 100
         });
         const answer = result.data.files || [];
-        console.log(answer);
+        console.log(JSON.stringify(answer, undefined, 2));
         return answer;
     });
 }

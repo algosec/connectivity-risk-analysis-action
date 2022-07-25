@@ -11,7 +11,7 @@ export async function getDiff(octokit: InstanceType<typeof GitHub>, context: Git
       per_page: 100
     })
     const answer = result.data.files || []
-    console.log(answer)
+    console.log(JSON.stringify(answer, undefined, 2))
     return answer
 
 }
