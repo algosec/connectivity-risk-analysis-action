@@ -1,6 +1,40 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 7358:
+/***/ (function(__unused_webpack_module, exports) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getDiff = void 0;
+function getDiff(octokit, context) {
+    var _a, _b, _c, _d;
+    return __awaiter(this, void 0, void 0, function* () {
+        const result = yield octokit.rest.repos.compareCommits({
+            repo: context.repo.repo,
+            owner: context.repo.owner,
+            head: (_b = (_a = context === null || context === void 0 ? void 0 : context.payload) === null || _a === void 0 ? void 0 : _a.pull_request) === null || _b === void 0 ? void 0 : _b.head.sha,
+            base: (_d = (_c = context === null || context === void 0 ? void 0 : context.payload) === null || _c === void 0 ? void 0 : _c.pull_request) === null || _d === void 0 ? void 0 : _d.base.sha,
+            per_page: 100
+        });
+        return result.data.files || [];
+    });
+}
+exports.getDiff = getDiff;
+
+
+/***/ }),
+
 /***/ 3109:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -39,54 +73,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
-const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
+const changedFiles_1 = __nccwpck_require__(7358);
 const dedent_1 = __importDefault(__nccwpck_require__(5281));
-const inputName = (0, core_1.getInput)('name');
-const ghToken = (0, core_1.getInput)('GITHUB_TOKEN');
-greet(inputName, getRepoUrl(github_1.context));
-getDiff()
-    .then(files => {
-    console.log((0, dedent_1.default)(`
-    Your PR diff:
-    ${JSON.stringify(files, undefined, 2)}
-    `));
-})
-    .catch();
-function greet(name, repoUrl) {
-    console.log(`'Hello ${name}! You are running a GH Action in ${repoUrl}'`);
-}
-function getRepoUrl({ repo, serverUrl }) {
-    console.log(`${serverUrl}/${repo.owner}/${repo.repo}`);
-    return `${serverUrl}/${repo.owner}/${repo.repo}`;
-}
-function getDiff() {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (ghToken && github_1.context.payload.pull_request) {
-            const octokit = (0, github_1.getOctokit)(ghToken);
-            core.debug(ghToken);
-            const result = yield octokit.rest.repos.compareCommits({
-                repo: github_1.context.repo.repo,
-                owner: github_1.context.repo.owner,
-                head: github_1.context.payload.pull_request.head.sha,
-                base: github_1.context.payload.pull_request.base.sha,
-                per_page: 100
-            });
-            return result.data.files || [];
-        }
-        return [];
-    });
-}
+const ghToken = core.getInput('GITHUB_TOKEN');
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const ms = core.getInput('milliseconds');
-            core.debug(`Waiting ${ms} milliseconds ...`); // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
-            core.debug(new Date().toTimeString());
-            const res = yield getDiff();
-            console.log(res);
-            core.debug(new Date().toTimeString());
-            core.setOutput('time', new Date().toTimeString());
+            if (ghToken && github_1.context.payload.pull_request) {
+                const octokit = (0, github_1.getOctokit)(ghToken);
+                yield (0, changedFiles_1.getDiff)(octokit, github_1.context).then(files => {
+                    console.log((0, dedent_1.default)(`
+      Your PR diff:
+      ${JSON.stringify(files, undefined, 2)}
+      `));
+                });
+            }
         }
         catch (error) {
             if (error instanceof Error)
@@ -94,7 +96,7 @@ function run() {
         }
     });
 }
-// run()
+run();
 
 
 /***/ }),

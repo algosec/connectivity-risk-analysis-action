@@ -12,7 +12,7 @@ async function run(): Promise<void> {
     if (ghToken && context.payload.pull_request) {
       const octokit = getOctokit(ghToken)
 
-    const res = await getDiff(octokit, context).then({
+    await getDiff(octokit, context).then(files => {
       console.log(
         dedent(`
       Your PR diff:
@@ -26,5 +26,5 @@ async function run(): Promise<void> {
   }
 }
 
-// run()
+run()
 
