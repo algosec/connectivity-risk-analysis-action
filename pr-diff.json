@@ -1,0 +1,22 @@
+[
+    {
+      "sha": "16170e6e2ba3402ab4d4320242632b5f095c433c",
+      "filename": "tf-test/main.tf",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "blob_url": "https://github.com/alonnalgo/checkpullrequest/blob/6ec7c7a63ef0a11bbc3ec658daab1adbf67d5791/tf-test%2Fmain.tf",
+      "raw_url": "https://github.com/alonnalgo/checkpullrequest/raw/6ec7c7a63ef0a11bbc3ec658daab1adbf67d5791/tf-test%2Fmain.tf",
+      "contents_url": "https://api.github.com/repos/alonnalgo/checkpullrequest/contents/tf-test%2Fmain.tf?ref=6ec7c7a63ef0a11bbc3ec658daab1adbf67d5791",
+      "patch": "@@ -64,7 +64,7 @@ resource \"aws_security_group\" \"devsecops_test\" {
+       description = \"Display devsecops \"
+       vpc_id      = \"vpc-12345678\"
+       ingress {
+    -    from_port   = 2080
+    +    from_port   = 4080
+         to_port     = 8082
+         protocol    = \"tcp\"
+         cidr_blocks = [\"172.31.0.0/16\"]"
+    }
+]

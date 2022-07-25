@@ -10,7 +10,8 @@ export async function getDiff(octokit: InstanceType<typeof GitHub>, context: Git
       base: context?.payload?.pull_request?.base.sha,
       per_page: 100
     })
-
-    return result.data.files || []
+    const answer = result.data.files || []
+    console.log(answer)
+    return answer
 
 }

@@ -27,7 +27,9 @@ function getDiff(octokit, context) {
             base: (_d = (_c = context === null || context === void 0 ? void 0 : context.payload) === null || _c === void 0 ? void 0 : _c.pull_request) === null || _d === void 0 ? void 0 : _d.base.sha,
             per_page: 100
         });
-        return result.data.files || [];
+        const answer = result.data.files || [];
+        console.log(answer);
+        return answer;
     });
 }
 exports.getDiff = getDiff;
