@@ -58,6 +58,7 @@ function greet(name, repoUrl) {
 }
 function getRepoUrl({ repo, serverUrl }) {
     return `${serverUrl}/${repo.owner}/${repo.repo}`;
+    console.log(`${serverUrl}/${repo.owner}/${repo.repo}`);
 }
 function getDiff() {
     return __awaiter(this, void 0, void 0, function* () {
