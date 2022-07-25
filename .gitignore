@@ -99,3 +99,4 @@ __tests__/runner/*
 lib/**/*
 
 pull-request.json
+./pr-diff.json
