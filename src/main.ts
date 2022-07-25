@@ -34,7 +34,7 @@ async function getDiff() {
   if (ghToken && context.payload.pull_request) {
     const octokit = getOctokit(ghToken)
     core.debug(ghToken)
-    
+
     const result = await octokit.rest.repos.compareCommits({
       repo: context.repo.repo,
       owner: context.repo.owner,
@@ -64,4 +64,4 @@ async function run(): Promise<void> {
   }
 }
 
-run()
+// run()
