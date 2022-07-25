@@ -41,9 +41,6 @@ export class GitProcessorExec extends Exec {
     return res.stdout;
   }
 
-  async diff(baseRef = '', sha = '', ...args: string[]){
-  }
-
   getCurrentRepoRemoteUrl(token: string): string {
     const { repo, owner } = context.repo;
     const serverName = this.getServerName(context.payload.repository?.html_url);

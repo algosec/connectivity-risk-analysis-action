@@ -1,6 +1,7 @@
 import{setFailed, getInput, info } from '@actions/core'
 import {context, getOctokit} from '@actions/github'
 import {GitProcessorExec} from './git';
+import {TerraformExec} from './terraform';
 import dedent from 'dedent'
 
 export type GithubContext = typeof context
@@ -31,11 +32,24 @@ async function changedFiles(){
  }
 }
 
-async function run(): Promise<void> {
-  info('Entering changedFiles')
-  const diffs = await changedFiles();
-  info(`Found diff: ${diffs}`)
+async function terraform(tfToken = ''){
+  try {
+    if (tfToken) {
+    let terraform = new TerraformExec(tfToken);
+    await terraform.init('token')
 
+    if (diffs?.length == 0){
+      return
+    }
+  }
+ 
+ } catch (error: any) {
+   if (error instanceof Error) setFailed(error.message)
+ }
+}
+
+async function run(): Promise<void> {
+  const diffs = await changedFiles();
 }
 
 
