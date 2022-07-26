@@ -6,6 +6,15 @@ import * as core from '@actions/core'
 export class GitProcessorExec extends Exec {
   static DEFAULT_GITHUB_URL = 'https://github.com';
 
+
+  async createComment(comment: string, octokit: InstanceType<typeof GitHub>, context: GithubContext){
+    await octokit.rest.issues.createComment({
+      ...context.repo,
+      issue_number: context.issue.number,
+            body: 'Thank you for submitting a pull request! We will try to review this as soon as we can.'
+    });
+  }
+
   async getDiff(octokit: InstanceType<typeof GitHub>, context: GithubContext) {
 
     const result = await octokit.rest.repos.compareCommits({
