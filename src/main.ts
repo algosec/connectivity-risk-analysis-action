@@ -2,7 +2,7 @@ import{setFailed, getInput, info } from '@actions/core'
 import {context, getOctokit} from '@actions/github'
 import {GitProcessorExec} from './git';
 import {TerraformExec} from './terraform';
-import dedent from 'dedent'
+import {loginToAws} from './providers/aws';
 
 export type GithubContext = typeof context
 
@@ -14,9 +14,7 @@ async function changedFiles(){
       const octokit = getOctokit(ghToken)
       let git = new GitProcessorExec();
       const diffs = await git.getDiff(octokit, context)
-      if (diffs?.length == 0){
-          return
-      }
+      return diffs;
   }
  
  } catch (error: any) {
@@ -24,27 +22,35 @@ async function changedFiles(){
  }
 }
 
-async function terraform(tfToken = ''){
-//   try {
-//     if (tfToken) {
-//     let terraform = new TerraformExec(tfToken);
-//     await terraform.init('token')
-
-//     if (diffs?.length == 0){
-//       return
-//     }
-//   }
- 
-//  } catch (error: any) {
-//    if (error instanceof Error) setFailed(error.message)
-//  }
+async function terraform(diffs: any, tfToken = ''){
+   try {
+     if (tfToken) {
+        let terraform = new TerraformExec(tfToken);
+        await terraform.init()
+        await terraform.fmt()
+        await terraform.plan()
+        await terraform.show()
+    }
+   
+    } catch (error: any) {
+      if (error instanceof Error) setFailed(error.message)
+    }
 }
 
 async function run(): Promise<void> {
-  const diffs = await changedFiles();
+  try {
+    const diffs = await changedFiles();
+    if (diffs?.length == 0){
+      return
+    }
+    await loginToAws();
+    await terraform(diffs);
+  } catch (error) {
+    console.log(error)
+  }
+
+
 }
-
-
 
 
 run()

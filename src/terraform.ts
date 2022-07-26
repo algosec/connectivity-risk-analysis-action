@@ -4,7 +4,9 @@ import * as core from '@actions/core'
 
 export class TerraformExec extends Exec {
 
-
+    constructor(tfToken: string = '') {
+        super();
+    }
     async init(
             additionalTerraformOptions: string[] = [],
             ...options: string[]

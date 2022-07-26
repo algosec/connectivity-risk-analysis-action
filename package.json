@@ -29,6 +29,7 @@
     "@actions/core": "^1.6.0",
     "@actions/exec": "^1.1.1",
     "@actions/github": "^5.0.3",
+    "aws-actions-configure-aws-credentials": "github:aws-actions/configure-aws-credentials",
     "dedent": "^0.7.0"
   },
   "devDependencies": {
