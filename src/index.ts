@@ -31,9 +31,8 @@ const ghSha =  getInput('GITHUB_SHA') //process?.env?.GITHUB_SHA ?? getInput('GI
 const githubWorkspace =  getInput('GITHUB_WORKSPACE') //process.cwd() + '\\' + process?.env?.GITHUB_WORKSPACE ?? getInput('GITHUB_WORKSPACE')
 const githubRepoOwner  =  getInput('GITHUB_REPOSITORY_OWNER') //process?.env?.GITHUB_REPOSITORY_OWNER ?? getInput('GITHUB_REPOSITORY_OWNER')
 const tfToken = getInput('TF_API_TOKEN') // process?.env?.TF_API_TOKEN ?? getInput('TF_API_TOKEN')
-const apiUrl = getInput('RA_API_URL') // process.env.API_URL ?? getInput('TF_API_TOKEN')
-
-const s3Dest = getInput('AWS_S3') // process?.env?.S3_DEST ?? getInput('S3_DEST')
+const apiUrl = getInput('RA_API_URL') // process.env.RA_API_URL ?? getInput('RA_API_URL')
+const s3Dest = getInput('AWS_S3') // process?.env?.AWS_S3 ?? getInput('AWS_S3')
 const actionUuid = generateTmpFileUuid()
 
 
@@ -110,7 +109,7 @@ async function run(): Promise<void> {
     // const fileToUpload = s3File 
     let gotResponse;
     if (uploadFile(fileToUpload)){
-      gotResponse = await checkRiskAnalysisResponse()
+      gotResponse = await pollRiskAnalysisResponse()
     }
     
     if (!!gotResponse){
@@ -132,11 +131,10 @@ async function parseRiskAnalysis(octokit, git) {
 async function pollRiskAnalysisResponse() {
   const http = new HttpClient()
   let hResult = await checkRiskAnalysisResponse()
-  let i = 0;
-  while (i < 50 || !hResult) {
+  for (let i = 0; i < 50 ; i++) {
     await wait(5000);
     hResult = await checkRiskAnalysisResponse()
-    i++
+    if (hResult) return hResult
   }
   return hResult;
 }
@@ -150,32 +148,28 @@ async function wait(ms = 1000) {
   async function checkRiskAnalysisResponse() {
     const http = new HttpClient()
     const pollUrl = `${apiUrl}?customer=${githubRepoOwner}&action_id=${actionUuid}`
+    let riskAnalysis = null
     const {message_found, result} = JSON.parse(await (await http.get(pollUrl)).readBody())
 
 
     if (message_found)
     {
-      const analysis = JSON.parse(result)
+      riskAnalysis = JSON.parse(result)
       let analysis_result = false
-      if (analysis?.success && analysis.additions.analysis_state){
+      if (riskAnalysis?.success && riskAnalysis.additions.analysis_state){
         analysis_result=true
       } else {
         analysis_result=false
       }
 
       if (message_found && analysis_result){
-        if (analysis.additions){
-          info('Additions: ' + analysis.additions)
-        }
-        info('The analysis process was completed successfully')
-        return JSON.parse(result)
+       
+        info('The analysis process was completed successfully: \n' + riskAnalysis)
+        return riskAnalysis
       } else {
         setFailed('The analysis process completed with error. Check report')
       }
-    } else {
-      setTimeout(this.checkRiskAnalysisResponse(), 3000)
-    }
-
+    } 
    
     
   
