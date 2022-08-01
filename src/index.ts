@@ -98,7 +98,6 @@ async function run(): Promise<void> {
     const git = new GitProcessorExec()
     // info(JSON.stringify(context))
 
-    await exec('git', ['fetch', 'origin', 'main', '--depth='])
     const diffs = await changedFiles(octokit, context, git)
     if (diffs?.length == 0) {
       return
