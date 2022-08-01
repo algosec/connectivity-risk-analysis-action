@@ -114,15 +114,16 @@ async function run(): Promise<void> {
 
     const fileToUpload = await terraform(diffs, tfToken)
     // const fileToUpload = s3File 
-    let gotResponse;
+    let analysisResult;
     if (uploadFile(fileToUpload)){
-      gotResponse = await pollRiskAnalysisResponse()
+      analysisResult = await pollRiskAnalysisResponse()
     }
     
-    if (gotResponse?.success){
+    if (analysisResult?.success){
+      info('Parsing Report')
       git.createComment('Risk Analysis Completed, no risks were found', octokit, context)
     } else {
-      parseRiskAnalysis(octokit, git, gotResponse)
+      parseRiskAnalysis(octokit, git, analysisResult)
     }
 
     
@@ -133,6 +134,7 @@ async function run(): Promise<void> {
 }
 
 async function parseRiskAnalysis(octokit, git, riskAnalysis) {
+  info('Parsing Report')
   const body = parseToGithubSyntax(riskAnalysis)
   git.createComment(body, octokit, context)
   return;
@@ -144,13 +146,13 @@ function parseToGithubSyntax(riskAnalysis) {
 
 async function pollRiskAnalysisResponse() {
   
-  let hResult = await checkRiskAnalysisResponse()
+  let analysisResult = await checkRiskAnalysisResponse()
   for (let i = 0; i < 50 ; i++) {
     await wait(5000);
-    hResult = await checkRiskAnalysisResponse()
-    if (hResult) return hResult
+    analysisResult = await checkRiskAnalysisResponse()
+    if (analysisResult) return analysisResult
   }
-  return hResult;
+  return analysisResult;
 }
 
 async function wait(ms = 1000) {
@@ -167,17 +169,19 @@ async function wait(ms = 1000) {
     if (message_found)
     {
       const parsedResult = JSON.parse(result)
-      if (parsedResult?.success && parsedResult?.additions?.analysis_state){
+      if (parsedResult?.success) {
+          const riskAnalysis = parsedResult?.additions?.analysis_result
+          const analysisState = parsedResult?.additions?.analysis_state
+          if (analysisState && riskAnalysis?.length == 0){
+            info('The risks analysis process completed successfully without any risks')
+          } else {
+            info('The risks analysis process completed successfully with risks, please check report')
+            return riskAnalysis
+          }
 
-      let riskAnalysis = parsedResult?.additions?.analysis_result
-
-      if (riskAnalysis?.length > 0){
-        info('The risks analysis process completed successfully: \n' + JSON.stringify(riskAnalysis))
-        return riskAnalysis
       } else {
         setFailed('The risks analysis process completed with errors, please check report')
       }
-    }
     } 
    
     
