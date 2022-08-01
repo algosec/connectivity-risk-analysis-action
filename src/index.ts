@@ -1,14 +1,21 @@
 import {getInput, info, setFailed, debug} from '@actions/core'
 import {context, getOctokit} from '@actions/github'
+import {HttpClient} from '@actions/http-client'
+
 import {GitProcessorExec} from './vcs/git'
 import {TerraformExec} from './iaas-tools/terraform'
 import {loginToAws} from './providers/aws'
 import {GitHub} from '@actions/github/lib/utils'
 import {githubEventPayload} from './pull-request'
-import 'dotenv/config'
 import {WebhookPayload} from '@actions/github/lib/interfaces'
-import { exec } from '@actions/exec'
+import { exec as actionsExec } from '@actions/exec'
+import {existsSync, writeFileSync} from 'fs'
+import * as AWS from 'aws-sdk';
+import { PutObjectOutput } from 'aws-sdk/clients/s3'
+// import { s3File } from '../test-repo/tmp/tf.json'
+import 'dotenv/config'
 
+const getUuid = require('uuid-by-string')
 
 export type GithubContext = typeof context
 context.payload = githubEventPayload as WebhookPayload & any
@@ -19,9 +26,15 @@ interface ExecResult {
   code: number | null;
 }
 
-const ghToken =  process?.env?.GITHUB_TOKEN ?? getInput('GITHUB_TOKEN')
-const githubWorkspace =  process?.env?.GITHUB_WORKSPACE ?? getInput('GITHUB_WORKSPACE')
-const tfToken =  process?.env?.TF_API_TOKEN ?? getInput('TF_API_TOKEN')
+const ghToken =  getInput('GITHUB_TOKEN') //process?.env?.GITHUB_TOKEN ?? getInput('GITHUB_TOKEN')
+const ghSha =  getInput('GITHUB_SHA') //process?.env?.GITHUB_SHA ?? getInput('GITHUB_SHA')
+const githubWorkspace =  getInput('GITHUB_WORKSPACE') //process.cwd() + '\\' + process?.env?.GITHUB_WORKSPACE ?? getInput('GITHUB_WORKSPACE')
+const githubRepoOwner  =  getInput('GITHUB_REPOSITORY_OWNER') //process?.env?.GITHUB_REPOSITORY_OWNER ?? getInput('GITHUB_REPOSITORY_OWNER')
+const tfToken = getInput('TF_API_TOKEN') // process?.env?.TF_API_TOKEN ?? getInput('TF_API_TOKEN')
+const s3Dest = getInput('AWS_S3') // process?.env?.S3_DEST ?? getInput('S3_DEST')
+const actionUuid = generateTmpFileUuid()
+
+
 // const tfHost =  getInput('TF_HOST') //process?.env?.TF_HOST ?? getInput('TF_HOST')
 // const awsAccessKeyId = getInput('AWS_ACCESS_KEY_ID') // process?.env?.AWS_ACCESS_KEY_ID ?? 
 // const awsSecretAccessKey = getInput('AWS_SECRET_ACCESS_KEY') // process?.env?.AWS_SECRET_ACCESS_KEY ?? 
@@ -48,15 +61,23 @@ async function changedFiles(
 
 async function terraform(diffs: any, tfToken = '') {
   try {
-    // const diffPromises = []
+    const diffPromises = []
     if (tfToken) {
-      // diffs.filter(diff => diff !== 'tf-test-sg').forEach(diff =>  diffPromises.push(capture('sh', ['tf-run.sh', `${process?.cwd()}`, githubWorkspace, diff])))
+      // diffs.filter(diff => diff !== 'tf-test-sg').forEach(diff =>  diffPromises.push(exec('sh', ['tf-run.sh', `${process?.cwd()}`, githubWorkspace, diff])))
       process.chdir(`${githubWorkspace}/${diffs[0]}`)
-      await capture('terraform', ['init'])
-      await capture('terraform', ['fmt', '-diff'])
-      await capture('terraform', ['validate', '-no-color'])
-      await capture('terraform', ['plan', '-input=false', '-no-color', `-out=${githubWorkspace}\\tf.out`])
+      await exec('terraform', ['init'])
+      await exec('terraform', ['fmt', '-diff'])
+      await exec('terraform', ['validate', '-no-color'])
+      if (!existsSync('./tmp')) {
+        await exec('mkdir', ['tmp'])
+      }
+      const plan = await exec('terraform', ['plan', '-input=false', '-no-color', `-out=${process?.cwd()}\\tmp\\tf.out`])
+      let json = {};
+      if (plan.stdout){
+        json = JSON.parse((await exec('terraform', ['show', '-json', `${process?.cwd()}\\tmp\\tf.out`])).stdout)
+      }
       process.chdir(`${githubWorkspace}`)
+      return json;
 
 
       
@@ -80,20 +101,111 @@ async function run(): Promise<void> {
     if (diffs?.length == 0) {
       return
     }
-    // info(JSON.stringify(diffs))
-    await capture('ls', [])
+    info('Diffs: ' + JSON.stringify(diffs))
     
 
-      // await git.clone(ghToken, context, './common')
-    // await git.checkout(context.payload.pull_request.base.sha)
-    await terraform(diffs, tfToken)
-    // git.createComment('Action Works !!!', octokit, context)
+    const fileToUpload = await terraform(diffs, tfToken)
+    // const fileToUpload = s3File 
+    let gotResponse;
+    if (uploadFile(fileToUpload)){
+      gotResponse = await pollRiskAnalysisResponse()
+    }
+    
+    if (gotResponse.message_found){
+      parseRiskAnalysis(octokit, git)
+    }
+
+    
   } catch (error) {
     console.log(error)
   }
+
 }
 
-async function capture(cmd: string, args: string[]): Promise<ExecResult> {
+async function parseRiskAnalysis(octokit, git) {
+  git.createComment('Risk Analysis Action Works !!!', octokit, context)
+  return;
+}
+
+async function pollRiskAnalysisResponse() {
+  const http = new HttpClient()
+  let hResult = await checkRiskAnalysisResponse(http)
+  let i = 0;
+  while (i < 50) {
+    await wait(1000);
+    hResult = await checkRiskAnalysisResponse(http)
+    i++
+  }
+  return hResult;
+}
+
+async function wait(ms = 1000) {
+  return new Promise(resolve => {
+    console.log(`waiting ${ms} ms...`);
+    setTimeout(resolve, ms);
+  });
+}
+  async function checkRiskAnalysisResponse(http: HttpClient) {
+    const pollUrl = `${process.env.API_URL}?customer=${githubRepoOwner}&action_id=${actionUuid}`
+    const {message_found, result} = JSON.parse(await (await http.get(pollUrl)).readBody())
+
+
+    if (message_found)
+    {
+      const analysis = JSON.parse(result)
+      let analysis_result = false
+      if (analysis?.success && analysis.additions.analysis_state){
+        analysis_result=true
+      } else {
+        analysis_result=false
+      }
+
+      if (message_found && analysis_result){
+        if (analysis.additions){
+          info('Additions: ' + analysis.additions)
+        }
+        info('The analysis process was completed successfully')
+        return 
+      } else {
+        setFailed('The analysis process completed with error. Check report')
+      }
+    }
+
+    return {message_found, result}
+    
+  
+    
+  
+}
+
+async function uploadFile(json: any) {
+  let res = false;
+  if (json){
+    const ans = await uploadToS3(actionUuid, JSON.stringify(json))
+    if (ans){
+      res = true;
+    }
+  }
+
+  return res
+}
+
+function generateTmpFileUuid() {
+  const uuid = getUuid(ghSha);
+  return uuid;
+}
+
+async function createTmpFile(json) {
+  writeFileSync(`${githubWorkspace}\\tmp\\tf.json.out`, JSON.stringify(json))
+  info('File was created successfully')
+
+}
+
+
+
+
+
+async function exec(cmd: string, args: string[]): Promise<ExecResult> {
   const res: ExecResult = {
       stdout: '',
       stderr: '',
@@ -101,17 +213,17 @@ async function capture(cmd: string, args: string[]): Promise<ExecResult> {
   };
 
   try {
-      const code = await exec(cmd, args, {
+      const code = await actionsExec(cmd, args, {
           listeners: {
               stdout(data) {
                   res.stdout += data.toString();
                   info(`stdout: ${res.stdout}`);
-                  debug(`stdout: ${res.stdout}`);
+                  // debug(`stdout: ${res.stdout}`);
               },
               stderr(data) {
                   res.stderr += data.toString();
                   info(`stderr: ${res.stderr}`);
-                  debug(`stderr: ${res.stderr}`);
+                  // debug(`stderr: ${res.stderr}`);
               },
           },
       });
@@ -124,6 +236,20 @@ async function capture(cmd: string, args: string[]): Promise<ExecResult> {
       debug(`@actions/exec.exec() threw an error: ${msg}`);
       throw new Error(msg);
   }
+}
+
+async function uploadToS3(keyName: string, body: any, bucketName?: string): Promise<PutObjectOutput> {
+  debug(`got the following bucket name ${bucketName}`);
+  const s3 = new AWS.S3();
+  const objectParams: AWS.S3.Types.PutObjectRequest = {
+    Bucket: s3Dest,
+    ACL: 'bucket-owner-full-control',
+    Body: body,
+    Key: 'tmp' + keyName + '.out',
+    Metadata: {customer: githubRepoOwner, action_id: actionUuid}
+
+  };
+  return s3.putObject(objectParams).promise();
 }
 
 
