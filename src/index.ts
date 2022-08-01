@@ -1,38 +1,45 @@
-import {getInput, info, setFailed, debug} from '@actions/core'
+import {debug, getInput, info, setFailed } from '@actions/core'
 import {context, getOctokit} from '@actions/github'
 import {HttpClient} from '@actions/http-client'
 
 import {GitProcessorExec} from './vcs/git'
-import {TerraformExec} from './iaas-tools/terraform'
-import {loginToAws} from './providers/aws'
+// import {TerraformExec} from './iaas-tools/terraform'
+// import {loginToAws} from './providers/aws'
 import {GitHub} from '@actions/github/lib/utils'
-import {githubEventPayload} from './pull-request'
-import {WebhookPayload} from '@actions/github/lib/interfaces'
+
 import { exec as actionsExec } from '@actions/exec'
 import {existsSync, writeFileSync} from 'fs'
 import * as AWS from 'aws-sdk';
 import { PutObjectOutput } from 'aws-sdk/clients/s3'
-// import { s3File } from '../test-repo/tmp/tf.json'
 import 'dotenv/config'
 
 const getUuid = require('uuid-by-string')
 
 export type GithubContext = typeof context
-// context.payload = githubEventPayload as WebhookPayload & any
 
 interface ExecResult {
   stdout: string;
   stderr: string;
   code: number | null;
 }
-
-const ghToken =  getInput('GITHUB_TOKEN') //process?.env?.GITHUB_TOKEN ?? getInput('GITHUB_TOKEN')
-const ghSha =  getInput('GITHUB_SHA') //process?.env?.GITHUB_SHA ?? getInput('GITHUB_SHA')
-const githubWorkspace =  getInput('GITHUB_WORKSPACE') //process.cwd() + '\\' + process?.env?.GITHUB_WORKSPACE ?? getInput('GITHUB_WORKSPACE')
-const githubRepoOwner  =  getInput('GITHUB_REPOSITORY_OWNER') //process?.env?.GITHUB_REPOSITORY_OWNER ?? getInput('GITHUB_REPOSITORY_OWNER')
-const tfToken = getInput('TF_API_TOKEN') // process?.env?.TF_API_TOKEN ?? getInput('TF_API_TOKEN')
-const apiUrl = getInput('RA_API_URL') // process.env.RA_API_URL ?? getInput('RA_API_URL')
-const s3Dest = getInput('AWS_S3') // process?.env?.AWS_S3 ?? getInput('AWS_S3')
+// import {WebhookPayload} from '@actions/github/lib/interfaces'
+// import {githubEventPayload} from './pull-request'
+// import { s3File } from '../test-repo/tmp/tf.json'
+// context.payload = githubEventPayload as WebhookPayload & any
+// const ghToken =  process?.env?.GITHUB_TOKEN ?? getInput('GITHUB_TOKEN')
+// const ghSha =  /process?.env?.GITHUB_SHA ?? getInput('GITHUB_SHA')
+// const githubWorkspace =  process.cwd() + '\\' + process?.env?.GITHUB_WORKSPACE ?? getInput('GITHUB_WORKSPACE')
+// const githubRepoOwner  =  process?.env?.GITHUB_REPOSITORY_OWNER ?? getInput('GITHUB_REPOSITORY_OWNER')
+// const tfToken = process?.env?.TF_API_TOKEN ?? getInput('TF_API_TOKEN')
+// const apiUrl = process.env.RA_API_URL ?? getInput('RA_API_URL')
+// const s3Dest = process?.env?.AWS_S3 ?? getInput('AWS_S3')
+const ghToken =  getInput('GITHUB_TOKEN')
+const ghSha =  getInput('GITHUB_SHA') 
+const githubWorkspace =  getInput('GITHUB_WORKSPACE') 
+const githubRepoOwner  =  getInput('GITHUB_REPOSITORY_OWNER')
+const tfToken = getInput('TF_API_TOKEN') 
+const apiUrl = getInput('RA_API_URL') 
+const s3Dest = getInput('AWS_S3') 
 const actionUuid = generateTmpFileUuid()
 const http = new HttpClient()
 
@@ -154,26 +161,23 @@ async function wait(ms = 1000) {
 }
   async function checkRiskAnalysisResponse() {
     const pollUrl = `${apiUrl}?customer=${githubRepoOwner}&action_id=${actionUuid}`
-    let riskAnalysis = null
     const {message_found, result} = JSON.parse(await (await http.get(pollUrl)).readBody())
 
 
     if (message_found)
     {
-      riskAnalysis = JSON.parse(result)
-      let analysis_result = false
-      if (riskAnalysis?.success && riskAnalysis?.additions?.analysis_state){
-        analysis_result=true
-      } else {
-        analysis_result=false
-      }
+      const parsedResult = JSON.parse(result)
+      if (parsedResult?.success && parsedResult?.additions?.analysis_state){
 
-      if (analysis_result){
-        info('The analysis process was completed successfully: \n' + JSON.stringify(riskAnalysis))
+      let riskAnalysis = parsedResult?.additions?.analysis_result
+
+      if (riskAnalysis?.length > 0){
+        info('The risks analysis process completed successfully: \n' + JSON.stringify(riskAnalysis))
         return riskAnalysis
       } else {
-        setFailed('The analysis process completed with error. Check report')
+        setFailed('The risks analysis process completed with errors, please check report')
       }
+    }
     } 
    
     
