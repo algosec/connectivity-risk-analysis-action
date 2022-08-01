@@ -156,7 +156,7 @@ async function wait(ms = 1000) {
     {
       riskAnalysis = JSON.parse(result)
       let analysis_result = false
-      if (riskAnalysis?.success && riskAnalysis?.additions?.analysis_state == 'True'){
+      if (riskAnalysis?.success && riskAnalysis?.additions?.analysis_state){
         analysis_result=true
       } else {
         analysis_result=false
