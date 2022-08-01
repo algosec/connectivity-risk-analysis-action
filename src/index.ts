@@ -96,11 +96,11 @@ async function capture(cmd: string, args: string[]): Promise<ExecResult> {
           listeners: {
               stdout(data) {
                   res.stdout += data.toString();
-                  console.log(`stdout: ${res.stdout}`);
+                  // console.log(`stdout: ${res.stdout}`);
               },
               stderr(data) {
                   res.stderr += data.toString();
-                  console.log(`stderr: ${res.stderr}`);
+                  // console.log(`stderr: ${res.stderr}`);
               },
           },
       });
