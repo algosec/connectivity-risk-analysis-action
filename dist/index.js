@@ -1,6 +1,202 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 898:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Exec = void 0;
+const exec_1 = __nccwpck_require__(1514);
+const core = __importStar(__nccwpck_require__(2186));
+class Exec {
+    capture(cmd, args) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const res = {
+                stdout: '',
+                stderr: '',
+                code: null,
+            };
+            try {
+                const code = yield (0, exec_1.exec)(cmd, args, {
+                    listeners: {
+                        stdout(data) {
+                            res.stdout += data.toString();
+                        },
+                        stderr(data) {
+                            res.stderr += data.toString();
+                        },
+                    },
+                });
+                res.code = code;
+                return res;
+            }
+            catch (err) {
+                const msg = `Command '${cmd}' failed with args '${args.join(' ')}': ${res.stderr}: ${err}`;
+                core.debug(`@actions/exec.exec() threw an error: ${msg}`);
+                throw new Error(msg);
+            }
+        });
+    }
+}
+exports.Exec = Exec;
+
+
+/***/ }),
+
+/***/ 4822:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core_1 = __nccwpck_require__(2186);
+const github_1 = __nccwpck_require__(5438);
+const git_1 = __nccwpck_require__(3415);
+const pull_request_1 = __nccwpck_require__(1843);
+__nccwpck_require__(4227);
+const exec_1 = __nccwpck_require__(1514);
+github_1.context.payload = pull_request_1.githubEventPayload;
+const ghToken = (0, core_1.getInput)('GITHUB_TOKEN'); //process?.env?.GITHUB_TOKEN ?? getInput('GITHUB_TOKEN')
+const githubWorkspace = (0, core_1.getInput)('GITHUB_WORKSPACE'); //process?.env?.GITHUB_WORKSPACE ?? getInput('GITHUB_WORKSPACE')
+const tfToken = (0, core_1.getInput)('TF_API_TOKEN'); //process?.env?.TF_API_TOKEN ?? getInput('TF_API_TOKEN')
+// const tfHost =  getInput('TF_HOST') //process?.env?.TF_HOST ?? getInput('TF_HOST')
+// const awsAccessKeyId = getInput('AWS_ACCESS_KEY_ID') // process?.env?.AWS_ACCESS_KEY_ID ?? 
+// const awsSecretAccessKey = getInput('AWS_SECRET_ACCESS_KEY') // process?.env?.AWS_SECRET_ACCESS_KEY ?? 
+function changedFiles(octokit, context, git) {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        let diffFolders;
+        try {
+            if (octokit && ((_a = context === null || context === void 0 ? void 0 : context.payload) === null || _a === void 0 ? void 0 : _a.pull_request)) {
+                const diffs = yield git.getDiff(octokit, context);
+                const foldersSet = new Set(diffs
+                    .filter(diff => { var _a; return (_a = diff === null || diff === void 0 ? void 0 : diff.filename) === null || _a === void 0 ? void 0 : _a.endsWith('.tf'); })
+                    .map(diff => diff === null || diff === void 0 ? void 0 : diff.filename.split('/')[0]));
+                diffFolders = [...foldersSet];
+            }
+        }
+        catch (error) {
+            if (error instanceof Error)
+                console.log(error.message); //setFailed(error.message)
+        }
+        return diffFolders;
+    });
+}
+function terraform(diffs, tfToken = '') {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const diffPromises = [];
+            if (tfToken) {
+                diffs.filter(diff => diff !== 'tf-test-sg').forEach(diff => diffPromises.push(capture('sh', ['tf-run.sh', `${process === null || process === void 0 ? void 0 : process.cwd()}`, githubWorkspace, diff])));
+                yield Promise.all(diffPromises);
+                // await terraform.show()
+            }
+        }
+        catch (error) {
+            if (error instanceof Error)
+                console.log(error.message); //setFailed(error.message)
+        }
+    });
+}
+function run() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const octokit = (0, github_1.getOctokit)(ghToken);
+            // await loginToAws();
+            const git = new git_1.GitProcessorExec();
+            // info(JSON.stringify(context))
+            const diffs = yield changedFiles(octokit, github_1.context, git);
+            if ((diffs === null || diffs === void 0 ? void 0 : diffs.length) == 0) {
+                return;
+            }
+            // info(JSON.stringify(diffs))
+            // await git.clone(ghToken, context, './common')
+            // await git.checkout(context.payload.pull_request.base.sha)
+            yield terraform(diffs, tfToken);
+            // git.createComment('Action Works !!!', octokit, context)
+        }
+        catch (error) {
+            console.log(error);
+        }
+    });
+}
+function capture(cmd, args) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const res = {
+            stdout: '',
+            stderr: '',
+            code: null,
+        };
+        try {
+            const code = yield (0, exec_1.exec)(cmd, args, {
+                listeners: {
+                    stdout(data) {
+                        res.stdout += data.toString();
+                        (0, core_1.info)(`stdout: ${res.stdout}`);
+                        (0, core_1.debug)(`stdout: ${res.stdout}`);
+                    },
+                    stderr(data) {
+                        res.stderr += data.toString();
+                        (0, core_1.info)(`stderr: ${res.stderr}`);
+                        (0, core_1.debug)(`stderr: ${res.stderr}`);
+                    },
+                },
+            });
+            res.code = code;
+            (0, core_1.info)(`EXEC RESPONSE: ${res}`);
+            return res;
+        }
+        catch (err) {
+            const msg = `Command '${cmd}' failed with args '${args.join(' ')}': ${res.stderr}: ${err}`;
+            (0, core_1.debug)(`@actions/exec.exec() threw an error: ${msg}`);
+            throw new Error(msg);
+        }
+    });
+}
+run();
+
+
+/***/ }),
+
 /***/ 1843:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -491,7 +687,7 @@ exports.githubEventPayload = {
 
 /***/ }),
 
-/***/ 4099:
+/***/ 3415:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -523,673 +719,104 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Exec = void 0;
-var exec_1 = __nccwpck_require__(1514);
-var core = __importStar(__nccwpck_require__(2186));
-var Exec = /** @class */ (function () {
-    function Exec() {
-    }
-    Exec.prototype.capture = function (cmd, args) {
-        return __awaiter(this, void 0, void 0, function () {
-            var res, code, err_1, msg;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        res = {
-                            stdout: '',
-                            stderr: '',
-                            code: null,
-                        };
-                        _a.label = 1;
-                    case 1:
-                        _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, (0, exec_1.exec)(cmd, args, {
-                                listeners: {
-                                    stdout: function (data) {
-                                        res.stdout += data.toString();
-                                    },
-                                    stderr: function (data) {
-                                        res.stderr += data.toString();
-                                    },
-                                },
-                            })];
-                    case 2:
-                        code = _a.sent();
-                        res.code = code;
-                        return [2 /*return*/, res];
-                    case 3:
-                        err_1 = _a.sent();
-                        msg = "Command '" + cmd + "' failed with args '" + args.join(' ') + "': " + res.stderr + ": " + err_1;
-                        core.debug("@actions/exec.exec() threw an error: " + msg);
-                        throw new Error(msg);
-                    case 4: return [2 /*return*/];
-                }
-            });
-        });
-    };
-    return Exec;
-}());
-exports.Exec = Exec;
-
-
-/***/ }),
-
-/***/ 4454:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
-    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-        if (ar || !(i in from)) {
-            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-            ar[i] = from[i];
-        }
-    }
-    return to.concat(ar || Array.prototype.slice.call(from));
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TerraformExec = void 0;
-var exec_1 = __nccwpck_require__(4099);
-var core = __importStar(__nccwpck_require__(2186));
-var TerraformExec = /** @class */ (function (_super) {
-    __extends(TerraformExec, _super);
-    function TerraformExec(_tfToken) {
-        if (_tfToken === void 0) { _tfToken = ''; }
-        return _super.call(this) || this;
-    }
-    TerraformExec.prototype.init = function (additionalTerraformOptions) {
-        if (additionalTerraformOptions === void 0) { additionalTerraformOptions = []; }
-        var options = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            options[_i - 1] = arguments[_i];
-        }
-        return __awaiter(this, void 0, void 0, function () {
-            var args;
-            return __generator(this, function (_a) {
-                core.debug("Executing 'git clone' to directory with token and options '" + options.join(' ') + "'");
-                args = ['init'];
-                if (options.length > 0) {
-                    args = args.concat(options);
-                }
-                return [2 /*return*/, this.cmd.apply(this, __spreadArray([additionalTerraformOptions], args, false))];
-            });
-        });
-    };
-    TerraformExec.prototype.fmt = function (additionalTerraformOptions) {
-        if (additionalTerraformOptions === void 0) { additionalTerraformOptions = []; }
-        var options = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            options[_i - 1] = arguments[_i];
-        }
-        return __awaiter(this, void 0, void 0, function () {
-            var args;
-            return __generator(this, function (_a) {
-                core.debug("Executing 'git clone' to directory with token and options '" + options.join(' ') + "'");
-                args = ['fmt', '--diff'];
-                if (options.length > 0) {
-                    args = args.concat(options);
-                }
-                return [2 /*return*/, this.cmd.apply(this, __spreadArray([additionalTerraformOptions], args, false))];
-            });
-        });
-    };
-    TerraformExec.prototype.validate = function (additionalTerraformOptions) {
-        if (additionalTerraformOptions === void 0) { additionalTerraformOptions = []; }
-        var options = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            options[_i - 1] = arguments[_i];
-        }
-        return __awaiter(this, void 0, void 0, function () {
-            var args;
-            return __generator(this, function (_a) {
-                core.debug("Executing 'git clone' to directory with token and options '" + options.join(' ') + "'");
-                args = ['fmt', '--diff'];
-                if (options.length > 0) {
-                    args = args.concat(options);
-                }
-                return [2 /*return*/, this.cmd.apply(this, __spreadArray([additionalTerraformOptions], args, false))];
-            });
-        });
-    };
-    TerraformExec.prototype.plan = function (additionalTerraformOptions) {
-        if (additionalTerraformOptions === void 0) { additionalTerraformOptions = []; }
-        var options = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            options[_i - 1] = arguments[_i];
-        }
-        return __awaiter(this, void 0, void 0, function () {
-            var args;
-            return __generator(this, function (_a) {
-                core.debug("Executing 'git clone' to directory with token and options '" + options.join(' ') + "'");
-                args = ['plan', '-input=false,  -no-color,  -out=/tmp/tf.out'];
-                if (options.length > 0) {
-                    args = args.concat(options);
-                }
-                return [2 /*return*/, this.cmd.apply(this, __spreadArray([additionalTerraformOptions], args, false))];
-            });
-        });
-    };
-    TerraformExec.prototype.show = function (additionalTerraformOptions) {
-        if (additionalTerraformOptions === void 0) { additionalTerraformOptions = []; }
-        var options = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            options[_i - 1] = arguments[_i];
-        }
-        return __awaiter(this, void 0, void 0, function () {
-            var args;
-            return __generator(this, function (_a) {
-                core.debug("Executing 'git clone' to directory with token and options '" + options.join(' ') + "'");
-                args = ['plan', '-input=false,  -no-color,  -out=/tmp/tf.out'];
-                if (options.length > 0) {
-                    args = args.concat(options);
-                }
-                return [2 /*return*/, this.cmd.apply(this, __spreadArray([additionalTerraformOptions], args, false))];
-            });
-        });
-    };
-    TerraformExec.prototype.cmd = function (additionalTerraformOptions) {
-        var args = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            args[_i - 1] = arguments[_i];
-        }
-        return __awaiter(this, void 0, void 0, function () {
-            var userArgs, res;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        core.debug("Executing Git: " + args.join(' '));
-                        userArgs = __spreadArray([], additionalTerraformOptions, true);
-                        return [4 /*yield*/, this.capture('terraform', userArgs.concat(args))];
-                    case 1:
-                        res = _a.sent();
-                        if (res.code !== 0) {
-                            throw new Error("Command 'terraform " + args.join(' ') + "' failed: " + JSON.stringify(res));
-                        }
-                        return [2 /*return*/, res.stdout];
-                }
-            });
-        });
-    };
-    return TerraformExec;
-}(exec_1.Exec));
-exports.TerraformExec = TerraformExec;
-
-
-/***/ }),
-
-/***/ 9726:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-var _a, _b;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-var core_1 = __nccwpck_require__(2186);
-var github_1 = __nccwpck_require__(5438);
-var git_1 = __nccwpck_require__(114);
-var terraform_1 = __nccwpck_require__(4454);
-var pull_request_1 = __nccwpck_require__(1843);
-__nccwpck_require__(4227);
-github_1.context.payload = pull_request_1.githubEventPayload;
-var ghToken = (_b = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.GITHUB_TOKEN) !== null && _b !== void 0 ? _b : (0, core_1.getInput)('GITHUB_TOKEN');
-function changedFiles(octokit, context) {
-    var _a;
-    return __awaiter(this, void 0, void 0, function () {
-        var diffs, git, error_1;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
-                case 0:
-                    _b.trys.push([0, 3, , 4]);
-                    if (!(ghToken && ((_a = context === null || context === void 0 ? void 0 : context.payload) === null || _a === void 0 ? void 0 : _a.pull_request))) return [3 /*break*/, 2];
-                    git = new git_1.GitProcessorExec();
-                    return [4 /*yield*/, git.getDiff(octokit, context)];
-                case 1:
-                    diffs = _b.sent();
-                    _b.label = 2;
-                case 2: return [3 /*break*/, 4];
-                case 3:
-                    error_1 = _b.sent();
-                    if (error_1 instanceof Error)
-                        console.log(error_1.message); //setFailed(error.message)
-                    return [3 /*break*/, 4];
-                case 4: return [2 /*return*/, diffs];
-            }
-        });
-    });
-}
-function terraform(_diffs, tfToken) {
-    if (tfToken === void 0) { tfToken = ''; }
-    return __awaiter(this, void 0, void 0, function () {
-        var terraform_2, error_2;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    _a.trys.push([0, 6, , 7]);
-                    if (!tfToken) return [3 /*break*/, 5];
-                    terraform_2 = new terraform_1.TerraformExec(tfToken);
-                    return [4 /*yield*/, terraform_2.init()];
-                case 1:
-                    _a.sent();
-                    return [4 /*yield*/, terraform_2.fmt()];
-                case 2:
-                    _a.sent();
-                    return [4 /*yield*/, terraform_2.plan()];
-                case 3:
-                    _a.sent();
-                    return [4 /*yield*/, terraform_2.show()];
-                case 4:
-                    _a.sent();
-                    _a.label = 5;
-                case 5: return [3 /*break*/, 7];
-                case 6:
-                    error_2 = _a.sent();
-                    if (error_2 instanceof Error)
-                        console.log(error_2.message); //setFailed(error.message)
-                    return [3 /*break*/, 7];
-                case 7: return [2 /*return*/];
-            }
-        });
-    });
-}
-function run() {
-    return __awaiter(this, void 0, void 0, function () {
-        var octokit, diffs, git, error_3;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    _a.trys.push([0, 3, , 4]);
-                    (0, core_1.info)(JSON.stringify(github_1.context));
-                    octokit = (0, github_1.getOctokit)(ghToken);
-                    return [4 /*yield*/, changedFiles(octokit, github_1.context)];
-                case 1:
-                    diffs = _a.sent();
-                    if ((diffs === null || diffs === void 0 ? void 0 : diffs.length) == 0) {
-                        return [2 /*return*/];
-                    }
-                    return [4 /*yield*/, terraform(diffs)];
-                case 2:
-                    _a.sent();
-                    git = new git_1.GitProcessorExec();
-                    return [3 /*break*/, 4];
-                case 3:
-                    error_3 = _a.sent();
-                    console.log(error_3);
-                    return [3 /*break*/, 4];
-                case 4: return [2 /*return*/];
-            }
-        });
-    });
-}
-run();
-
-
-/***/ }),
-
-/***/ 114:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
-    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-        if (ar || !(i in from)) {
-            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-            ar[i] = from[i];
-        }
-    }
-    return to.concat(ar || Array.prototype.slice.call(from));
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GitProcessorExec = void 0;
-var exec_1 = __nccwpck_require__(4099);
-var github_1 = __nccwpck_require__(5438);
-var core = __importStar(__nccwpck_require__(2186));
-var GitProcessorExec = /** @class */ (function (_super) {
-    __extends(GitProcessorExec, _super);
-    function GitProcessorExec() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    GitProcessorExec.prototype.createComment = function (_comment, octokit, context) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, octokit.rest.issues.createComment(__assign(__assign({}, context.repo), { issue_number: context.issue.number, body: 'Thank you for submitting a pull request! We will try to review this as soon as we can.' }))];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
-    GitProcessorExec.prototype.getDiff = function (octokit, context) {
+const exec_1 = __nccwpck_require__(898);
+const github_1 = __nccwpck_require__(5438);
+const core = __importStar(__nccwpck_require__(2186));
+class GitProcessorExec extends exec_1.Exec {
+    getDiff(octokit, context) {
         var _a, _b, _c, _d;
-        return __awaiter(this, void 0, void 0, function () {
-            var result, answer;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
-                    case 0: return [4 /*yield*/, octokit.rest.repos.compareCommits({
-                            repo: context.repo.repo,
-                            owner: context.repo.owner,
-                            head: (_b = (_a = context === null || context === void 0 ? void 0 : context.payload) === null || _a === void 0 ? void 0 : _a.pull_request) === null || _b === void 0 ? void 0 : _b.head.sha,
-                            base: (_d = (_c = context === null || context === void 0 ? void 0 : context.payload) === null || _c === void 0 ? void 0 : _c.pull_request) === null || _d === void 0 ? void 0 : _d.base.sha,
-                            per_page: 100
-                        })];
-                    case 1:
-                        result = _e.sent();
-                        answer = result.data.files || [];
-                        console.log(JSON.stringify(answer, undefined, 2));
-                        return [2 /*return*/, answer];
-                }
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = yield octokit.rest.repos.compareCommits({
+                repo: context.repo.repo,
+                owner: context.repo.owner,
+                head: (_b = (_a = context === null || context === void 0 ? void 0 : context.payload) === null || _a === void 0 ? void 0 : _a.pull_request) === null || _b === void 0 ? void 0 : _b.head.sha,
+                base: (_d = (_c = context === null || context === void 0 ? void 0 : context.payload) === null || _c === void 0 ? void 0 : _c.pull_request) === null || _d === void 0 ? void 0 : _d.base.sha,
+                per_page: 100
             });
+            const answer = result.data.files || [];
+            // console.log(JSON.stringify(answer, undefined, 2))
+            return answer;
         });
-    };
-    GitProcessorExec.prototype.cmd = function (additionalGitOptions) {
-        var _a;
-        var args = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            args[_i - 1] = arguments[_i];
-        }
-        return __awaiter(this, void 0, void 0, function () {
-            var serverUrl, userArgs, res;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        core.debug("Executing Git: " + args.join(' '));
-                        serverUrl = this.getServerUrl((_a = github_1.context.payload.repository) === null || _a === void 0 ? void 0 : _a.html_url);
-                        userArgs = __spreadArray(__spreadArray([], additionalGitOptions, true), [
-                            '-c',
-                            'user.name=github-action-benchmark',
-                            '-c',
-                            'user.email=github@users.noreply.github.com',
-                            '-c',
-                            "http." + serverUrl + "/.extraheader=",
-                        ], false);
-                        return [4 /*yield*/, this.capture('git', userArgs.concat(args))];
-                    case 1:
-                        res = _b.sent();
-                        if (res.code !== 0) {
-                            throw new Error("Command 'git " + args.join(' ') + "' failed: " + JSON.stringify(res));
-                        }
-                        return [2 /*return*/, res.stdout];
-                }
-            });
+    }
+    createComment(_comment, octokit, context) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: context.issue.number, body: 'Thank you for submitting a pull request! We will try to review this as soon as we can.' }));
         });
-    };
-    GitProcessorExec.prototype.getCurrentRepoRemoteUrl = function (token) {
+    }
+    cmd(additionalGitOptions, context, ...args) {
         var _a;
-        var _b = github_1.context.repo, repo = _b.repo, owner = _b.owner;
-        var serverName = this.getServerName((_a = github_1.context.payload.repository) === null || _a === void 0 ? void 0 : _a.html_url);
-        return this.getRepoRemoteUrl(token, serverName + "/" + owner + "/" + repo);
-    };
-    GitProcessorExec.prototype.getRepoRemoteUrl = function (token, repoUrl) {
-        return "https://x-access-token:" + token + "@" + repoUrl + ".git";
-    };
-    GitProcessorExec.prototype.getServerName = function (repositoryUrl) {
-        var urlObj = repositoryUrl ? new URL(repositoryUrl) : new URL(GitProcessorExec.DEFAULT_GITHUB_URL);
+        return __awaiter(this, void 0, void 0, function* () {
+            core.debug(`Executing Git: ${args.join(' ')}`);
+            const serverUrl = this.getServerUrl((_a = context.payload.repository) === null || _a === void 0 ? void 0 : _a.html_url);
+            const userArgs = [
+                ...additionalGitOptions,
+                '-c',
+                'user.email=alon.noy@algosec.com',
+                '-c',
+                `http.${serverUrl}/.extraheader=`, // This config is necessary to support actions/checkout@v2 (#9)
+            ];
+            const res = yield this.capture('git', userArgs.concat(args));
+            if (res.code !== 0) {
+                throw new Error(`Command 'git ${args.join(' ')}' failed: ${JSON.stringify(res)}`);
+            }
+            return res.stdout;
+        });
+    }
+    fetch(token, branch, additionalGitOptions = [], ...options) {
+        return __awaiter(this, void 0, void 0, function* () {
+            core.debug(`Executing 'git fetch' for branch '${branch}' with token and options '${options.join(' ')}'`);
+            const remote = token !== undefined ? this.getCurrentRepoRemoteUrl(token) : 'origin';
+            let args = ['fetch', remote, `${branch}:${branch}`];
+            if (options.length > 0) {
+                args = args.concat(options);
+            }
+            return this.cmd(additionalGitOptions, github_1.context, ...args);
+        });
+    }
+    getCurrentRepoRemoteUrl(token) {
+        var _a;
+        const { repo, owner } = github_1.context.repo;
+        const serverName = this.getServerName((_a = github_1.context.payload.repository) === null || _a === void 0 ? void 0 : _a.html_url);
+        return this.getRepoRemoteUrl(token, `${serverName}/${owner}/${repo}`);
+    }
+    getRepoRemoteUrl(token, repoUrl) {
+        return `https://x-access-token:${token}@${repoUrl}.git`;
+    }
+    getServerName(repositoryUrl) {
+        const urlObj = repositoryUrl ? new URL(repositoryUrl) : new URL(GitProcessorExec.DEFAULT_GITHUB_URL);
         return repositoryUrl ? urlObj.hostname : GitProcessorExec.DEFAULT_GITHUB_URL.replace('https://', '');
-    };
-    GitProcessorExec.prototype.clone = function (token, ghRepository, baseDirectory, additionalGitOptions) {
-        if (additionalGitOptions === void 0) { additionalGitOptions = []; }
-        var options = [];
-        for (var _i = 4; _i < arguments.length; _i++) {
-            options[_i - 4] = arguments[_i];
-        }
-        return __awaiter(this, void 0, void 0, function () {
-            var remote, args;
-            return __generator(this, function (_a) {
-                core.debug("Executing 'git clone' to directory '" + baseDirectory + "' with token and options '" + options.join(' ') + "'");
-                remote = this.getRepoRemoteUrl(token, ghRepository);
-                args = ['clone', remote, baseDirectory];
-                if (options.length > 0) {
-                    args = args.concat(options);
-                }
-                return [2 /*return*/, this.cmd.apply(this, __spreadArray([additionalGitOptions], args, false))];
-            });
+    }
+    clone(token, context, baseDirectory, additionalGitOptions = [], ...options) {
+        return __awaiter(this, void 0, void 0, function* () {
+            core.debug(`Executing 'git clone' to directory '${baseDirectory}' with token and options '${options.join(' ')}'`);
+            const remote = this.getRepoRemoteUrl(token, this.getServerName(undefined) + '/' + context.repo.owner + '/' + context.repo.repo);
+            let args = ['clone', remote, baseDirectory];
+            if (options.length > 0) {
+                args = args.concat(options);
+            }
+            return this.cmd(additionalGitOptions, context, ...args);
         });
-    };
-    GitProcessorExec.prototype.checkout = function (ghRef, additionalGitOptions) {
-        if (additionalGitOptions === void 0) { additionalGitOptions = []; }
-        var options = [];
-        for (var _i = 2; _i < arguments.length; _i++) {
-            options[_i - 2] = arguments[_i];
-        }
-        return __awaiter(this, void 0, void 0, function () {
-            var args;
-            return __generator(this, function (_a) {
-                core.debug("Executing 'git checkout' to ref '" + ghRef + "' with token and options '" + options.join(' ') + "'");
-                args = ['checkout', ghRef];
-                if (options.length > 0) {
-                    args = args.concat(options);
-                }
-                return [2 /*return*/, this.cmd.apply(this, __spreadArray([additionalGitOptions], args, false))];
-            });
+    }
+    checkout(ghRef, additionalGitOptions = [], ...options) {
+        return __awaiter(this, void 0, void 0, function* () {
+            core.debug(`Executing 'git checkout' to ref '${ghRef}' with token and options '${options.join(' ')}'`);
+            let args = ['checkout', ghRef];
+            if (options.length > 0) {
+                args = args.concat(options);
+            }
+            return this.cmd(additionalGitOptions, github_1.context, ...args);
         });
-    };
-    GitProcessorExec.prototype.getServerUrl = function (repositoryUrl) {
-        var urlObj = repositoryUrl ? new URL(repositoryUrl) : new URL(GitProcessorExec.DEFAULT_GITHUB_URL);
+    }
+    getServerUrl(repositoryUrl) {
+        const urlObj = repositoryUrl ? new URL(repositoryUrl) : new URL(GitProcessorExec.DEFAULT_GITHUB_URL);
         return repositoryUrl ? urlObj.origin : GitProcessorExec.DEFAULT_GITHUB_URL;
-    };
-    GitProcessorExec.DEFAULT_GITHUB_URL = 'https://github.com';
-    return GitProcessorExec;
-}(exec_1.Exec));
+    }
+}
 exports.GitProcessorExec = GitProcessorExec;
+GitProcessorExec.DEFAULT_GITHUB_URL = 'https://github.com';
 
 
 /***/ }),
@@ -11880,7 +11507,7 @@ module.exports = require("zlib");
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(9726);
+/******/ 	var __webpack_exports__ = __nccwpck_require__(4822);
 /******/ 	module.exports = __webpack_exports__;
 /******/ 	
 /******/ })()
