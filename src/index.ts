@@ -110,10 +110,10 @@ async function run(): Promise<void> {
     // const fileToUpload = s3File 
     let gotResponse;
     if (uploadFile(fileToUpload)){
-      gotResponse = await pollRiskAnalysisResponse()
+      gotResponse = await checkRiskAnalysisResponse()
     }
     
-    if (gotResponse.message_found){
+    if (!!gotResponse){
       parseRiskAnalysis(octokit, git)
     }
 
@@ -131,11 +131,11 @@ async function parseRiskAnalysis(octokit, git) {
 
 async function pollRiskAnalysisResponse() {
   const http = new HttpClient()
-  let hResult = await checkRiskAnalysisResponse(http)
+  let hResult = await checkRiskAnalysisResponse()
   let i = 0;
-  while (i < 50) {
-    await wait(1000);
-    hResult = await checkRiskAnalysisResponse(http)
+  while (i < 50 || !hResult) {
+    await wait(5000);
+    hResult = await checkRiskAnalysisResponse()
     i++
   }
   return hResult;
@@ -147,7 +147,8 @@ async function wait(ms = 1000) {
     setTimeout(resolve, ms);
   });
 }
-  async function checkRiskAnalysisResponse(http: HttpClient) {
+  async function checkRiskAnalysisResponse() {
+    const http = new HttpClient()
     const pollUrl = `${apiUrl}?customer=${githubRepoOwner}&action_id=${actionUuid}`
     const {message_found, result} = JSON.parse(await (await http.get(pollUrl)).readBody())
 
@@ -167,13 +168,15 @@ async function wait(ms = 1000) {
           info('Additions: ' + analysis.additions)
         }
         info('The analysis process was completed successfully')
-        return 
+        return JSON.parse(result)
       } else {
         setFailed('The analysis process completed with error. Check report')
       }
+    } else {
+      setTimeout(this.checkRiskAnalysisResponse(), 3000)
     }
 
-    return {message_found, result}
+   
     
   
     
