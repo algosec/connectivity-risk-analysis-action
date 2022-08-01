@@ -34,7 +34,7 @@ const tfToken = getInput('TF_API_TOKEN') // process?.env?.TF_API_TOKEN ?? getInp
 const apiUrl = getInput('RA_API_URL') // process.env.RA_API_URL ?? getInput('RA_API_URL')
 const s3Dest = getInput('AWS_S3') // process?.env?.AWS_S3 ?? getInput('AWS_S3')
 const actionUuid = generateTmpFileUuid()
-
+const http = new HttpClient()
 
 // const tfHost =  getInput('TF_HOST') //process?.env?.TF_HOST ?? getInput('TF_HOST')
 // const awsAccessKeyId = getInput('AWS_ACCESS_KEY_ID') // process?.env?.AWS_ACCESS_KEY_ID ?? 
@@ -112,8 +112,10 @@ async function run(): Promise<void> {
       gotResponse = await pollRiskAnalysisResponse()
     }
     
-    if (!!gotResponse){
-      parseRiskAnalysis(octokit, git)
+    if (gotResponse?.success){
+      git.createComment('Risk Analysis Completed, no risks were found', octokit, context)
+    } else {
+      parseRiskAnalysis(octokit, git, gotResponse)
     }
 
     
@@ -123,13 +125,18 @@ async function run(): Promise<void> {
 
 }
 
-async function parseRiskAnalysis(octokit, git) {
-  git.createComment('Risk Analysis Action Works !!!', octokit, context)
+async function parseRiskAnalysis(octokit, git, riskAnalysis) {
+  const body = parseToGithubSyntax(riskAnalysis)
+  git.createComment(body, octokit, context)
   return;
 }
 
+function parseToGithubSyntax(riskAnalysis) {
+  return JSON.stringify(riskAnalysis)
+}
+
 async function pollRiskAnalysisResponse() {
-  const http = new HttpClient()
+  
   let hResult = await checkRiskAnalysisResponse()
   for (let i = 0; i < 50 ; i++) {
     await wait(5000);
@@ -146,7 +153,6 @@ async function wait(ms = 1000) {
   });
 }
   async function checkRiskAnalysisResponse() {
-    const http = new HttpClient()
     const pollUrl = `${apiUrl}?customer=${githubRepoOwner}&action_id=${actionUuid}`
     let riskAnalysis = null
     const {message_found, result} = JSON.parse(await (await http.get(pollUrl)).readBody())
