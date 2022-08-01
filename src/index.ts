@@ -18,7 +18,7 @@ import 'dotenv/config'
 const getUuid = require('uuid-by-string')
 
 export type GithubContext = typeof context
-context.payload = githubEventPayload as WebhookPayload & any
+// context.payload = githubEventPayload as WebhookPayload & any
 
 interface ExecResult {
   stdout: string;
@@ -62,7 +62,7 @@ async function changedFiles(
 
 async function terraform(diffs: any, tfToken = '') {
   try {
-    const diffPromises = []
+    // const diffPromises = []
     if (tfToken) {
       // diffs.filter(diff => diff !== 'tf-test-sg').forEach(diff =>  diffPromises.push(exec('sh', ['tf-run.sh', `${process?.cwd()}`, githubWorkspace, diff])))
       process.chdir(`${githubWorkspace}/${diffs[0]}`)
@@ -97,7 +97,8 @@ async function run(): Promise<void> {
     // await loginToAws();
     const git = new GitProcessorExec()
     // info(JSON.stringify(context))
-  
+
+    await exec('git', ['fetch', 'origin', 'main', '--depth='])
     const diffs = await changedFiles(octokit, context, git)
     if (diffs?.length == 0) {
       return
