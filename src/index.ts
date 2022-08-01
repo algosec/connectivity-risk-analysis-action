@@ -31,6 +31,8 @@ const ghSha =  getInput('GITHUB_SHA') //process?.env?.GITHUB_SHA ?? getInput('GI
 const githubWorkspace =  getInput('GITHUB_WORKSPACE') //process.cwd() + '\\' + process?.env?.GITHUB_WORKSPACE ?? getInput('GITHUB_WORKSPACE')
 const githubRepoOwner  =  getInput('GITHUB_REPOSITORY_OWNER') //process?.env?.GITHUB_REPOSITORY_OWNER ?? getInput('GITHUB_REPOSITORY_OWNER')
 const tfToken = getInput('TF_API_TOKEN') // process?.env?.TF_API_TOKEN ?? getInput('TF_API_TOKEN')
+const apiUrl = getInput('RA_API_URL') // process.env.API_URL ?? getInput('TF_API_TOKEN')
+
 const s3Dest = getInput('AWS_S3') // process?.env?.S3_DEST ?? getInput('S3_DEST')
 const actionUuid = generateTmpFileUuid()
 
@@ -146,7 +148,7 @@ async function wait(ms = 1000) {
   });
 }
   async function checkRiskAnalysisResponse(http: HttpClient) {
-    const pollUrl = `${process.env.API_URL}?customer=${githubRepoOwner}&action_id=${actionUuid}`
+    const pollUrl = `${apiUrl}?customer=${githubRepoOwner}&action_id=${actionUuid}`
     const {message_found, result} = JSON.parse(await (await http.get(pollUrl)).readBody())
 
 
