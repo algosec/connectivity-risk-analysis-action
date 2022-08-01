@@ -141,7 +141,31 @@ async function parseRiskAnalysis(octokit, git, riskAnalysis) {
 }
 
 function parseToGithubSyntax(riskAnalysis) {
-  return JSON.stringify(riskAnalysis)
+    const CODE_BLOCK = '```';
+    
+
+    const output = `
+    ##  Code Analysis :cop:
+    <details open="true">
+    <summary>Report</summary>
+
+    ${JSON.stringify(riskAnalysis)}
+    </details>
+
+    <details>
+    <summary>Logs</summary>
+    Output
+
+    ${CODE_BLOCK}
+    ${riskAnalysis}
+    ${CODE_BLOCK}
+
+
+    </details>`
+
+   
+
+  return output
 }
 
 async function pollRiskAnalysisResponse() {
