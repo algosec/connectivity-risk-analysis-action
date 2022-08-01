@@ -125,10 +125,16 @@ function changedFiles(octokit, context, git) {
 function terraform(diffs, tfToken = '') {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const diffPromises = [];
+            // const diffPromises = []
             if (tfToken) {
-                diffs.filter(diff => diff !== 'tf-test-sg').forEach(diff => diffPromises.push(capture('sh', ['tf-run.sh', `${process === null || process === void 0 ? void 0 : process.cwd()}`, githubWorkspace, diff])));
-                yield Promise.all(diffPromises);
+                // diffs.filter(diff => diff !== 'tf-test-sg').forEach(diff =>  diffPromises.push(capture('sh', ['tf-run.sh', `${process?.cwd()}`, githubWorkspace, diff])))
+                process.chdir(`${githubWorkspace}/${diffs[0]}`);
+                yield capture('terraform', ['init']);
+                yield capture('terraform', ['fmt', '-diff']);
+                yield capture('terraform', ['validate', '-no-color']);
+                yield capture('terraform', ['plan', '-input=false', '-no-color', `-out=${githubWorkspace}\\tf.out`]);
+                process.chdir(`${githubWorkspace}`);
+                // await Promise.all(diffPromises)
                 // await terraform.show()
             }
         }
