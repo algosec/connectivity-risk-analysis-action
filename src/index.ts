@@ -72,7 +72,7 @@ async function run(): Promise<void> {
       return
     }
     // info(JSON.stringify(diffs))
-    await capture('echo', ['$(ls)'])
+    await capture('ls', [])
     
 
       // await git.clone(ghToken, context, './common')

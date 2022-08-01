@@ -150,7 +150,7 @@ function run() {
                 return;
             }
             // info(JSON.stringify(diffs))
-            yield capture('echo', ['$(ls)']);
+            yield capture('ls', []);
             // await git.clone(ghToken, context, './common')
             // await git.checkout(context.payload.pull_request.base.sha)
             yield terraform(diffs, tfToken);
