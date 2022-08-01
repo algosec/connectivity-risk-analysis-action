@@ -19,9 +19,9 @@ interface ExecResult {
   code: number | null;
 }
 
-const ghToken =  getInput('GITHUB_TOKEN') //process?.env?.GITHUB_TOKEN ?? getInput('GITHUB_TOKEN')
-const githubWorkspace =  getInput('GITHUB_WORKSPACE') //process?.env?.GITHUB_WORKSPACE ?? getInput('GITHUB_WORKSPACE')
-const tfToken =  getInput('TF_API_TOKEN') //process?.env?.TF_API_TOKEN ?? getInput('TF_API_TOKEN')
+const ghToken =  process?.env?.GITHUB_TOKEN ?? getInput('GITHUB_TOKEN')
+const githubWorkspace =  process?.env?.GITHUB_WORKSPACE ?? getInput('GITHUB_WORKSPACE')
+const tfToken =  process?.env?.TF_API_TOKEN ?? getInput('TF_API_TOKEN')
 // const tfHost =  getInput('TF_HOST') //process?.env?.TF_HOST ?? getInput('TF_HOST')
 // const awsAccessKeyId = getInput('AWS_ACCESS_KEY_ID') // process?.env?.AWS_ACCESS_KEY_ID ?? 
 // const awsSecretAccessKey = getInput('AWS_SECRET_ACCESS_KEY') // process?.env?.AWS_SECRET_ACCESS_KEY ?? 
@@ -72,7 +72,7 @@ async function run(): Promise<void> {
       return
     }
     // info(JSON.stringify(diffs))
-
+    await capture('echo', ['$(ls)'])
     
 
       // await git.clone(ghToken, context, './common')
@@ -108,7 +108,7 @@ async function capture(cmd: string, args: string[]): Promise<ExecResult> {
       });
       
       res.code = code;
-      info(`EXEC RESPONSE: ${res}`)
+      info(`EXEC RESPONSE: ${JSON.stringify(res)}`)
       return res;
   } catch (err) {
       const msg = `Command '${cmd}' failed with args '${args.join(' ')}': ${res.stderr}: ${err}`;

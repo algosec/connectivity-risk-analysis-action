@@ -5,10 +5,10 @@
   "description": "TypeScript template action",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "rimraf lib && tsc",
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'",
-    "package": "ncc build lib/index.js --source-map",
+    "package": "rimraf dist && ncc build lib/index.js --source-map",
     "test": "jest",
     "all": "npm run build && npm run format && npm run lint && npm run package ",
     "ready": "npm run build  && npm run package ",

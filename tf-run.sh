@@ -4,7 +4,7 @@
           workDir=$1
           githubWorkspace=$2
           tfDir=$3
-
+          
           cd $githubWorkspace/$tfDir
           
           tmp_stdout=stdout.txt

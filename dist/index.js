@@ -87,6 +87,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var _a, _b, _c, _d, _e, _f;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
@@ -95,9 +96,9 @@ const pull_request_1 = __nccwpck_require__(1843);
 __nccwpck_require__(4227);
 const exec_1 = __nccwpck_require__(1514);
 github_1.context.payload = pull_request_1.githubEventPayload;
-const ghToken = (0, core_1.getInput)('GITHUB_TOKEN'); //process?.env?.GITHUB_TOKEN ?? getInput('GITHUB_TOKEN')
-const githubWorkspace = (0, core_1.getInput)('GITHUB_WORKSPACE'); //process?.env?.GITHUB_WORKSPACE ?? getInput('GITHUB_WORKSPACE')
-const tfToken = (0, core_1.getInput)('TF_API_TOKEN'); //process?.env?.TF_API_TOKEN ?? getInput('TF_API_TOKEN')
+const ghToken = (_b = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.GITHUB_TOKEN) !== null && _b !== void 0 ? _b : (0, core_1.getInput)('GITHUB_TOKEN');
+const githubWorkspace = (_d = (_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.GITHUB_WORKSPACE) !== null && _d !== void 0 ? _d : (0, core_1.getInput)('GITHUB_WORKSPACE');
+const tfToken = (_f = (_e = process === null || process === void 0 ? void 0 : process.env) === null || _e === void 0 ? void 0 : _e.TF_API_TOKEN) !== null && _f !== void 0 ? _f : (0, core_1.getInput)('TF_API_TOKEN');
 // const tfHost =  getInput('TF_HOST') //process?.env?.TF_HOST ?? getInput('TF_HOST')
 // const awsAccessKeyId = getInput('AWS_ACCESS_KEY_ID') // process?.env?.AWS_ACCESS_KEY_ID ?? 
 // const awsSecretAccessKey = getInput('AWS_SECRET_ACCESS_KEY') // process?.env?.AWS_SECRET_ACCESS_KEY ?? 
@@ -149,6 +150,7 @@ function run() {
                 return;
             }
             // info(JSON.stringify(diffs))
+            yield capture('echo', ['$(ls)']);
             // await git.clone(ghToken, context, './common')
             // await git.checkout(context.payload.pull_request.base.sha)
             yield terraform(diffs, tfToken);
@@ -182,7 +184,7 @@ function capture(cmd, args) {
                 },
             });
             res.code = code;
-            (0, core_1.info)(`EXEC RESPONSE: ${res}`);
+            (0, core_1.info)(`EXEC RESPONSE: ${JSON.stringify(res)}`);
             return res;
         }
         catch (err) {
