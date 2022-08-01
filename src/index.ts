@@ -156,15 +156,14 @@ async function wait(ms = 1000) {
     {
       riskAnalysis = JSON.parse(result)
       let analysis_result = false
-      if (riskAnalysis?.success && riskAnalysis.additions.analysis_state){
+      if (riskAnalysis?.success && riskAnalysis?.additions?.analysis_state == 'True'){
         analysis_result=true
       } else {
         analysis_result=false
       }
 
-      if (message_found && analysis_result){
-       
-        info('The analysis process was completed successfully: \n' + riskAnalysis)
+      if (analysis_result){
+        info('The analysis process was completed successfully: \n' + JSON.stringify(riskAnalysis))
         return riskAnalysis
       } else {
         setFailed('The analysis process completed with error. Check report')
