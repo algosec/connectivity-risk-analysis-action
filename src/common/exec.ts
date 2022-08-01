@@ -30,7 +30,7 @@ export abstract class Exec {
         }
      }
 
-     abstract cmd(additionalOptions: string[], ...args: string[]): Promise<string>
+     abstract cmd(additionalOptions: string[], context: any, ...args: string[]): Promise<string>
 
 }
 

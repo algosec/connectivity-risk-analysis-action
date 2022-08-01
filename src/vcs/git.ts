@@ -1,19 +1,10 @@
 import { GitHub } from "@actions/github/lib/utils"
-import { GithubContext } from "./main"
-import {Exec} from './exec'
+import { GithubContext } from "../index"
+import {Exec} from '../common/exec'
 import {context} from '@actions/github'
 import * as core from '@actions/core'
 export class GitProcessorExec extends Exec {
   static DEFAULT_GITHUB_URL = 'https://github.com';
-
-
-  async createComment(comment: string, octokit: InstanceType<typeof GitHub>, context: GithubContext){
-    await octokit.rest.issues.createComment({
-      ...context.repo,
-      issue_number: context.issue.number,
-            body: 'Thank you for submitting a pull request! We will try to review this as soon as we can.'
-    });
-  }
 
   async getDiff(octokit: InstanceType<typeof GitHub>, context: GithubContext) {
 
@@ -25,21 +16,27 @@ export class GitProcessorExec extends Exec {
       per_page: 100
     })
     const answer = result.data.files || []
-    console.log(JSON.stringify(answer, undefined, 2))
+    // console.log(JSON.stringify(answer, undefined, 2))
     return answer
 
 
   }
 
-  async cmd(additionalGitOptions: string[], ...args: string[]): Promise<string> {
+  async createComment(_comment: string, octokit: InstanceType<typeof GitHub>, context: GithubContext){
+    await octokit.rest.issues.createComment({
+      ...context.repo,
+      issue_number: context.issue.number,
+            body: 'Thank you for submitting a pull request! We will try to review this as soon as we can.'
+    });
+  }
+
+  async cmd(additionalGitOptions: string[], context: GithubContext, ...args: string[]): Promise<string> {
     core.debug(`Executing Git: ${args.join(' ')}`);
     const serverUrl = this.getServerUrl(context.payload.repository?.html_url);
     const userArgs = [
         ...additionalGitOptions,
         '-c',
-        'user.name=github-action-benchmark',
-        '-c',
-        'user.email=github@users.noreply.github.com',
+        'user.email=alon.noy@algosec.com',
         '-c',
         `http.${serverUrl}/.extraheader=`, // This config is necessary to support actions/checkout@v2 (#9)
     ];
@@ -49,6 +46,23 @@ export class GitProcessorExec extends Exec {
     }
     return res.stdout;
   }
+
+  async fetch(
+    token: string | undefined,
+    branch: string,
+    additionalGitOptions: string[] = [],
+    ...options: string[]
+): Promise<string> {
+    core.debug(`Executing 'git fetch' for branch '${branch}' with token and options '${options.join(' ')}'`);
+
+    const remote = token !== undefined ? this.getCurrentRepoRemoteUrl(token) : 'origin';
+    let args = ['fetch', remote, `${branch}:${branch}`];
+    if (options.length > 0) {
+        args = args.concat(options);
+    }
+
+    return this.cmd(additionalGitOptions, context, ...args);
+}
 
   getCurrentRepoRemoteUrl(token: string): string {
     const { repo, owner } = context.repo;
@@ -68,20 +82,20 @@ export class GitProcessorExec extends Exec {
   
   async clone(
     token: string,
-    ghRepository: string,
+    context: GithubContext,
     baseDirectory: string,
     additionalGitOptions: string[] = [],
     ...options: string[]
 ): Promise<string> {
     core.debug(`Executing 'git clone' to directory '${baseDirectory}' with token and options '${options.join(' ')}'`);
 
-    const remote = this.getRepoRemoteUrl(token, ghRepository);
+    const remote = this.getRepoRemoteUrl(token, this.getServerName(undefined) + '/' + context.repo.owner + '/' + context.repo.repo);
     let args = ['clone', remote, baseDirectory];
     if (options.length > 0) {
         args = args.concat(options);
     }
 
-    return this.cmd(additionalGitOptions, ...args);
+    return this.cmd(additionalGitOptions, context, ...args);
     }
   
     async checkout(
@@ -96,7 +110,7 @@ export class GitProcessorExec extends Exec {
         args = args.concat(options);
     }
 
-    return this.cmd(additionalGitOptions, ...args);
+    return this.cmd(additionalGitOptions, context, ...args);
     }
   
     getServerUrl(repositoryUrl: string | undefined): string {

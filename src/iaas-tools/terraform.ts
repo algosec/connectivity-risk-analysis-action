@@ -1,20 +1,21 @@
-import { Exec } from "./exec";
+import { Exec } from "../common/exec";
 import * as core from '@actions/core'
 
 
 export class TerraformExec extends Exec {
 
-    constructor(tfToken: string = '') {
+    constructor(_tfToken: string = '') {
         super();
     }
     async init(
             additionalTerraformOptions: string[] = [],
             ...options: string[]
         ): Promise<string> {
+            
             core.debug(`Executing 'git clone' to directory with token and options '${options.join(' ')}'`);
         
             // const remote = this.getRepoRemoteUrl(token, ghRepository);
-            let args = ['init', 'remote'];
+            let args = ['init'];
             if (options.length > 0) {
                 args = args.concat(options);
             }
