@@ -27,7 +27,7 @@ interface ExecResult {
 // import { s3File } from '../test-repo/tmp/tf.json'
 // context.payload = githubEventPayload as WebhookPayload & any
 // const ghToken =  process?.env?.GITHUB_TOKEN ?? getInput('GITHUB_TOKEN')
-// const ghSha =  /process?.env?.GITHUB_SHA ?? getInput('GITHUB_SHA')
+// const ghSha =  process?.env?.GITHUB_SHA ?? getInput('GITHUB_SHA')
 // const githubWorkspace =  process.cwd() + '\\' + process?.env?.GITHUB_WORKSPACE ?? getInput('GITHUB_WORKSPACE')
 // const githubRepoOwner  =  process?.env?.GITHUB_REPOSITORY_OWNER ?? getInput('GITHUB_REPOSITORY_OWNER')
 // const tfToken = process?.env?.TF_API_TOKEN ?? getInput('TF_API_TOKEN')
@@ -40,6 +40,7 @@ const githubRepoOwner  =  getInput('GITHUB_REPOSITORY_OWNER')
 const tfToken = getInput('TF_API_TOKEN') 
 const apiUrl = getInput('RA_API_URL') 
 const s3Dest = getInput('AWS_S3') 
+
 const actionUuid = generateTmpFileUuid()
 const http = new HttpClient()
 
@@ -108,24 +109,26 @@ async function run(): Promise<void> {
     if (diffs?.length == 0) {
       return
     }
-    info('Diffs Result: ' + JSON.stringify(diffs))
+    info('Step 1 - Diffs Result: ' + JSON.stringify(diffs))
     const terraformResult = await terraform(diffs, tfToken)
-    info('Terraform Result: ' + JSON.stringify(terraformResult))
-    // const fileToUpload = s3File 
+    info('Step 2 - Terraform Result: ' + JSON.stringify(terraformResult))
     let analysisResult;
+  // const fileToUpload = s3File 
+
     if (uploadFile(terraformResult.plan)){
-    info('File Uploaded to S3 Successfully')
+      
+    info('Step 3 - File Uploaded to S3 Successfully')
       analysisResult = await pollRiskAnalysisResponse()
     }
-    info('Risk Analysis Result: ' + JSON.stringify(analysisResult))
-    if (analysisResult?.result?.success) {
-      const risks = analysisResult?.result?.additions
+    info('Step 4 - Risk Analysis Result: ' + JSON.stringify(analysisResult))
+    if (analysisResult?.success) {
+      const risks = analysisResult?.additions
       if (risks?.analysis_state){
-    info('The risks analysis process completed successfully without any risks')
+    info('Step 5 - The risks analysis process completed successfully without any risks')
         git.createComment('Risk Analysis Completed, no risks were found', octokit, context)
         return
       } else {
-    info('Parsing Report')
+    info('Step 6 - Parsing Report')
         const commentBody = parseRiskAnalysis(risks, terraformResult)
         git.createComment(commentBody, octokit, context)
         setFailed('The risks analysis process completed successfully with risks, please check report')

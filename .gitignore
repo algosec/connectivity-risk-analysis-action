@@ -102,3 +102,5 @@ __tests__/runner/*
 .env
 test-repo/
 .history/
+
+src/pull-request.ts
