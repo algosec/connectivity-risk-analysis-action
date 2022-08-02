@@ -102,30 +102,39 @@ async function run(): Promise<void> {
   try {
     
     const octokit = getOctokit(ghToken)
-    
-    // await loginToAws();
     const git = new GitProcessorExec()
-    // info(JSON.stringify(context))
-
+    // await loginToAws();
     const diffs = await changedFiles(octokit, context, git)
     if (diffs?.length == 0) {
       return
     }
-    info('Diffs: ' + JSON.stringify(diffs))
-    
-
+    info('Diffs Result: ' + JSON.stringify(diffs))
     const terraformResult = await terraform(diffs, tfToken)
+    info('Terraform Result: ' + JSON.stringify(terraformResult))
     // const fileToUpload = s3File 
     let analysisResult;
     if (uploadFile(terraformResult.plan)){
+    info('File Uploaded to S3 Successfully')
       analysisResult = await pollRiskAnalysisResponse()
     }
-    
-    if (analysisResult?.analysis_state){
-      git.createComment('Risk Analysis Completed, no risks were found', octokit, context)
+    info('Risk Analysis Result: ' + JSON.stringify(analysisResult))
+    if (analysisResult?.result?.success) {
+      const risks = analysisResult?.result?.additions
+      if (risks?.analysis_state){
+    info('The risks analysis process completed successfully without any risks')
+        git.createComment('Risk Analysis Completed, no risks were found', octokit, context)
+        return
+      } else {
+    info('Parsing Report')
+        const commentBody = parseRiskAnalysis(risks, terraformResult)
+        git.createComment(commentBody, octokit, context)
+        setFailed('The risks analysis process completed successfully with risks, please check report')
+      }
     } else {
-      parseRiskAnalysis(octokit, git, analysisResult, terraformResult)
+      setFailed('The risks analysis process completed with errors')
     }
+    
+   
 
     
   } catch (error) {
@@ -134,11 +143,9 @@ async function run(): Promise<void> {
 
 }
 
-async function parseRiskAnalysis(octokit, git, analysis, terraform) {
-  info('Parsing Report')
+function parseRiskAnalysis(analysis, terraform) {
   const body = parseToGithubSyntax(analysis, terraform)
-  git.createComment(body, octokit, context)
-  return;
+  return body;
 }
 
 function parseToGithubSyntax(analysis, terraform) {
@@ -194,12 +201,13 @@ ${ CODE_BLOCK }
 }
 
 async function pollRiskAnalysisResponse() {
-  
+
   let analysisResult = await checkRiskAnalysisResponse()
   for (let i = 0; i < 50 ; i++) {
-    await wait(5000);
+    await wait(3000);
     analysisResult = await checkRiskAnalysisResponse()
-    if (analysisResult) return analysisResult
+    info('Response: \n' + JSON.stringify(analysisResult))
+    if (analysisResult) break;
   }
   return analysisResult;
 }
@@ -213,31 +221,13 @@ async function wait(ms = 1000) {
 
 async function checkRiskAnalysisResponse() {
     const pollUrl = `${apiUrl}?customer=${githubRepoOwner}&action_id=${actionUuid}`
-    const {message_found, result} = JSON.parse(await (await http.get(pollUrl)).readBody())
-
-
-    if (message_found)
-    {
-      const parsedResult = JSON.parse(result)
-      if (parsedResult?.success) {
-          const additions = parsedResult?.additions
+    const response = JSON.parse(await (await http.get(pollUrl)).readBody())
+    if (response.message_found) {
+      return JSON.parse(response.result)
+    } else {
+      return null
+    }
   
-          if (additions.analysis_state){
-            info('The risks analysis process completed successfully without any risks')
-          } else {
-            info('The risks analysis process completed successfully with risks, please check report')
-            
-          }
-          return additions
-
-      } else {
-        setFailed('The risks analysis process completed with errors')
-      }
-    } 
-   
-    
-  
-    
   
 }
 
@@ -286,7 +276,7 @@ async function exec(cmd: string, args: string[]): Promise<ExecResult> {
       });
       
       res.code = code;
-      info(`EXEC RESPONSE: ${JSON.stringify(res)}`)
+      // info(`EXEC RESPONSE: ${JSON.stringify(res)}`)
       return res;
   } catch (err) {
       const msg = `Command '${cmd}' failed with args '${args.join(' ')}': ${res.stderr}: ${err}`;
