@@ -73,19 +73,20 @@ async function terraform(diffs: any, tfToken = '') {
     if (tfToken) {
       // diffs.filter(diff => diff !== 'tf-test-sg').forEach(diff =>  diffPromises.push(exec('sh', ['tf-run.sh', `${process?.cwd()}`, githubWorkspace, diff])))
       process.chdir(`${githubWorkspace}/${diffs[0]}`)
-      await exec('terraform', ['init'])
-      await exec('terraform', ['fmt', '-diff'])
-      await exec('terraform', ['validate', '-no-color'])
+      const init = await exec('terraform', ['init']);
+      const fmt = await exec('terraform', ['fmt', '-diff'])
+      const validate = await exec('terraform', ['validate', '-no-color'])
       if (!existsSync('./tmp')) {
         await exec('mkdir', ['tmp'])
       }
       const plan = await exec('terraform', ['plan', '-input=false', '-no-color', `-out=${process?.cwd()}\\tmp\\tf.out`])
-      let json = {};
+      const terraformLog = init.stdout.concat(fmt.stdout, validate.stdout, init.stdout)
+      let jsonPlan = {};
       if (plan.stdout){
-        json = JSON.parse((await exec('terraform', ['show', '-json', `${process?.cwd()}\\tmp\\tf.out`])).stdout)
+        jsonPlan = JSON.parse((await exec('terraform', ['show', '-json', `${process?.cwd()}\\tmp\\tf.out`])).stdout)
       }
       process.chdir(`${githubWorkspace}`)
-      return json;
+      return {plan: jsonPlan, log: plan.stdout};
 
 
       
@@ -99,6 +100,7 @@ async function terraform(diffs: any, tfToken = '') {
 
 async function run(): Promise<void> {
   try {
+    
     const octokit = getOctokit(ghToken)
     
     // await loginToAws();
@@ -112,18 +114,18 @@ async function run(): Promise<void> {
     info('Diffs: ' + JSON.stringify(diffs))
     
 
-    const fileToUpload = await terraform(diffs, tfToken)
+    const terraformResult = await terraform(diffs, tfToken)
     // const fileToUpload = s3File 
     let analysisResult;
-    if (uploadFile(fileToUpload)){
+    if (uploadFile(terraformResult.plan)){
       analysisResult = await pollRiskAnalysisResponse()
     }
     
-    if (analysisResult?.success){
-      info('Parsing Report')
+    if (analysisResult?.length == 0){
+      info('Risk Analysis Completed with no risks found')
       git.createComment('Risk Analysis Completed, no risks were found', octokit, context)
     } else {
-      parseRiskAnalysis(octokit, git, analysisResult)
+      parseRiskAnalysis(octokit, git, analysisResult, terraformResult)
     }
 
     
@@ -133,36 +135,74 @@ async function run(): Promise<void> {
 
 }
 
-async function parseRiskAnalysis(octokit, git, riskAnalysis) {
+async function parseRiskAnalysis(octokit, git, riskAnalysis, terraform) {
   info('Parsing Report')
-  const body = parseToGithubSyntax(riskAnalysis)
+  const body = parseToGithubSyntax(riskAnalysis, terraform)
   git.createComment(body, octokit, context)
   return;
 }
 
-function parseToGithubSyntax(riskAnalysis) {
+function parseToGithubSyntax(riskAnalysis, terraform) {
     const CODE_BLOCK = '```';
     
 
     const output = `
-    ##  Code Analysis :cop:
+    ![alt text](https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png "Connectivity Risk Analysis")
+    ## ${!riskAnalysis ? ':heavy_check_mark:' : ':x:' }  Connectivity Risk Analysis :cop:
     <details open="true">
     <summary>Report</summary>
+    ${'ANALYSIS REPORT'}
+    </details>`
+    +
+    riskAnalysis.forEach(risk => {
+      return 
+      `
+      <details open="true">
+      <summary>${risk.riskSeverity}  ${risk.riskId}</summary>
 
-    ${JSON.stringify(riskAnalysis)}
-    </details>
+      ${risk.riskTitle}
+      ###### Description: ${risk.riskDescription}
+      ###### Recommendation: ${risk.riskRecommendation}
+      ###### Details:
+      ${CODE_BLOCK}
+      ${risk.items}
+      ${CODE_BLOCK}
 
-    <details>
+     `
+    })
+    +
+    `<details>
     <summary>Logs</summary>
     Output
 
+    ${CODE_BLOCK + 'json'}
+    ${JSON.stringify(riskAnalysis)}
     ${CODE_BLOCK}
-    ${riskAnalysis}
-    ${CODE_BLOCK}
+    
+    Errors
 
+    ${ CODE_BLOCK }
+    ${'env.analysis_err'}
+    ${ CODE_BLOCK }
 
-    </details>`
+    </details>
 
+    ## ${terraform.log.stdout ? ':heavy_check_mark:' : ':x:' } Terraform Processing ⚙️
+    <details><summary>Terraform Log</summary>
+    Output
+
+    ${ CODE_BLOCK }
+    ${terraform.log.stdout }
+    ${ CODE_BLOCK }
+
+    Errors
+
+    ${ CODE_BLOCK }
+    ${terraform.log.stderr}
+    ${ CODE_BLOCK }
+
+    </details> <!-- End Format Logs -->
+    *Pusher: @${context.actor}, Action: \`${context.eventName}\`, Working Directory: \`${'env.tf_actions_working_dir'}\`, Workflow: \`${context.workflow }\`*`
    
 
   return output
@@ -185,7 +225,8 @@ async function wait(ms = 1000) {
     setTimeout(resolve, ms);
   });
 }
-  async function checkRiskAnalysisResponse() {
+
+async function checkRiskAnalysisResponse() {
     const pollUrl = `${apiUrl}?customer=${githubRepoOwner}&action_id=${actionUuid}`
     const {message_found, result} = JSON.parse(await (await http.get(pollUrl)).readBody())
 
@@ -200,8 +241,9 @@ async function wait(ms = 1000) {
             info('The risks analysis process completed successfully without any risks')
           } else {
             info('The risks analysis process completed successfully with risks, please check report')
-            return riskAnalysis
+            
           }
+          return riskAnalysis
 
       } else {
         setFailed('The risks analysis process completed with errors, please check report')
@@ -237,10 +279,6 @@ async function createTmpFile(json) {
 
 }
 
-
-
-
-
 async function exec(cmd: string, args: string[]): Promise<ExecResult> {
   const res: ExecResult = {
       stdout: '',
@@ -253,13 +291,11 @@ async function exec(cmd: string, args: string[]): Promise<ExecResult> {
           listeners: {
               stdout(data) {
                   res.stdout += data.toString();
-                  info(`stdout: ${res.stdout}`);
-                  // debug(`stdout: ${res.stdout}`);
+                  debug(`stdout: ${res.stdout}`);
               },
               stderr(data) {
                   res.stderr += data.toString();
-                  info(`stderr: ${res.stderr}`);
-                  // debug(`stderr: ${res.stderr}`);
+                  debug(`stderr: ${res.stderr}`);
               },
           },
       });
