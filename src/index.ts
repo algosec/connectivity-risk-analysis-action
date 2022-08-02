@@ -195,7 +195,7 @@ ${risksTableContents}
 </table>\n
 <details open="true">\n
 <summary>Report</summary>\n\n
-</details>\n
+
 ${risks}\n
 <details>\n
 <summary>Logs</summary>\n
@@ -207,7 +207,7 @@ ${CODE_BLOCK}\n
 Errors\n
 ${CODE_BLOCK}\n
 ${'Risk Analysis Errors'}\n
-${CODE_BLOCK}\n
+${CODE_BLOCK}\nq
 </details>\n
 ## ${terraform?.log?.stdout ? ':heavy_check_mark:' : ':x:' } Terraform Processing ⚙️\n
 <details>
@@ -221,6 +221,7 @@ ${CODE_BLOCK}\n
 // ${terraform?.log?.stderr}\n
 ${CODE_BLOCK}\n
 </details> <!-- End Format Logs -->\n
+</details>\n
 *Pusher: @${context?.actor}, Action: \`${context?.eventName}\`, Working Directory: \'${'diff'}\', Workflow: \'${context?.workflow }\'*`
    
 
