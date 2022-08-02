@@ -121,8 +121,7 @@ async function run(): Promise<void> {
       analysisResult = await pollRiskAnalysisResponse()
     }
     
-    if (analysisResult?.length == 0){
-      info('Risk Analysis Completed with no risks found')
+    if (analysisResult?.analysis_state){
       git.createComment('Risk Analysis Completed, no risks were found', octokit, context)
     } else {
       parseRiskAnalysis(octokit, git, analysisResult, terraformResult)
@@ -135,24 +134,24 @@ async function run(): Promise<void> {
 
 }
 
-async function parseRiskAnalysis(octokit, git, riskAnalysis, terraform) {
+async function parseRiskAnalysis(octokit, git, analysis, terraform) {
   info('Parsing Report')
-  const body = parseToGithubSyntax(riskAnalysis, terraform)
+  const body = parseToGithubSyntax(analysis, terraform)
   git.createComment(body, octokit, context)
   return;
 }
 
-function parseToGithubSyntax(riskAnalysis, terraform) {
+function parseToGithubSyntax(analysis, terraform) {
     const CODE_BLOCK = '```';
     
 
-    const output = `## ![alt text](https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png "Connectivity Risk Analysis") ${!riskAnalysis ? ':heavy_check_mark:' : ':x:' }  Connectivity Risk Analysis :cop:
+    const output = `## ![alt text](https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png "Connectivity Risk Analysis") ${analysis.analysis_state ? ':heavy_check_mark:' : ':x:' }  Connectivity Risk Analysis :cop:
 <details open="true">
 <summary>Report</summary>
 ${'ANALYSIS REPORT'}
 </details>`
 +
-riskAnalysis.forEach(risk => {
+analysis?.analysis_result?.forEach(risk => {
       return 
       `<details open="true">
 <summary>${risk.riskSeverity}  ${risk.riskId}</summary>
@@ -168,8 +167,8 @@ ${CODE_BLOCK}`
 `<details>
 <summary>Logs</summary>
 Output
-${CODE_BLOCK + 'json'}
-${JSON.stringify(riskAnalysis)}
+${CODE_BLOCK}json
+${analysis?.analysis_result}
 ${CODE_BLOCK}
 
 Errors
@@ -221,18 +220,18 @@ async function checkRiskAnalysisResponse() {
     {
       const parsedResult = JSON.parse(result)
       if (parsedResult?.success) {
-          const riskAnalysis = parsedResult?.additions?.analysis_result
-          const analysisState = parsedResult?.additions?.analysis_state
-          if (analysisState && riskAnalysis?.length == 0){
+          const additions = parsedResult?.additions
+  
+          if (additions.analysis_state){
             info('The risks analysis process completed successfully without any risks')
           } else {
             info('The risks analysis process completed successfully with risks, please check report')
             
           }
-          return riskAnalysis
+          return additions
 
       } else {
-        setFailed('The risks analysis process completed with errors, please check report')
+        setFailed('The risks analysis process completed with errors')
       }
     } 
    
