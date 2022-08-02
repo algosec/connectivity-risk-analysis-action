@@ -175,7 +175,7 @@ ${CODE_BLOCK}\n
 risksTableContents +=   
 `<tr>\n
 <td>${risk.riskId}</td>\n
-<td><img width="16" height="16" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${risk.riskSeverity}.png" ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
+<td><img width="16" height="16" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${risk.riskSeverity}.png" /> ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
 <td>${risk.riskDescription}</td>\n
 </tr>\n`
 
