@@ -154,6 +154,7 @@ function parseRiskAnalysis(analysis, terraform) {
 }
 
 function parseToGithubSyntax(analysis, terraform) {
+  
     const CODE_BLOCK = '```';
     
     let risks = '' 
@@ -173,8 +174,8 @@ ${CODE_BLOCK}\n
 
 risksTableContents +=   
 `<tr>\n
-<td>${risk.riskSeverity}</td>\n
 <td>${risk.riskId}</td>\n
+<td><img width="16" height="16" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${risk.riskSeverity}.png" ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
 <td>${risk.riskDescription}</td>\n
 </tr>\n`
 
@@ -188,7 +189,7 @@ risksTableContents +=
 <tr>\n
 <th scope="col">Risk ID</th>\n
 <th scope="col">Severity</th>\n
-<th scope="col">Summary</th>\n
+<th align="left" scope="col">Summary</th>\n
 </tr>\n
 </thead>\n
 <tbody id="tableBody">\n
