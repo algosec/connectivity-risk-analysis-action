@@ -162,13 +162,13 @@ function parseToGithubSyntax(analysis, terraform) {
     analysis?.analysis_result?.forEach(risk => {
       risks +=
       `<details open="true">\n
-<summary>${risk.riskSeverity}  ${risk.riskId}</summary>\n
+<summary><img width="16" height="16" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${risk.riskSeverity}.png" />  ${risk.riskId}</summary>\n
 ${risk.riskTitle}\n
 ###### Description: ${risk.riskDescription}\n
 ###### Recommendation: ${risk.riskRecommendation}\n
 ###### Details:\n
 ${CODE_BLOCK}json\n
-${JSON.stringify(risk.items)}\n
+${JSON.stringify(risk.items, null, "\t")}\n
 ${CODE_BLOCK}\n
 </details>\n`
 
@@ -202,7 +202,7 @@ ${risks}\n
 <summary>Logs</summary>\n
 Output\n
 ${CODE_BLOCK}json\n
-${JSON.stringify(analysis?.analysis_result)}\n
+${JSON.stringify(analysis?.analysis_result, null, "\t")}\n
 ${CODE_BLOCK}\n
 
 Errors\n
@@ -214,12 +214,12 @@ ${CODE_BLOCK}\n
 <details>
 <summary>Terraform Log</summary>\n
 Output\n
-${CODE_BLOCK}\n
-${terraform?.log?.stdout}\n
+${CODE_BLOCK}json\n
+${JSON.stringify(terraform?.log, null, "\t") }\n
 ${CODE_BLOCK}\n
 Errors\n
-${CODE_BLOCK}\n
-${terraform?.log?.stderr}\n
+${CODE_BLOCK}json\n
+${JSON.stringify(terraform?.log, null, "\t") }\n
 ${CODE_BLOCK}\n
 </details> <!-- End Format Logs -->\n
 *Pusher: @${context?.actor}, Action: \`${context?.eventName}\`, Working Directory: \'${'tf_actions_working_dir'}\', Workflow: \'${context?.workflow }\'*`
