@@ -131,7 +131,7 @@ async function run(): Promise<void> {
         return
       } else {
     info('Step 6 - Parsing Report')
-        const commentBody = parseRiskAnalysis(risks, 'terraformResult')
+        const commentBody = parseRiskAnalysis(risks, terraformResult)
         git.createComment(commentBody, octokit, context)
         setFailed('The risks analysis process completed successfully with risks, please check report')
       }
@@ -157,6 +157,7 @@ function parseToGithubSyntax(analysis, terraform) {
     const CODE_BLOCK = '```';
     
     let risks = '' 
+    let risksTableContents = ''
     analysis?.analysis_result?.forEach(risk => {
       risks +=
       `<details open="true">\n
@@ -169,11 +170,31 @@ ${CODE_BLOCK}json\n
 ${JSON.stringify(risk.items)}\n
 ${CODE_BLOCK}\n
 </details>\n`
+
+risksTableContents +=   
+`<tr>\n
+<td>${risk.riskSeverity}</td>\n
+<td>${risk.riskId}</td>\n
+<td>${risk.riskDescription}</td>\n
+</tr>\n`
+
+
 })
     const output = `## ![alt text](https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png "Connectivity Risk Analysis") ${analysis.analysis_state ? ':heavy_check_mark:' : ':x:' }  Connectivity Risk Analysis :cop:\n
 <details open="true">\n
 <summary>Report</summary>\n
-${'ANALYSIS REPORT'}\n
+<table border="2">\n
+<thead class="thead-dark">\n
+<tr>\n
+<th scope="col">Risk ID</th>\n
+<th scope="col">Severity</th>\n
+<th scope="col">Summary</th>\n
+</tr>\n
+</thead>\n
+<tbody id="tableBody">\n
+${risksTableContents}                 
+</tbody>
+</table>
 </details>\n
 ${risks}\n
 <details>\n
