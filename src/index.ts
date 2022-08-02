@@ -146,63 +146,49 @@ function parseToGithubSyntax(riskAnalysis, terraform) {
     const CODE_BLOCK = '```';
     
 
-    const output = `
-    ![alt text](https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png "Connectivity Risk Analysis")
-    ## ${!riskAnalysis ? ':heavy_check_mark:' : ':x:' }  Connectivity Risk Analysis :cop:
-    <details open="true">
-    <summary>Report</summary>
-    ${'ANALYSIS REPORT'}
-    </details>`
-    +
-    riskAnalysis.forEach(risk => {
+    const output = `## ![alt text](https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png "Connectivity Risk Analysis") ${!riskAnalysis ? ':heavy_check_mark:' : ':x:' }  Connectivity Risk Analysis :cop:
+<details open="true">
+<summary>Report</summary>
+${'ANALYSIS REPORT'}
+</details>`
++
+riskAnalysis.forEach(risk => {
       return 
-      `
-      <details open="true">
-      <summary>${risk.riskSeverity}  ${risk.riskId}</summary>
+      `<details open="true">
+<summary>${risk.riskSeverity}  ${risk.riskId}</summary>
+${risk.riskTitle}
+###### Description: ${risk.riskDescription}
+###### Recommendation: ${risk.riskRecommendation}
+###### Details:
+${CODE_BLOCK}
+${risk.items}
+${CODE_BLOCK}`
+})
++
+`<details>
+<summary>Logs</summary>
+Output
+${CODE_BLOCK + 'json'}
+${JSON.stringify(riskAnalysis)}
+${CODE_BLOCK}
 
-      ${risk.riskTitle}
-      ###### Description: ${risk.riskDescription}
-      ###### Recommendation: ${risk.riskRecommendation}
-      ###### Details:
-      ${CODE_BLOCK}
-      ${risk.items}
-      ${CODE_BLOCK}
-
-     `
-    })
-    +
-    `<details>
-    <summary>Logs</summary>
-    Output
-
-    ${CODE_BLOCK + 'json'}
-    ${JSON.stringify(riskAnalysis)}
-    ${CODE_BLOCK}
-    
-    Errors
-
-    ${ CODE_BLOCK }
-    ${'env.analysis_err'}
-    ${ CODE_BLOCK }
-
-    </details>
-
-    ## ${terraform.log.stdout ? ':heavy_check_mark:' : ':x:' } Terraform Processing ⚙️
-    <details><summary>Terraform Log</summary>
-    Output
-
-    ${ CODE_BLOCK }
-    ${terraform.log.stdout }
-    ${ CODE_BLOCK }
-
-    Errors
-
-    ${ CODE_BLOCK }
-    ${terraform.log.stderr}
-    ${ CODE_BLOCK }
-
-    </details> <!-- End Format Logs -->
-    *Pusher: @${context.actor}, Action: \`${context.eventName}\`, Working Directory: \`${'env.tf_actions_working_dir'}\`, Workflow: \`${context.workflow }\`*`
+Errors
+${ CODE_BLOCK }
+${'env.analysis_err'}
+${ CODE_BLOCK }
+</details>
+## ${terraform.log.stdout ? ':heavy_check_mark:' : ':x:' } Terraform Processing ⚙️
+<details><summary>Terraform Log</summary>
+Output
+${ CODE_BLOCK }
+${terraform.log.stdout }
+${ CODE_BLOCK }
+Errors
+${ CODE_BLOCK }
+${terraform.log.stderr}
+${ CODE_BLOCK }
+</details> <!-- End Format Logs -->
+*Pusher: @${context.actor}, Action: \`${context.eventName}\`, Working Directory: \'${'env.tf_actions_working_dir'}\', Workflow: \'${context.workflow }\'*`
    
 
   return output
