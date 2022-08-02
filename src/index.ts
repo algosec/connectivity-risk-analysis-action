@@ -88,7 +88,7 @@ async function terraform(diffs: any, tfToken = '') {
         jsonPlan = JSON.parse((await exec('terraform', ['show', '-json', `${process?.cwd()}\\tmp\\tf.out`])).stdout)
       }
       process.chdir(`${githubWorkspace}`)
-      return {plan: jsonPlan, log: plan.stdout};
+      return {plan: jsonPlan, log: plan};
 
 
       
@@ -162,11 +162,10 @@ function parseToGithubSyntax(analysis, terraform) {
     analysis?.analysis_result?.forEach(risk => {
       risks +=
       `<details open="true">\n
-<summary><img width="16" height="16" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${risk.riskSeverity}.png" />  ${risk.riskId}</summary>\n
-${risk.riskTitle}\n
-###### Description: ${risk.riskDescription}\n
-###### Recommendation: ${risk.riskRecommendation}\n
-###### Details:\n
+<summary><img width="16" height="16" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${risk.riskSeverity}.png" />  ${risk.riskId}</summary> ${risk.riskTitle}\n
+###### **Description:**\n ###### ${risk.riskDescription}\n
+###### **Recommendation:**\n ###### ${risk.riskRecommendation}\n
+###### **Details:**\n
 ${CODE_BLOCK}json\n
 ${JSON.stringify(risk.items, null, "\t")}\n
 ${CODE_BLOCK}\n
@@ -176,14 +175,12 @@ risksTableContents +=
 `<tr>\n
 <td>${risk.riskId}</td>\n
 <td><img width="16" height="16" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${risk.riskSeverity}.png" /> ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
-<td>${risk.riskDescription}</td>\n
+<td>${risk.riskTitle}</td>\n
 </tr>\n`
 
 
 })
     const output = `## ![alt text](https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png "Connectivity Risk Analysis") ${analysis.analysis_state ? ':heavy_check_mark:' : ':x:' }  Connectivity Risk Analysis :cop:\n
-<details open="true">\n
-<summary>Report</summary>\n
 <table border="2">\n
 <thead class="thead-dark">\n
 <tr>\n
@@ -195,7 +192,9 @@ risksTableContents +=
 <tbody id="tableBody">\n
 ${risksTableContents}                 
 </tbody>
-</table>
+</table>\n
+<details open="true">\n
+<summary>Report</summary>\n\n
 </details>\n
 ${risks}\n
 <details>\n
@@ -214,15 +213,15 @@ ${CODE_BLOCK}\n
 <details>
 <summary>Terraform Log</summary>\n
 Output\n
-${CODE_BLOCK}json\n
-${JSON.stringify(terraform?.log, null, "\t") }\n
+${CODE_BLOCK}\n
+${terraform?.log?.stdout}\n
 ${CODE_BLOCK}\n
 Errors\n
-${CODE_BLOCK}json\n
-${JSON.stringify(terraform?.log, null, "\t") }\n
+${CODE_BLOCK}\n
+// ${terraform?.log?.stderr}\n
 ${CODE_BLOCK}\n
 </details> <!-- End Format Logs -->\n
-*Pusher: @${context?.actor}, Action: \`${context?.eventName}\`, Working Directory: \'${'tf_actions_working_dir'}\', Workflow: \'${context?.workflow }\'*`
+*Pusher: @${context?.actor}, Action: \`${context?.eventName}\`, Working Directory: \'${'diff'}\', Workflow: \'${context?.workflow }\'*`
    
 
   return output
