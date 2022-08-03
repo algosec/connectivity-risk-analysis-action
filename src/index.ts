@@ -162,7 +162,7 @@ function parseToGithubSyntax(analysis, terraform) {
     analysis?.analysis_result?.forEach(risk => {
       risks +=
       `<details open="true">\n
-####<summary><img width="10" height="10" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${risk.riskSeverity}.png" />  ${risk.riskId} - ${risk.riskTitle}</summary> \n
+<summary><img width="10" height="10" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${risk.riskSeverity}.png" />  ${risk.riskId} | ${risk.riskTitle}</summary> \n
 ### **Description:**\n${risk.riskDescription}\n
 ### **Recommendation:**\n${risk.riskRecommendation.toString()}\n
 ### **Details:**\n
@@ -180,7 +180,7 @@ risksTableContents +=
 
 
 })
-    const output = `## <img height="30" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png" /><sup>&nbsp;Connectivity Risk Analysis &nbsp; ${analysis.analysis_state ? ':heavy_check_mark:' : ':x:' }<sup> \n
+    const output = `## <img height="35" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png" /><sup> &nbsp; Connectivity Risk Analysis &nbsp; ${analysis.analysis_state ? ':heavy_check_mark:' : ':x:' }<sup> \n
 <table>\n
 <thead>\n
 <tr>\n
