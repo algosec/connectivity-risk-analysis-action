@@ -281,9 +281,9 @@ async function run(context: GithubContext): Promise<void> {
     
     const octokit = getOctokit(ghToken)
     const git = new GitProcessorExec()
-    if (!existsSync(githubWorkspace)) {
-      await git.clone(ghToken, context, githubWorkspace)
-    }
+    // if (!existsSync(githubWorkspace)) {
+    const clone = await exec('gh',['repo', 'clone', context.repo.owner + '/' + context.repo.repo, githubWorkspace])
+    // }
     process.chdir(githubWorkspace)
     const pr = await exec('gh',['pr', 'checkout', context.payload.pull_request.number.toString()])
     // await loginToAws();
