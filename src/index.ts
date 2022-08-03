@@ -138,17 +138,17 @@ risksTableContents +=
     })
     const header = `## <img height="35" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png" /><sup> &nbsp; Connectivity Risk Analysis &nbsp; ${analysis.analysis_state ? ':heavy_check_mark:' : ':x:' }<sup> \n`
     const risksTable = `<table>\n
-    <thead>\n
-    <tr>\n
-    <th align="left" scope="col">Risk ID</th>\n
-    <th align="left" scope="col">Severity</th>\n
-    <th align="left" scope="col">Summary</th>\n
-    </tr>\n
-    </thead>\n
-    <tbody id="tableBody">\n
-    ${risksTableContents}                 
-    </tbody>
-    </table>\n`
+<thead>\n
+<tr>\n
+<th align="left" scope="col">Risk ID</th>\n
+<th align="left" scope="col">Severity</th>\n
+<th align="left" scope="col">Summary</th>\n
+</tr>\n
+</thead>\n
+<tbody id="tableBody">\n
+${risksTableContents}                 
+</tbody>
+</table>\n`
     const terraformContent = `## <sup>Terraform Processing &nbsp; ${terraform?.log?.stdout ? ':heavy_check_mark:' : ':x:' }<sup>\n
 <details>
 <summary>Terraform Log</summary>\n
@@ -179,7 +179,7 @@ ${CODE_BLOCK}\n
     header +
     risksTable + 
    `<details open="true">\n` +
-    (analysis?.analysis_result?.length > 0 ? riskAnalysisContent : 'No Risks Found') +
+    (analysis?.analysis_result?.length > 0 ? riskAnalysisContent : 'No Risks Found\n') +
     terraformContent +
     `</details>\n` +
 `*Pusher: @${context?.actor}, Action: \`${context?.eventName}\`, Working Directory: \'${'diff'}\', Workflow: \'${context?.workflow }\'*`
