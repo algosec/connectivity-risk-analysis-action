@@ -78,7 +78,7 @@ async function terraform(diffs: any, tfToken = '') {
       const init = await exec('terraform', ['init']);
       const fmt = await exec('terraform', ['fmt', '-diff'])
       const validate = await exec('terraform', ['validate', '-no-color'])
-      const terraformLog = {
+      const initLog = {
         stdout: init.stdout.concat(fmt.stdout, validate.stdout, init.stdout),
         stderr:init.stderr.concat(fmt.stderr, validate.stderr, init.stderr)
       }
@@ -92,7 +92,7 @@ async function terraform(diffs: any, tfToken = '') {
         jsonPlan = JSON.parse((await exec('terraform', ['show', '-json', `${process?.cwd()}\\tmp\\tf.out`])).stdout)
       }
       process.chdir(`${githubWorkspace}`)
-      return {plan: jsonPlan, log: plan};
+      return {plan: jsonPlan, log: plan, initLog};
 
 
       
@@ -113,10 +113,10 @@ function parseToGithubSyntax(analysis, terraform) {
   
     const CODE_BLOCK = '```';
     
-    let risks = '' 
+    let risksList = '' 
     let risksTableContents = ''
     analysis?.analysis_result?.forEach(risk => {
-      risks +=
+      risksList +=
       `<details open="true">\n
 <summary><img width="10" height="10" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${risk.riskSeverity}.png" />  ${risk.riskId} | ${risk.riskTitle}</summary> \n
 ### **Description:**\n${risk.riskDescription}\n
@@ -135,36 +135,21 @@ risksTableContents +=
 </tr>\n`
 
 
-})
-    const output = `## <img height="35" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png" /><sup> &nbsp; Connectivity Risk Analysis &nbsp; ${analysis.analysis_state ? ':heavy_check_mark:' : ':x:' }<sup> \n
-<table>\n
-<thead>\n
-<tr>\n
-<th align="left" scope="col">Risk ID</th>\n
-<th align="left" scope="col">Severity</th>\n
-<th align="left" scope="col">Summary</th>\n
-</tr>\n
-</thead>\n
-<tbody id="tableBody">\n
-${risksTableContents}                 
-</tbody>
-</table>\n
-<details open="true">\n
-<summary>Report</summary>\n
-${risks}\n
-<details>\n
-<summary>Logs</summary>\n
-Output\n
-${CODE_BLOCK}json\n
-${JSON.stringify(analysis?.analysis_result, null, "\t")}\n
-${CODE_BLOCK}\n
-
-Errors\n
-${CODE_BLOCK}\n
-${'Risk Analysis Errors'}\n
-${CODE_BLOCK}\nq
-</details>\n
-## <sup>Terraform Processing &nbsp; ${terraform?.log?.stdout ? ':heavy_check_mark:' : ':x:' }<sup>\n
+    })
+    const header = `## <img height="35" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png" /><sup> &nbsp; Connectivity Risk Analysis &nbsp; ${analysis.analysis_state ? ':heavy_check_mark:' : ':x:' }<sup> \n`
+    const risksTable = `<table>\n
+    <thead>\n
+    <tr>\n
+    <th align="left" scope="col">Risk ID</th>\n
+    <th align="left" scope="col">Severity</th>\n
+    <th align="left" scope="col">Summary</th>\n
+    </tr>\n
+    </thead>\n
+    <tbody id="tableBody">\n
+    ${risksTableContents}                 
+    </tbody>
+    </table>\n`
+    const terraformContent = `## <sup>Terraform Processing &nbsp; ${terraform?.log?.stdout ? ':heavy_check_mark:' : ':x:' }<sup>\n
 <details>
 <summary>Terraform Log</summary>\n
 Output\n
@@ -173,14 +158,34 @@ ${terraform?.log?.stdout}\n
 ${CODE_BLOCK}\n
 Errors\n
 ${CODE_BLOCK}\n
-// ${terraform?.log?.stderr}\n
+${terraform?.log?.stderr ?? terraform.initLog.stderr}\n
 ${CODE_BLOCK}\n
-</details> <!-- End Format Logs -->\n
-</details>\n
-*Pusher: @${context?.actor}, Action: \`${context?.eventName}\`, Working Directory: \'${'diff'}\', Workflow: \'${context?.workflow }\'*`
+</details> <!-- End Format Logs -->\n`
+    const riskAnalysisContent = `<summary>Report</summary>\n
+${risksList}\n
+<details>\n
+<summary>Logs</summary>\n
+Output\n
+${CODE_BLOCK}json\n
+${JSON.stringify(analysis?.analysis_result, null, "\t")}\n
+${CODE_BLOCK}\n
+Errors\n
+${CODE_BLOCK}\n
+${'Risk Analysis Errors'}\n
+${CODE_BLOCK}\n
+</details>\n`
+
+  const markdownOutput = 
+    header +
+    risksTable + 
+   `<details open="true">\n` +
+    (analysis?.analysis_result?.length > 0 ? riskAnalysisContent : 'No Risks Found') +
+    terraformContent +
+    `</details>\n` +
+`*Pusher: @${context?.actor}, Action: \`${context?.eventName}\`, Working Directory: \'${'diff'}\', Workflow: \'${context?.workflow }\'*`
    
 
-  return output
+  return markdownOutput
 }
 
 async function pollRiskAnalysisResponse() {
