@@ -15,13 +15,14 @@ import 'dotenv/config'
 
 const getUuid = require('uuid-by-string')
 
-export type GithubContext = typeof context
 
 interface ExecResult {
   stdout: string;
   stderr: string;
   code: number | null;
 }
+export type GithubContext = typeof context
+
 // import {WebhookPayload} from '@actions/github/lib/interfaces'
 // import {githubEventPayloadMock, riskAnalysisMock} from './pull-request'
 // import { s3FileMock } from '../test-repo/tmp/tf.json'
@@ -69,26 +70,30 @@ async function changedFiles(
   return diffFolders
 }
 
-async function terraform(diffs: any, tfToken = '') {
+async function terraform(diff: any, tfToken = '') {
   try {
     // const diffPromises = []
     if (tfToken) {
       // diffs.filter(diff => diff !== 'tf-test-sg').forEach(diff =>  diffPromises.push(exec('sh', ['tf-run.sh', `${process?.cwd()}`, githubWorkspace, diff])))
-      process.chdir(`${githubWorkspace}/${diffs[0]}`)
+      process.chdir(`${githubWorkspace}/${diff}`)
       const init = await exec('terraform', ['init']);
       const fmt = await exec('terraform', ['fmt', '-diff'])
       const validate = await exec('terraform', ['validate', '-no-color'])
+      const terraformLog = {
+        stdout: init.stdout.concat(fmt.stdout, validate.stdout, init.stdout),
+        stderr:init.stderr.concat(fmt.stderr, validate.stderr, init.stderr)
+      }
       if (!existsSync('./tmp')) {
         await exec('mkdir', ['tmp'])
       }
       const plan = await exec('terraform', ['plan', '-input=false', '-no-color', `-out=${process?.cwd()}\\tmp\\tf.out`])
-      const terraformLog = init.stdout.concat(fmt.stdout, validate.stdout, init.stdout)
+      
       let jsonPlan = {};
       if (plan.stdout){
         jsonPlan = JSON.parse((await exec('terraform', ['show', '-json', `${process?.cwd()}\\tmp\\tf.out`])).stdout)
       }
       process.chdir(`${githubWorkspace}`)
-      return {plan: jsonPlan, log: plan};
+      return {plan: jsonPlan, log: plan, terraformLog};
 
 
       
@@ -169,7 +174,7 @@ ${terraform?.log?.stdout}\n
 ${CODE_BLOCK}\n
 Errors\n
 ${CODE_BLOCK}\n
-// ${terraform?.log?.stderr}\n
+${terraform?.terraformLog.stderr}\n
 ${CODE_BLOCK}\n
 </details> <!-- End Format Logs -->\n
 </details>\n
@@ -271,54 +276,57 @@ async function uploadToS3(keyName: string, body: any, bucketName?: string): Prom
   return s3.putObject(objectParams).promise();
 }
 
-async function run(): Promise<void> {
+async function run(context: GithubContext): Promise<void> {
   try {
     
     const octokit = getOctokit(ghToken)
     const git = new GitProcessorExec()
-  //   // await loginToAws();
+    if (!existsSync(githubWorkspace)) {
+      await git.clone(ghToken, context, githubWorkspace)
+    }
+    process.chdir(githubWorkspace)
+    const pr = await exec('gh',['pr', 'checkout', context.payload.pull_request.number.toString()])
+    // await loginToAws();
     const diffs = await changedFiles(octokit, context, git)
     if (diffs?.length == 0) {
     info('No changes were found in terraform plans')
       return
     }
     info('Step 1 - Diffs Result: ' + JSON.stringify(diffs))
-    const terraformResult = await terraform(diffs, tfToken)
+    const terraformResult = await terraform(diffs[0], tfToken)
     info('Step 2 - Terraform Result: ' + JSON.stringify(terraformResult))
     let analysisResult;
+    let risks = {analysis_state: true, analysis_result: []};
     // const fileToUpload = s3FileMock 
 
     if (uploadFile(terraformResult.plan)){
-      
     info('Step 3 - File Uploaded to S3 Successfully')
       analysisResult = await pollRiskAnalysisResponse()
     }
     // let analysisResult = riskAnalysisMock
     info('Step 4 - Risk Analysis Result: ' + JSON.stringify(analysisResult))
+    const commentBody = parseRiskAnalysis(risks, terraformResult)
+    git.createComment(commentBody , octokit, context)
     if (analysisResult?.success) {
-      const risks = analysisResult?.additions
-      const commentBody = parseRiskAnalysis(risks, terraformResult)
+      risks = analysisResult?.additions
     info('Step 5 - Parsing Risk Analysis')
 
-      git.createComment(commentBody , octokit, context)
       if (risks?.analysis_state){
     info('Step 6 - The risks analysis process completed successfully without any risks')
       } else {
         setFailed('The risks analysis process completed successfully with risks, please check report')
       }
     } else {
+      risks.analysis_state = false;
       setFailed('The risks analysis process completed with errors')
     }
     
-   
-
-    
   } catch (error) {
-    console.log(error)
+    debug(error)
   }
 
 }
 
-run()
+run(context)
 
 
