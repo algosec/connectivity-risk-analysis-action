@@ -150,7 +150,7 @@ risksTableContents +=
 ${risksTableContents}                 
 </tbody>
 </table>\n`
-    const terraformIcon = terraform?.log?.stderr ?? terraform.initLog.stderr ? 'sucsess' : 'failure'
+    const terraformIcon = (terraform?.log?.stderr == '' && terraform?.initLog?.stderr == '') ? 'success' : 'failure' 
     const terraformContent = `\n## <sup>Terraform Processing &nbsp; <sub><sub><img height="22" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${terraformIcon}.png" /><sub><sub><sup>\n
 <details>
 <summary>Terraform Log</summary>
@@ -166,8 +166,8 @@ ${CODE_BLOCK}\n
 </details> <!-- End Format Logs -->\n`
     const riskAnalysisContent = `<summary>Report</summary>\n
 ${risksList}\n
-<details>\n
-<summary>Logs</summary>\n
+<details>
+<summary>Logs</summary>
 <br>Output<br>
 &nbsp;
 ${CODE_BLOCK}\n
