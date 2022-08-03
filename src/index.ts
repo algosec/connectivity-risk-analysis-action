@@ -152,7 +152,11 @@ ${risksTableContents}
     const terraformContent = `\n## <sup>Terraform Processing &nbsp; ${terraform?.log?.stdout ? ':heavy_check_mark:' : ':x:' }<sup>\n
 <details>
 <summary>Terraform Log</summary>\n
-Output\n
+&nbsp;
+<br>
+Output
+<br>
+&nbsp;
 ${CODE_BLOCK}\n
 ${terraform?.log?.stdout}\n
 ${CODE_BLOCK}\n
@@ -165,7 +169,11 @@ ${CODE_BLOCK}\n
 ${risksList}\n
 <details>\n
 <summary>Logs</summary>\n
-Output\n
+&nbsp;
+<br>
+Output
+<br>
+&nbsp;
 ${CODE_BLOCK}json\n
 ${JSON.stringify(analysis?.analysis_result, null, "\t")}\n
 ${CODE_BLOCK}\n
@@ -182,7 +190,7 @@ ${CODE_BLOCK}\n
     (analysis?.analysis_result?.length > 0 ? riskAnalysisContent : 'No Risks Found\n') +
     terraformContent +
     `</details>\n` +
-`*Pusher: @${context?.actor}, Action: \`${context?.eventName}\`, Working Directory: \'${'diff'}\', Workflow: \'${context?.workflow }\'*`
+`*Pusher: @${context?.actor}, Action: \`${context?.eventName}\`, Working Directory: \'${githubWorkspace}\', Workflow: \'${context?.workflow }\'*`
    
 
   return markdownOutput
