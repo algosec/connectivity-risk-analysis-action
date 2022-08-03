@@ -100,54 +100,6 @@ async function terraform(diffs: any, tfToken = '') {
   }
 }
 
-async function run(): Promise<void> {
-  try {
-    
-    const octokit = getOctokit(ghToken)
-    const git = new GitProcessorExec()
-  //   // await loginToAws();
-    const diffs = await changedFiles(octokit, context, git)
-    if (diffs?.length == 0) {
-      return
-    }
-    info('Step 1 - Diffs Result: ' + JSON.stringify(diffs))
-    const terraformResult = await terraform(diffs, tfToken)
-    info('Step 2 - Terraform Result: ' + JSON.stringify(terraformResult))
-    let analysisResult;
-    // const fileToUpload = s3FileMock 
-
-    if (uploadFile(terraformResult.plan)){
-      
-    info('Step 3 - File Uploaded to S3 Successfully')
-      analysisResult = await pollRiskAnalysisResponse()
-    }
-    // let analysisResult = riskAnalysisMock
-    info('Step 4 - Risk Analysis Result: ' + JSON.stringify(analysisResult))
-    if (analysisResult?.success) {
-      const risks = analysisResult?.additions
-      if (risks?.analysis_state){
-    info('Step 5 - The risks analysis process completed successfully without any risks')
-        git.createComment('Risk Analysis Completed, no risks were found', octokit, context)
-        return
-      } else {
-    info('Step 6 - Parsing Report')
-        const commentBody = parseRiskAnalysis(risks, terraformResult)
-        git.createComment(commentBody, octokit, context)
-        setFailed('The risks analysis process completed successfully with risks, please check report')
-      }
-    } else {
-      setFailed('The risks analysis process completed with errors')
-    }
-    
-   
-
-    
-  } catch (error) {
-    console.log(error)
-  }
-
-}
-
 function parseRiskAnalysis(analysis, terraform) {
   const body = parseToGithubSyntax(analysis, terraform)
   return body;
@@ -233,7 +185,7 @@ async function pollRiskAnalysisResponse() {
   for (let i = 0; i < 50 ; i++) {
     await wait(3000);
     analysisResult = await checkRiskAnalysisResponse()
-    info('Response: \n' + JSON.stringify(analysisResult))
+    info('Response: ' + JSON.stringify(analysisResult))
     if (analysisResult) break;
   }
   return analysisResult;
@@ -275,12 +227,6 @@ function generateTmpFileUuid() {
   return uuid;
 }
 
-async function createTmpFile(json) {
-  writeFileSync(`${githubWorkspace}\\tmp\\tf.json.out`, JSON.stringify(json))
-  info('File was created successfully')
-
-}
-
 async function exec(cmd: string, args: string[]): Promise<ExecResult> {
   const res: ExecResult = {
       stdout: '',
@@ -303,7 +249,6 @@ async function exec(cmd: string, args: string[]): Promise<ExecResult> {
       });
       
       res.code = code;
-      // info(`EXEC RESPONSE: ${JSON.stringify(res)}`)
       return res;
   } catch (err) {
       const msg = `Command '${cmd}' failed with args '${args.join(' ')}': ${res.stderr}: ${err}`;
@@ -326,6 +271,53 @@ async function uploadToS3(keyName: string, body: any, bucketName?: string): Prom
   return s3.putObject(objectParams).promise();
 }
 
+async function run(): Promise<void> {
+  try {
+    
+    const octokit = getOctokit(ghToken)
+    const git = new GitProcessorExec()
+  //   // await loginToAws();
+    const diffs = await changedFiles(octokit, context, git)
+    if (diffs?.length == 0) {
+    info('No changes were found in terraform plans')
+      return
+    }
+    info('Step 1 - Diffs Result: ' + JSON.stringify(diffs))
+    const terraformResult = await terraform(diffs, tfToken)
+    info('Step 2 - Terraform Result: ' + JSON.stringify(terraformResult))
+    let analysisResult;
+    // const fileToUpload = s3FileMock 
+
+    if (uploadFile(terraformResult.plan)){
+      
+    info('Step 3 - File Uploaded to S3 Successfully')
+      analysisResult = await pollRiskAnalysisResponse()
+    }
+    // let analysisResult = riskAnalysisMock
+    info('Step 4 - Risk Analysis Result: ' + JSON.stringify(analysisResult))
+    if (analysisResult?.success) {
+      const risks = analysisResult?.additions
+      const commentBody = parseRiskAnalysis(risks, terraformResult)
+    info('Step 5 - Parsing Risk Analysis')
+
+      git.createComment(commentBody , octokit, context)
+      if (risks?.analysis_state){
+    info('Step 6 - The risks analysis process completed successfully without any risks')
+      } else {
+        setFailed('The risks analysis process completed successfully with risks, please check report')
+      }
+    } else {
+      setFailed('The risks analysis process completed with errors')
+    }
+    
+   
+
+    
+  } catch (error) {
+    console.log(error)
+  }
+
+}
 
 run()
 
