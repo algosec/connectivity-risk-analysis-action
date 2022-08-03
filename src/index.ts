@@ -156,6 +156,7 @@ ${risksTableContents}
 <summary>Terraform Log</summary>
 <br>Output<br>
 &nbsp;
+
 ${CODE_BLOCK}\n
 ${terraform?.log?.stdout}\n
 ${CODE_BLOCK}\n
@@ -170,13 +171,10 @@ ${risksList}\n
 <summary>Logs</summary>
 <br>Output<br>
 &nbsp;
+
 ${CODE_BLOCK}\n
 ${JSON.stringify(analysis?.analysis_result, null, "\t")}\n
-${CODE_BLOCK}\n
-Errors\n
-${CODE_BLOCK}\n
-${'Risk Analysis Errors'}\n
-${CODE_BLOCK}\n
+${CODE_BLOCK}\ns
 </details>\n`
 
   const markdownOutput = 
