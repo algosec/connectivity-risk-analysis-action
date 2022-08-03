@@ -15,14 +15,13 @@ import 'dotenv/config'
 
 const getUuid = require('uuid-by-string')
 
+export type GithubContext = typeof context
 
 interface ExecResult {
   stdout: string;
   stderr: string;
   code: number | null;
 }
-export type GithubContext = typeof context
-
 // import {WebhookPayload} from '@actions/github/lib/interfaces'
 // import {githubEventPayloadMock, riskAnalysisMock} from './pull-request'
 // import { s3FileMock } from '../test-repo/tmp/tf.json'
@@ -70,12 +69,12 @@ async function changedFiles(
   return diffFolders
 }
 
-async function terraform(diff: any, tfToken = '') {
+async function terraform(diffs: any, tfToken = '') {
   try {
     // const diffPromises = []
     if (tfToken) {
       // diffs.filter(diff => diff !== 'tf-test-sg').forEach(diff =>  diffPromises.push(exec('sh', ['tf-run.sh', `${process?.cwd()}`, githubWorkspace, diff])))
-      process.chdir(`${githubWorkspace}/${diff}`)
+      process.chdir(`${githubWorkspace}/${diffs[0]}`)
       const init = await exec('terraform', ['init']);
       const fmt = await exec('terraform', ['fmt', '-diff'])
       const validate = await exec('terraform', ['validate', '-no-color'])
@@ -93,7 +92,7 @@ async function terraform(diff: any, tfToken = '') {
         jsonPlan = JSON.parse((await exec('terraform', ['show', '-json', `${process?.cwd()}\\tmp\\tf.out`])).stdout)
       }
       process.chdir(`${githubWorkspace}`)
-      return {plan: jsonPlan, log: plan, terraformLog};
+      return {plan: jsonPlan, log: plan};
 
 
       
@@ -174,7 +173,7 @@ ${terraform?.log?.stdout}\n
 ${CODE_BLOCK}\n
 Errors\n
 ${CODE_BLOCK}\n
-${terraform?.terraformLog.stderr}\n
+// ${terraform?.log?.stderr}\n
 ${CODE_BLOCK}\n
 </details> <!-- End Format Logs -->\n
 </details>\n
@@ -276,57 +275,52 @@ async function uploadToS3(keyName: string, body: any, bucketName?: string): Prom
   return s3.putObject(objectParams).promise();
 }
 
-async function run(context: GithubContext): Promise<void> {
+async function run(): Promise<void> {
   try {
     
     const octokit = getOctokit(ghToken)
     const git = new GitProcessorExec()
-    // if (!existsSync(githubWorkspace)) {
-    const clone = await exec('gh',['repo', 'clone', context.repo.owner + '/' + context.repo.repo, githubWorkspace])
-    // }
-    process.chdir(githubWorkspace)
-    const pr = await exec('gh',['pr', 'checkout', context.payload.pull_request.number.toString()])
-    // await loginToAws();
+// await loginToAws();
     const diffs = await changedFiles(octokit, context, git)
     if (diffs?.length == 0) {
     info('No changes were found in terraform plans')
       return
     }
     info('Step 1 - Diffs Result: ' + JSON.stringify(diffs))
-    const terraformResult = await terraform(diffs[0], tfToken)
+    const terraformResult = await terraform(diffs, tfToken)
     info('Step 2 - Terraform Result: ' + JSON.stringify(terraformResult))
     let analysisResult;
-    let risks = {analysis_state: true, analysis_result: []};
-    // const fileToUpload = s3FileMock 
-
+    // terraformResult.plan = s3FileMock 
     if (uploadFile(terraformResult.plan)){
     info('Step 3 - File Uploaded to S3 Successfully')
       analysisResult = await pollRiskAnalysisResponse()
+      // let analysisResult = riskAnalysisMock
     }
-    // let analysisResult = riskAnalysisMock
     info('Step 4 - Risk Analysis Result: ' + JSON.stringify(analysisResult))
+    const risks = analysisResult?.additions
     const commentBody = parseRiskAnalysis(risks, terraformResult)
     git.createComment(commentBody , octokit, context)
     if (analysisResult?.success) {
-      risks = analysisResult?.additions
     info('Step 5 - Parsing Risk Analysis')
-
       if (risks?.analysis_state){
     info('Step 6 - The risks analysis process completed successfully without any risks')
+        return
       } else {
         setFailed('The risks analysis process completed successfully with risks, please check report')
       }
     } else {
-      risks.analysis_state = false;
       setFailed('The risks analysis process completed with errors')
     }
     
+   
+
+    
   } catch (error) {
-    debug(error)
+    console.log(error)
   }
 
 }
 
-run(context)
+run()
 
 
