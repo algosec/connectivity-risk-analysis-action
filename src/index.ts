@@ -122,7 +122,7 @@ function parseToGithubSyntax(analysis, terraform) {
 ### **Description:**\n${risk.riskDescription}\n
 ### **Recommendation:**\n${risk.riskRecommendation.toString()}\n
 ### **Details:**\n
-${CODE_BLOCK}json\n
+${CODE_BLOCK}\n
 ${JSON.stringify(risk.items, null, "\t")}\n
 ${CODE_BLOCK}\n
 </details>\n`
@@ -136,7 +136,8 @@ risksTableContents +=
 
 
     })
-    const header = `## <img height="35" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png" /><sup> &nbsp; Connectivity Risk Analysis &nbsp; ${analysis.analysis_state ? ':heavy_check_mark:' : ':x:' }<sup> \n`
+    const analysisIcon = analysis.analysis_state ? 'success' : 'failure'
+    const header = `## <img height="35" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png" /><sup> &nbsp; Connectivity Risk Analysis &nbsp; <sub><sub><img height="22" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${analysisIcon}" /><sub><sub><sup><sup> \n`
     const risksTable = `<table>\n
 <thead>\n
 <tr>\n
@@ -149,13 +150,11 @@ risksTableContents +=
 ${risksTableContents}                 
 </tbody>
 </table>\n`
-    const terraformContent = `\n## <sup>Terraform Processing &nbsp; ${terraform?.log?.stdout ? ':heavy_check_mark:' : ':x:' }<sup>\n
+    const terraformIcon = terraform?.log?.stderr ?? terraform.initLog.stderr ? 'sucsess' : 'failure'
+    const terraformContent = `\n## <sup>Terraform Processing &nbsp; <sub><sub><img height="22" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${terraformIcon}" /><sub><sub><sup>\n
 <details>
-<summary>Terraform Log</summary>\n
-&nbsp;
-<br>
-Output
-<br>
+<summary>Terraform Log</summary>
+<br>Output<br>
 &nbsp;
 ${CODE_BLOCK}\n
 ${terraform?.log?.stdout}\n
@@ -169,12 +168,9 @@ ${CODE_BLOCK}\n
 ${risksList}\n
 <details>\n
 <summary>Logs</summary>\n
+<br>Output<br>
 &nbsp;
-<br>
-Output
-<br>
-&nbsp;
-${CODE_BLOCK}json\n
+${CODE_BLOCK}\n
 ${JSON.stringify(analysis?.analysis_result, null, "\t")}\n
 ${CODE_BLOCK}\n
 Errors\n
