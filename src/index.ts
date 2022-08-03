@@ -137,7 +137,7 @@ risksTableContents +=
 
     })
     const analysisIcon = analysis?.analysis_state ? 'success' : 'failure'
-    const header = `## <img height="35" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png" /><sup> &nbsp; Connectivity Risk Analysis &nbsp; <sub><sub><img height="22" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${analysisIcon}" /><sub><sub><sup><sup> \n`
+    const header = `## <img height="35" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png" /><sup> &nbsp; Connectivity Risk Analysis &nbsp; <sub><sub><img height="22" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${analysisIcon}.png" /><sub><sub><sup><sup> \n`
     const risksTable = `<table>\n
 <thead>\n
 <tr>\n
@@ -151,7 +151,7 @@ ${risksTableContents}
 </tbody>
 </table>\n`
     const terraformIcon = terraform?.log?.stderr ?? terraform.initLog.stderr ? 'sucsess' : 'failure'
-    const terraformContent = `\n## <sup>Terraform Processing &nbsp; <sub><sub><img height="22" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${terraformIcon}" /><sub><sub><sup>\n
+    const terraformContent = `\n## <sup>Terraform Processing &nbsp; <sub><sub><img height="22" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${terraformIcon}.png" /><sub><sub><sup>\n
 <details>
 <summary>Terraform Log</summary>
 <br>Output<br>
