@@ -136,7 +136,7 @@ risksTableContents +=
 
 
     })
-    const analysisIcon = analysis.analysis_state ? 'success' : 'failure'
+    const analysisIcon = analysis?.analysis_state ? 'success' : 'failure'
     const header = `## <img height="35" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png" /><sup> &nbsp; Connectivity Risk Analysis &nbsp; <sub><sub><img height="22" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${analysisIcon}" /><sub><sub><sup><sup> \n`
     const risksTable = `<table>\n
 <thead>\n
