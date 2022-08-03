@@ -149,7 +149,7 @@ risksTableContents +=
 ${risksTableContents}                 
 </tbody>
 </table>\n`
-    const terraformContent = `## <sup>Terraform Processing &nbsp; ${terraform?.log?.stdout ? ':heavy_check_mark:' : ':x:' }<sup>\n
+    const terraformContent = `\n## <sup>Terraform Processing &nbsp; ${terraform?.log?.stdout ? ':heavy_check_mark:' : ':x:' }<sup>\n
 <details>
 <summary>Terraform Log</summary>\n
 Output\n
