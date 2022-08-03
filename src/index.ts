@@ -162,10 +162,10 @@ function parseToGithubSyntax(analysis, terraform) {
     analysis?.analysis_result?.forEach(risk => {
       risks +=
       `<details open="true">\n
-<summary><img width="16" height="16" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${risk.riskSeverity}.png" />  ${risk.riskId}</summary> ${risk.riskTitle}\n
-###### **Description:**\n ###### ${risk.riskDescription}\n
-###### **Recommendation:**\n ###### ${risk.riskRecommendation}\n
-###### **Details:**\n
+####<summary><img width="10" height="10" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${risk.riskSeverity}.png" />  ${risk.riskId} - ${risk.riskTitle}</summary> \n
+### **Description:**\n${risk.riskDescription}\n
+### **Recommendation:**\n${risk.riskRecommendation.toString()}\n
+### **Details:**\n
 ${CODE_BLOCK}json\n
 ${JSON.stringify(risk.items, null, "\t")}\n
 ${CODE_BLOCK}\n
@@ -174,18 +174,18 @@ ${CODE_BLOCK}\n
 risksTableContents +=   
 `<tr>\n
 <td>${risk.riskId}</td>\n
-<td><img width="16" height="16" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${risk.riskSeverity}.png" /> ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
+<td><img width="10" height="10" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${risk.riskSeverity}.png" /> ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
 <td>${risk.riskTitle}</td>\n
 </tr>\n`
 
 
 })
-    const output = `## ![alt text](https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png "Connectivity Risk Analysis") ${analysis.analysis_state ? ':heavy_check_mark:' : ':x:' }  Connectivity Risk Analysis :cop:\n
-<table border="2">\n
-<thead class="thead-dark">\n
+    const output = `## <img height="30" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png" /><sup>&nbsp;Connectivity Risk Analysis &nbsp; ${analysis.analysis_state ? ':heavy_check_mark:' : ':x:' }<sup> \n
+<table>\n
+<thead>\n
 <tr>\n
-<th scope="col">Risk ID</th>\n
-<th scope="col">Severity</th>\n
+<th align="left" scope="col">Risk ID</th>\n
+<th align="left" scope="col">Severity</th>\n
 <th align="left" scope="col">Summary</th>\n
 </tr>\n
 </thead>\n
@@ -194,8 +194,7 @@ ${risksTableContents}
 </tbody>
 </table>\n
 <details open="true">\n
-<summary>Report</summary>\n\n
-
+<summary>Report</summary>\n
 ${risks}\n
 <details>\n
 <summary>Logs</summary>\n
@@ -209,7 +208,7 @@ ${CODE_BLOCK}\n
 ${'Risk Analysis Errors'}\n
 ${CODE_BLOCK}\nq
 </details>\n
-## ${terraform?.log?.stdout ? ':heavy_check_mark:' : ':x:' } Terraform Processing ⚙️\n
+## <sup>Terraform Processing &nbsp; ${terraform?.log?.stdout ? ':heavy_check_mark:' : ':x:' }<sup>\n
 <details>
 <summary>Terraform Log</summary>\n
 Output\n
