@@ -5,7 +5,7 @@
 # Run Risk Analysis
 
 ```yaml
-name: 'Customer Repo CI/CD'
+name: 'Your Repo CI/CD Yaml Workflow'
 on:
   pull_request:
     branches:
@@ -34,7 +34,7 @@ Use this template to add Risk Analysis Action on IaC repository.
 This template includes the needed environment variables for the next run
 
 
-## Create an action from this template
+## Use this action
 
 Click the `Use this Template` and provide the new repo details for your action
 
