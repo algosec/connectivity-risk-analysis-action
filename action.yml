@@ -1,6 +1,9 @@
 name: 'Algosec Risk Analysis'
 description: 'This GitHub Action runs Algosec Risk Analysis against an Infrastructure-as-Code repository.'
 author: 'alon.noy@algosec.com'
+branding:
+  icon: 'activity'
+  color: 'blue'
 runs:
   using: 'node16'
   main: 'dist/index.js'
