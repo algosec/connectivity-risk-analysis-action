@@ -29,7 +29,7 @@ jobs:
           TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
 ```
 
-Use this template to add Algosec's Risk Analysis Action on IaC repository.
+Use this template to add Risk Analysis Action on IaC repository.
 
 This template includes the needed environment variables for the next run
 
