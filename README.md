@@ -18,13 +18,13 @@ jobs:
       - name: 'Risk Analysis Action'
         uses: alonnalgo/action-test@v0.0.51
         env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-west-2
+          AWS_S3: ${{ secrets.AWS_S3 }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_WORKSPACE: ${{ github.workspace }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_REGION: us-west-2
-          AWS_S3: ${{ secrets.AWS_S3 }}
           RA_API_URL: ${{ secrets.RA_API_URL }}
           TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
 ```
