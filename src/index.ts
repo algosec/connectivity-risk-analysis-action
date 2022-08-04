@@ -25,7 +25,7 @@ interface ExecResult {
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 
 
-const ghToken =  process?.env?.GITHUB_TOKEN 
+const ghToken =  process?.env?.GH_TOKEN 
 const debugMode =  process?.env?.ALGOSEC_DEBUG 
 const ghSha =  process?.env?.GITHUB_SHA 
 const apiUrl = process.env.RA_API_URL
