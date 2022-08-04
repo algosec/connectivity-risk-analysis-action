@@ -3,8 +3,6 @@ import {context, getOctokit} from '@actions/github'
 import {HttpClient} from '@actions/http-client'
 
 import {GitProcessorExec} from './vcs/git'
-// import {TerraformExec} from './iaas-tools/terraform'
-// import {loginToAws} from './providers/aws'
 import {GitHub} from '@actions/github/lib/utils'
 
 import { exec as actionsExec } from '@actions/exec'
@@ -24,36 +22,28 @@ interface ExecResult {
 }
 // import {WebhookPayload} from '@actions/github/lib/interfaces'
 // import {githubEventPayloadMock, riskAnalysisMock} from './pull-request'
-// import { s3FileMock } from '../test-repo/tmp/tf.json'
 // context.payload = githubEventPayloadMock as WebhookPayload & any
-// const ghToken =  process?.env?.GITHUB_TOKEN ?? getInput('GITHUB_TOKEN')
-// const ghSha =  process?.env?.GITHUB_SHA ?? getInput('GITHUB_SHA')
-// const githubWorkspace =  process.cwd() + '\\' + process?.env?.GITHUB_WORKSPACE ?? getInput('GITHUB_WORKSPACE')
-// const githubRepoOwner  =  process?.env?.GITHUB_REPOSITORY_OWNER ?? getInput('GITHUB_REPOSITORY_OWNER')
-// const tfToken = process?.env?.TF_API_TOKEN ?? getInput('TF_API_TOKEN')
-// const apiUrl = process.env.RA_API_URL ?? getInput('RA_API_URL')
-// const s3Dest = process?.env?.AWS_S3 ?? getInput('AWS_S3')
+// const ghToken =  process?.env?.GITHUB_TOKEN 
+// const ghSha =  process?.env?.GITHUB_SHA 
+// const githubRepoOwner  =  process?.env?.GITHUB_REPOSITORY_OWNER 
+// const apiUrl = process.env.RA_API_URL
+// const s3Dest = process?.env?.AWS_S3
 
 const ghToken =  getInput('GITHUB_TOKEN')
 const ghSha =  getInput('GITHUB_SHA') 
 const githubWorkspace =  getInput('GITHUB_WORKSPACE') 
 const githubRepoOwner  =  getInput('GITHUB_REPOSITORY_OWNER')
-const tfToken = getInput('TF_API_TOKEN') 
 const apiUrl = getInput('RA_API_URL') 
 const s3Dest = getInput('AWS_S3') 
 
 const actionUuid = generateTmpFileUuid()
+// const githubWorkspace =  (process?.cwd() + '\\' + process?.env?.GITHUB_WORKSPACE + actionUuid) ?? getInput('GITHUB_WORKSPACE')
 const http = new HttpClient()
 
-// const tfHost =  getInput('TF_HOST') //process?.env?.TF_HOST ?? getInput('TF_HOST')
-// const awsAccessKeyId = getInput('AWS_ACCESS_KEY_ID') // process?.env?.AWS_ACCESS_KEY_ID ?? 
-// const awsSecretAccessKey = getInput('AWS_SECRET_ACCESS_KEY') // process?.env?.AWS_SECRET_ACCESS_KEY ?? 
 
-async function changedFiles(
-  octokit: InstanceType<typeof GitHub>,
-  context: GithubContext,
-  git: any
-) {
+async function changedFolders() {
+  const octokit = getOctokit(ghToken)
+  const git = new GitProcessorExec()
   let diffFolders
   try {
     if (octokit && context?.payload?.pull_request) {
@@ -69,12 +59,11 @@ async function changedFiles(
   return diffFolders
 }
 
-async function terraform(diffs: any, tfToken = '') {
+async function terraform(diffFolder: any) {
   try {
     // const diffPromises = []
-    if (tfToken) {
       // diffs.filter(diff => diff !== 'tf-test-sg').forEach(diff =>  diffPromises.push(exec('sh', ['tf-run.sh', `${process?.cwd()}`, githubWorkspace, diff])))
-      process.chdir(`${githubWorkspace}/${diffs[0]}`)
+      process.chdir(`${githubWorkspace}/${diffFolder}`)
       const init = await exec('terraform', ['init']);
       const fmt = await exec('terraform', ['fmt', '-diff'])
       const validate = await exec('terraform', ['validate', '-no-color'])
@@ -91,14 +80,13 @@ async function terraform(diffs: any, tfToken = '') {
       if (plan.stdout){
         jsonPlan = JSON.parse((await exec('terraform', ['show', '-json', `${process?.cwd()}\\tmp\\tf.out`])).stdout)
       }
-      process.chdir(`${githubWorkspace}`)
+      process.chdir(githubWorkspace)
       return {plan: jsonPlan, log: plan, initLog};
 
 
       
       // await Promise.all(diffPromises)
       // await terraform.show()
-    }
   } catch (error: any) {
     if (error instanceof Error) console.log(error.message) //setFailed(error.message)
   }
@@ -174,7 +162,7 @@ ${risksList}\n
 
 ${CODE_BLOCK}\n
 ${JSON.stringify(analysis?.analysis_result, null, "\t")}\n
-${CODE_BLOCK}\ns
+${CODE_BLOCK}\n
 </details>\n`
 
   const markdownOutput = 
@@ -284,17 +272,18 @@ async function uploadToS3(keyName: string, body: any, bucketName?: string): Prom
 
 async function run(): Promise<void> {
   try {
-    
-    const octokit = getOctokit(ghToken)
-    const git = new GitProcessorExec()
-// await loginToAws();
-    const diffs = await changedFiles(octokit, context, git)
+    const steps: {[name: string]: ExecResult} = {}
+    steps.removeFolder = await exec('rimraf', [githubWorkspace])
+    steps.cloneRepo = await exec('gh', ['repo', 'clone', context.repo.owner+'/'+context.repo.repo, githubWorkspace])
+    process.chdir(githubWorkspace)
+    steps.pr = await exec('gh', ['pr', 'checkout', context.payload.pull_request.number.toString()])
+    const diffs = await changedFolders()
     if (diffs?.length == 0) {
     info('No changes were found in terraform plans')
       return
     }
     info('Step 1 - Diffs Result: ' + JSON.stringify(diffs))
-    const terraformResult = await terraform(diffs, tfToken)
+    const terraformResult = await terraform(diffs[0])
     info('Step 2 - Terraform Result: ' + JSON.stringify(terraformResult))
     let analysisResult;
     // terraformResult.plan = s3FileMock 
@@ -306,7 +295,9 @@ async function run(): Promise<void> {
     info('Step 4 - Risk Analysis Result: ' + JSON.stringify(analysisResult))
     const risks = analysisResult?.additions
     const commentBody = parseRiskAnalysis(risks, terraformResult)
-    git.createComment(commentBody , octokit, context)
+    // git.createComment(commentBody , octokit, context)
+    steps.comment = await exec('gh', ['pr', 'comment', context.payload.pull_request.number.toString(), '-b', commentBody])
+
     if (analysisResult?.success) {
     info('Step 5 - Parsing Risk Analysis')
       if (risks?.analysis_state){
@@ -316,7 +307,9 @@ async function run(): Promise<void> {
         setFailed('The risks analysis process completed successfully with risks, please check report')
       }
     } else {
-      setFailed('The risks analysis process completed with errors')
+      let errors = ''
+      Object.keys(steps).forEach(step => errors += steps[step].stderr)
+      setFailed('The risks analysis process completed with errors:\n' + errors)
     }
     
    
