@@ -1,43 +1,6 @@
 name: 'Typescript Risk Analysis action'
 description: 'Provide a description here'
 author: 'Your name or organization here'
-inputs:
-  GITHUB_TOKEN: 
-    required: true
-    description: 'input description here'
-    default: 'default value if applicable'
-  GITHUB_WORKSPACE: 
-    required: true
-    description: 'input description here'
-    default: 'default value if applicable'  
-  GITHUB_REPOSITORY: 
-    required: true
-    description: 'input description here'
-    default: 'default value if applicable'
-  GITHUB_REPOSITORY_OWNER: 
-    required: true
-    description: 'input description here'
-    default: 'default value if applicable'
-  TF_API_TOKEN: 
-    required: true
-    description: 'input description here'
-    default: 'default value if applicable'
-  RA_API_URL: 
-    required: true
-    description: 'input description here'
-    default: 'default value if applicable'
-  AWS_S3: 
-    required: true
-    description: 'input description here'
-    default: 'default value if applicable'
-  AWS_ACCESS_KEY_ID: 
-    required: true
-    description: 'input description here'
-    default: 'default value if applicable'
-  AWS_SECRET_ACCESS_KEY: 
-    required: true
-    description: 'input description here'
-    default: 'default value if applicable'
 runs:
   using: 'node16'
   main: 'dist/index.js'

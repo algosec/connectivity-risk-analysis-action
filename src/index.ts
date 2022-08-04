@@ -23,23 +23,14 @@ interface ExecResult {
 // import {WebhookPayload} from '@actions/github/lib/interfaces'
 // import {githubEventPayloadMock, riskAnalysisMock} from './pull-request'
 // context.payload = githubEventPayloadMock as WebhookPayload & any
-// const ghToken =  process?.env?.GITHUB_TOKEN 
-// const ghSha =  process?.env?.GITHUB_SHA 
-// const githubRepoOwner  =  process?.env?.GITHUB_REPOSITORY_OWNER 
-// const apiUrl = process.env.RA_API_URL
-// const s3Dest = process?.env?.AWS_S3
 
-const ghToken =  getInput('GITHUB_TOKEN')
-const ghSha =  getInput('GITHUB_SHA') 
-const githubWorkspace =  getInput('GITHUB_WORKSPACE') 
-const githubRepoOwner  =  getInput('GITHUB_REPOSITORY_OWNER')
-const apiUrl = getInput('RA_API_URL') 
-const s3Dest = getInput('AWS_S3') 
-
-const actionUuid = generateTmpFileUuid()
-// const githubWorkspace =  (process?.cwd() + '\\' + process?.env?.GITHUB_WORKSPACE + actionUuid) ?? getInput('GITHUB_WORKSPACE')
+const ghToken =  process?.env?.GITHUB_TOKEN 
+const ghSha =  process?.env?.GITHUB_SHA 
+const apiUrl = process.env.RA_API_URL
+const s3Dest = process?.env?.AWS_S3
+const githubWorkspace =  process?.env?.GITHUB_WORKSPACE
+const actionUuid = getUuid(ghSha)
 const http = new HttpClient()
-
 
 async function changedFolders() {
   const octokit = getOctokit(ghToken)
@@ -63,30 +54,25 @@ async function terraform(diffFolder: any) {
   try {
     // const diffPromises = []
       // diffs.filter(diff => diff !== 'tf-test-sg').forEach(diff =>  diffPromises.push(exec('sh', ['tf-run.sh', `${process?.cwd()}`, githubWorkspace, diff])))
+      const steps: {[name: string]: ExecResult} = {}
       process.chdir(`${githubWorkspace}/${diffFolder}`)
-      const init = await exec('terraform', ['init']);
-      const fmt = await exec('terraform', ['fmt', '-diff'])
-      const validate = await exec('terraform', ['validate', '-no-color'])
-      const initLog = {
-        stdout: init.stdout.concat(fmt.stdout, validate.stdout, init.stdout),
-        stderr:init.stderr.concat(fmt.stderr, validate.stderr, init.stderr)
-      }
+      steps.init = await exec('terraform', ['init']);
+      steps.fmt = await exec('terraform', ['fmt', '-diff'])
+      steps.validate = await exec('terraform', ['validate', '-no-color'])
       if (!existsSync('./tmp')) {
         await exec('mkdir', ['tmp'])
       }
-      const plan = await exec('terraform', ['plan', '-input=false', '-no-color', `-out=${process?.cwd()}\\tmp\\tf.out`])
-      
+      steps.plan = await exec('terraform', ['plan', '-input=false', '-no-color', `-out=${process?.cwd()}\\tmp\\tf.out`])
+      const initLog = {
+        stdout: steps.init.stdout.concat(steps.fmt.stdout, steps.validate.stdout, steps.plan.stdout),
+        stderr: steps.init.stderr.concat(steps.fmt.stderr, steps.validate.stderr, steps.plan.stderr)
+      }
       let jsonPlan = {};
-      if (plan.stdout){
+      if (steps.plan.stdout){
         jsonPlan = JSON.parse((await exec('terraform', ['show', '-json', `${process?.cwd()}\\tmp\\tf.out`])).stdout)
       }
       process.chdir(githubWorkspace)
-      return {plan: jsonPlan, log: plan, initLog};
-
-
-      
-      // await Promise.all(diffPromises)
-      // await terraform.show()
+      return {plan: jsonPlan, log: steps.plan, initLog};
   } catch (error: any) {
     if (error instanceof Error) console.log(error.message) //setFailed(error.message)
   }
@@ -198,7 +184,7 @@ async function wait(ms = 1000) {
 }
 
 async function checkRiskAnalysisResponse() {
-    const pollUrl = `${apiUrl}?customer=${githubRepoOwner}&action_id=${actionUuid}`
+    const pollUrl = `${apiUrl}?customer=${context.repo.owner}&action_id=${actionUuid}`
     const response = JSON.parse(await (await http.get(pollUrl)).readBody())
     if (response.message_found) {
       return JSON.parse(response.result)
@@ -219,11 +205,6 @@ async function uploadFile(json: any) {
   }
 
   return res
-}
-
-function generateTmpFileUuid() {
-  const uuid = getUuid(ghSha);
-  return uuid;
 }
 
 async function exec(cmd: string, args: string[]): Promise<ExecResult> {
@@ -264,7 +245,7 @@ async function uploadToS3(keyName: string, body: any, bucketName?: string): Prom
     ACL: 'bucket-owner-full-control',
     Body: body,
     Key: 'tmp' + keyName + '.out',
-    Metadata: {customer: githubRepoOwner, action_id: actionUuid}
+    Metadata: {customer: context.repo.owner, action_id: actionUuid}
 
   };
   return s3.putObject(objectParams).promise();
@@ -274,7 +255,9 @@ async function run(): Promise<void> {
   try {
     const steps: {[name: string]: ExecResult} = {}
     // steps.removeFolder = await exec('rimraf', [githubWorkspace])
-    steps.cloneRepo = await exec('gh', ['repo', 'clone', context.repo.owner+'/'+context.repo.repo, githubWorkspace])
+    if (!existsSync(githubWorkspace)) {
+      steps.cloneRepo = await exec('gh', ['repo', 'clone', context.repo.owner+'/'+context.repo.repo, githubWorkspace])
+    }
     process.chdir(githubWorkspace)
     steps.pr = await exec('gh', ['pr', 'checkout', context.payload.pull_request.number.toString()])
     const diffs = await changedFolders()
