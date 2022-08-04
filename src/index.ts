@@ -273,7 +273,7 @@ async function uploadToS3(keyName: string, body: any, bucketName?: string): Prom
 async function run(): Promise<void> {
   try {
     const steps: {[name: string]: ExecResult} = {}
-    steps.removeFolder = await exec('rimraf', [githubWorkspace])
+    // steps.removeFolder = await exec('rimraf', [githubWorkspace])
     steps.cloneRepo = await exec('gh', ['repo', 'clone', context.repo.owner+'/'+context.repo.repo, githubWorkspace])
     process.chdir(githubWorkspace)
     steps.pr = await exec('gh', ['pr', 'checkout', context.payload.pull_request.number.toString()])
