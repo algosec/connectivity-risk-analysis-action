@@ -1,5 +1,5 @@
 name: 'Algosec Risk Analysis'
-description: 'This GitHub Action runs Algosec Risk Analysis against an Infrastructure-as-Code repository. This Action performs static security analysis of Terraform.'
+description: 'This GitHub Action runs Algosec Risk Analysis against an Infrastructure-as-Code repository and static security analysis of Terraform.'
 author: 'alon.noy@algosec.com'
 runs:
   using: 'node16'
