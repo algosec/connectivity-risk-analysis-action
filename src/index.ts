@@ -24,7 +24,9 @@ interface ExecResult {
 // import {githubEventPayloadMock, riskAnalysisMock} from './pull-request'
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 
+
 const ghToken =  process?.env?.GITHUB_TOKEN 
+const debugMode =  process?.env?.ALGOSEC_DEBUG 
 const ghSha =  process?.env?.GITHUB_SHA 
 const apiUrl = process.env.RA_API_URL
 const s3Dest = process?.env?.AWS_S3
@@ -254,10 +256,7 @@ async function uploadToS3(keyName: string, body: any, bucketName?: string): Prom
 async function run(): Promise<void> {
   try {
     const steps: {[name: string]: ExecResult} = {}
-    // steps.removeFolder = await exec('rimraf', [githubWorkspace])
-    if (!existsSync(githubWorkspace)) {
-      steps.cloneRepo = await exec('gh', ['repo', 'clone', context.repo.owner+'/'+context.repo.repo, githubWorkspace])
-    }
+    steps.cloneRepo = await exec('gh', ['repo', 'clone', context.repo.owner+'/'+context.repo.repo, githubWorkspace])
     process.chdir(githubWorkspace)
     steps.pr = await exec('gh', ['pr', 'checkout', context.payload.pull_request.number.toString()])
     const diffs = await changedFolders()
