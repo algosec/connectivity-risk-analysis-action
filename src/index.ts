@@ -29,13 +29,11 @@ const ghToken =  process?.env?.GITHUB_TOKEN
 const debugMode =  process?.env?.ALGOSEC_DEBUG 
 const ghSha =  process?.env?.GITHUB_SHA 
 const apiUrl = process.env.RA_API_URL
-const awsSecretKey = process.env.AWS_SECRET_ACCESS_KEY
-const awsKeyId = process.env.AWS_ACCESS_KEY_ID
-const awsRegion = process.env.AWS_REGION
 const s3Dest = process?.env?.AWS_S3
 const actionUuid = getUuid(ghSha)
 const githubWorkspace =  process?.env?.GITHUB_WORKSPACE//+'_'+actionUuid
 const http = new HttpClient()
+const workDir = githubWorkspace+'_'+actionUuid
 
 async function changedFolders() {
   const octokit = getOctokit(ghToken)
@@ -58,12 +56,9 @@ async function changedFolders() {
 async function terraform(diffFolder: any) {
   try {
       
-    // const diffPromises = []
-      // diffs.filter(diff => diff !== 'tf-test-sg').forEach(diff =>  diffPromises.push(exec('sh', ['tf-run.sh', `${process?.cwd()}`, githubWorkspace, diff])))
+  
       const steps: {[name: string]: ExecResult} = {}
-      steps.awsConfigureKey = await exec('aws', ['configure', 'set', 'aws_access_key_id', awsKeyId]) 
-      steps.awsConfigureSecret = await exec('aws', ['configure', 'set', 'aws_secret_access_key', awsSecretKey]) 
-      process.chdir(`${githubWorkspace}/${diffFolder}`)
+      process.chdir(`${workDir}/${diffFolder}`)
       steps.init = await exec('terraform', ['init']);
       steps.fmt = await exec('terraform', ['fmt', '-diff'])
       steps.validate = await exec('terraform', ['validate', '-no-color'])
@@ -79,7 +74,7 @@ async function terraform(diffFolder: any) {
       if (steps.plan.stdout){
         jsonPlan = JSON.parse((await exec('terraform', ['show', '-json', `${process?.cwd()}\\tmp\\tf.out`])).stdout)
       }
-      process.chdir(githubWorkspace)
+      process.chdir(workDir)
       return {plan: jsonPlan, log: steps.plan, initLog};
   } catch (error: any) {
     if (error instanceof Error) console.log(error.message) //setFailed(error.message)
@@ -262,13 +257,14 @@ async function uploadToS3(keyName: string, body: any, bucketName?: string): Prom
 async function run(): Promise<void> {
   try {
     const steps: {[name: string]: ExecResult} = {}
+
     // steps.cloneRepo = await exec('gh', ['repo', 'clone', context.repo.owner+'/'+context.repo.repo, githubWorkspace])
     // process.chdir(githubWorkspace)
     // steps.pr = await exec('gh', ['pr', 'checkout', context.payload.pull_request.number.toString()])
-    if (!existsSync(githubWorkspace)) {
-      steps.gitClone = await exec('git' , ['clone', `https://${context.repo.owner}:${ghToken}@github.com/${context.repo.owner}/${context.repo.repo}.git`, githubWorkspace])
+    if (!existsSync(workDir)) {
+      steps.gitClone = await exec('git' , ['clone', `https://${context.repo.owner}:${ghToken}@github.com/${context.repo.owner}/${context.repo.repo}.git`, workDir])
     }
-    process.chdir(githubWorkspace)
+    process.chdir(workDir)
     steps.gitFetch = await exec('git' , ['fetch', 'origin', `pull/${context.payload.pull_request.number.toString()}/head:${actionUuid}`])
     steps.gitCheckout = await exec('git' , ['checkout', actionUuid])
     const diffs = await changedFolders()
@@ -277,42 +273,48 @@ async function run(): Promise<void> {
       return
     }
     info('Step 1 - Diffs Result: ' + JSON.stringify(diffs))
-    const terraformResult = await terraform(diffs[0])
-    info('Step 2 - Terraform Result: ' + JSON.stringify(terraformResult))
-    let analysisResult;
-    // terraformResult.plan = s3FileMock 
-    if (uploadFile(terraformResult.plan)){
-    info('Step 3 - File Uploaded to S3 Successfully')
-      analysisResult = await pollRiskAnalysisResponse()
-      // let analysisResult = riskAnalysisMock
-    }
-    info('Step 4 - Risk Analysis Result: ' + JSON.stringify(analysisResult))
-    const risks = analysisResult?.additions
-    const commentBody = parseRiskAnalysis(risks, terraformResult)
-    // git.createComment(commentBody , octokit, context)
-    steps.comment = await exec('gh', ['pr', 'comment', context.payload.pull_request.number.toString(), '-b', commentBody])
-
-    if (analysisResult?.success) {
-    info('Step 5 - Parsing Risk Analysis')
-      if (risks?.analysis_state){
-    info('Step 6 - The risks analysis process completed successfully without any risks')
-        return
-      } else {
-        setFailed('The risks analysis process completed successfully with risks, please check report')
-      }
-    } else {
-      let errors = ''
-      Object.keys(steps).forEach(step => errors += steps[step].stderr)
-      setFailed('The risks analysis process completed with errors:\n' + errors)
-    }
-    
-   
-
+    const diffPromises = []
+    diffs.forEach(diff => diffPromises.push(initRiskAnalysis(diff)))
+    const response = await Promise.all(diffPromises)
+    console.log(response)
     
   } catch (error) {
     console.log(error)
   }
 
+}
+
+async function initRiskAnalysis(diff){
+  const steps: {[name: string]: ExecResult} = {}
+
+  const terraformResult = await terraform(diff)
+  info('Step 2 - Terraform Result: ' + JSON.stringify(terraformResult))
+  let analysisResult;
+  // terraformResult.plan = s3FileMock 
+  if (uploadFile(terraformResult.plan)){
+  info('Step 3 - File Uploaded to S3 Successfully')
+    analysisResult = await pollRiskAnalysisResponse()
+    // let analysisResult = riskAnalysisMock
+  }
+  info('Step 4 - Risk Analysis Result: ' + JSON.stringify(analysisResult))
+  const risks = analysisResult?.additions
+  const commentBody = parseRiskAnalysis(risks, terraformResult)
+  // git.createComment(commentBody , octokit, context)
+  steps.comment = await exec('gh', ['pr', 'comment', context.payload.pull_request.number.toString(), '-b', commentBody])
+
+  if (analysisResult?.success) {
+  info('Step 5 - Parsing Risk Analysis')
+    if (risks?.analysis_state){
+  info('Step 6 - The risks analysis process completed successfully without any risks')
+      return
+    } else {
+      setFailed('The risks analysis process completed successfully with risks, please check report')
+    }
+  } else {
+    let errors = ''
+    Object.keys(steps).forEach(step => errors += steps[step].stderr)
+    setFailed('The risks analysis process completed with errors:\n' + errors)
+  }
 }
 
 run()
