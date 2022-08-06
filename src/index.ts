@@ -20,18 +20,21 @@ interface ExecResult {
   stderr: string;
   code: number | null;
 }
-import {WebhookPayload} from '@actions/github/lib/interfaces'
-import {githubEventPayloadMock, riskAnalysisMock} from './pull-request'
-context.payload = githubEventPayloadMock as WebhookPayload & any
+// import {WebhookPayload} from '@actions/github/lib/interfaces'
+// import {githubEventPayloadMock, riskAnalysisMock} from './pull-request'
+// context.payload = githubEventPayloadMock as WebhookPayload & any
 
 
 const ghToken =  process?.env?.GITHUB_TOKEN 
 const debugMode =  process?.env?.ALGOSEC_DEBUG 
 const ghSha =  process?.env?.GITHUB_SHA 
 const apiUrl = process.env.RA_API_URL
+const awsSecretKey = process.env.AWS_SECRET_ACCESS_KEY
+const awsKeyId = process.env.AWS_ACCESS_KEY_ID
+const awsRegion = process.env.AWS_REGION
 const s3Dest = process?.env?.AWS_S3
 const actionUuid = getUuid(ghSha)
-const githubWorkspace =  process?.env?.GITHUB_WORKSPACE+'_'+actionUuid
+const githubWorkspace =  process?.env?.GITHUB_WORKSPACE//+'_'+actionUuid
 const http = new HttpClient()
 
 async function changedFolders() {
@@ -54,9 +57,12 @@ async function changedFolders() {
 
 async function terraform(diffFolder: any) {
   try {
+      
     // const diffPromises = []
       // diffs.filter(diff => diff !== 'tf-test-sg').forEach(diff =>  diffPromises.push(exec('sh', ['tf-run.sh', `${process?.cwd()}`, githubWorkspace, diff])))
       const steps: {[name: string]: ExecResult} = {}
+      steps.awsConfigureKey = await exec('aws', ['configure', 'set', 'aws_access_key_id', awsKeyId]) 
+      steps.awsConfigureSecret = await exec('aws', ['configure', 'set', 'aws_secret_access_key', awsSecretKey]) 
       process.chdir(`${githubWorkspace}/${diffFolder}`)
       steps.init = await exec('terraform', ['init']);
       steps.fmt = await exec('terraform', ['fmt', '-diff'])
