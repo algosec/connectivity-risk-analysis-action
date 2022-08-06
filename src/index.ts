@@ -95,7 +95,7 @@ function parseToGithubSyntax(analysis, terraform) {
     analysis?.analysis_result?.forEach(risk => {
       risksList +=
       `<details open="true">\n
-<summary><img width="10" height="10" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${risk.riskSeverity}.png" />  ${risk.riskId} | ${risk.riskTitle}</summary> \n
+<summary><img width="10" height="10" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/${risk.riskSeverity}.png" />  ${risk.riskId} | ${risk.riskTitle}</summary> \n
 ### **Description:**\n${risk.riskDescription}\n
 ### **Recommendation:**\n${risk.riskRecommendation.toString()}\n
 ### **Details:**\n
@@ -107,14 +107,14 @@ ${CODE_BLOCK}\n
 risksTableContents +=   
 `<tr>\n
 <td>${risk.riskId}</td>\n
-<td><img width="10" height="10" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${risk.riskSeverity}.png" /> ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
+<td><img width="10" height="10" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/${risk.riskSeverity}.png" /> ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
 <td>${risk.riskTitle}</td>\n
 </tr>\n`
 
 
     })
     const analysisIcon = analysis?.analysis_state ? 'success' : 'failure'
-    const header = `## <img height="35" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/algosec_logo.png" /><sup> &nbsp; Connectivity Risk Analysis &nbsp; <sub><sub><img height="22" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${analysisIcon}.png" /><sub><sub><sup><sup> \n`
+    const header = `## <img height="35" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/algosec_logo.png" /><sup> &nbsp; Connectivity Risk Analysis &nbsp; <sub><sub><img height="22" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/${analysisIcon}.png" /><sub><sub><sup><sup> \n`
     const risksTable = `<table>\n
 <thead>\n
 <tr>\n
@@ -128,7 +128,7 @@ ${risksTableContents}
 </tbody>
 </table>\n`
     const terraformIcon = (terraform?.log?.stderr == '' && terraform?.initLog?.stderr == '') ? 'success' : 'failure' 
-    const terraformContent = `\n## <sup>Terraform Processing &nbsp; <sub><sub><img height="22" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/${terraformIcon}.png" /><sub><sub><sup>\n
+    const terraformContent = `\n## <sup>Terraform Processing &nbsp; <sub><sub><img height="22" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/${terraformIcon}.png" /><sub><sub><sup>\n
 <details>
 <summary>Terraform Log</summary>
 <br>Output<br>
@@ -161,7 +161,7 @@ ${CODE_BLOCK}\n
     (analysis?.analysis_result?.length > 0 ? riskAnalysisContent : 'No Risks Found\n') +
     terraformContent +
     `</details>\n` +
-`*Pusher: @${context?.actor}, Action: \`${context?.eventName}\`, Working Directory: \'${githubWorkspace}\', Workflow: \'${context?.workflow }\'*`
+`<br>*Pusher: @${context?.actor}, Action: \`${context?.eventName}\`, Working Directory: \'${githubWorkspace}\', Workflow: \'${context?.workflow }\'*`
    
 
   return markdownOutput
