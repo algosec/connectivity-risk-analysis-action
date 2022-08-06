@@ -20,18 +20,18 @@ interface ExecResult {
   stderr: string;
   code: number | null;
 }
-// import {WebhookPayload} from '@actions/github/lib/interfaces'
-// import {githubEventPayloadMock, riskAnalysisMock} from './pull-request'
-// context.payload = githubEventPayloadMock as WebhookPayload & any
+import {WebhookPayload} from '@actions/github/lib/interfaces'
+import {githubEventPayloadMock, riskAnalysisMock} from './pull-request'
+context.payload = githubEventPayloadMock as WebhookPayload & any
 
 
-const ghToken =  process?.env?.GH_TOKEN 
+const ghToken =  process?.env?.GITHUB_TOKEN 
 const debugMode =  process?.env?.ALGOSEC_DEBUG 
 const ghSha =  process?.env?.GITHUB_SHA 
 const apiUrl = process.env.RA_API_URL
 const s3Dest = process?.env?.AWS_S3
-const githubWorkspace =  process?.env?.GITHUB_WORKSPACE
 const actionUuid = getUuid(ghSha)
+const githubWorkspace =  process?.env?.GITHUB_WORKSPACE+'_'+actionUuid
 const http = new HttpClient()
 
 async function changedFolders() {
@@ -40,14 +40,14 @@ async function changedFolders() {
   let diffFolders
   try {
     if (octokit && context?.payload?.pull_request) {
-      const diffs = await git.getDiff(octokit, context)
+      const diffs = await git.getDiff(octokit)
       const foldersSet = new Set(diffs
         .filter(diff => diff?.filename?.endsWith('.tf'))
         .map(diff => diff?.filename.split('/')[0]))
       diffFolders = [...foldersSet]
     }
   } catch (error: unknown) {
-    if (error instanceof Error) console.log(error.message) //setFailed(error.message)
+    if (error instanceof Error) setFailed(error.message)
   }
   return diffFolders
 }
@@ -256,9 +256,15 @@ async function uploadToS3(keyName: string, body: any, bucketName?: string): Prom
 async function run(): Promise<void> {
   try {
     const steps: {[name: string]: ExecResult} = {}
-    steps.cloneRepo = await exec('gh', ['repo', 'clone', context.repo.owner+'/'+context.repo.repo, githubWorkspace])
+    // steps.cloneRepo = await exec('gh', ['repo', 'clone', context.repo.owner+'/'+context.repo.repo, githubWorkspace])
+    // process.chdir(githubWorkspace)
+    // steps.pr = await exec('gh', ['pr', 'checkout', context.payload.pull_request.number.toString()])
+    if (!existsSync(githubWorkspace)) {
+      steps.gitClone = await exec('git' , ['clone', `https://${context.repo.owner}:${ghToken}@github.com/${context.repo.owner}/${context.repo.repo}.git`, githubWorkspace])
+    }
     process.chdir(githubWorkspace)
-    steps.pr = await exec('gh', ['pr', 'checkout', context.payload.pull_request.number.toString()])
+    steps.gitFetch = await exec('git' , ['fetch', 'origin', `pull/${context.payload.pull_request.number.toString()}/head:${actionUuid}`])
+    steps.gitCheckout = await exec('git' , ['checkout', actionUuid])
     const diffs = await changedFolders()
     if (diffs?.length == 0) {
     info('No changes were found in terraform plans')

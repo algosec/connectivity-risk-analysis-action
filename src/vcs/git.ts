@@ -6,7 +6,7 @@ import * as core from '@actions/core'
 export class GitProcessorExec extends Exec {
   static DEFAULT_GITHUB_URL = 'https://github.com';
 
-  async getDiff(octokit: InstanceType<typeof GitHub>, context: GithubContext) {
+  async getDiff(octokit: InstanceType<typeof GitHub>) {
 
     const result = await octokit.rest.repos.compareCommits({
       repo: context.repo.repo,
