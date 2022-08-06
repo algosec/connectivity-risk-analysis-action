@@ -65,14 +65,14 @@ async function terraform(diffFolder: any) {
       if (!existsSync('./tmp')) {
         await exec('mkdir', ['tmp'])
       }
-      steps.plan = await exec('terraform', ['plan', '-input=false', '-no-color', `-out=${process?.cwd()}\\tmp\\tf.out`])
+      steps.plan = await exec('terraform', ['plan', '-input=false', '-no-color', `-out=${process?.cwd()}\\tmp\\tf-${diffFolder}.out`])
       const initLog = {
         stdout: steps.init.stdout.concat(steps.fmt.stdout, steps.validate.stdout, steps.plan.stdout),
         stderr: steps.init.stderr.concat(steps.fmt.stderr, steps.validate.stderr, steps.plan.stderr)
       }
       let jsonPlan = {};
       if (steps.plan.stdout){
-        jsonPlan = JSON.parse((await exec('terraform', ['show', '-json', `${process?.cwd()}\\tmp\\tf.out`])).stdout)
+        jsonPlan = JSON.parse((await exec('terraform', ['show', '-json', `${process?.cwd()}\\tmp\\tf-${diffFolder}.out`])).stdout)
       }
       process.chdir(workDir)
       return {plan: jsonPlan, log: steps.plan, initLog};
@@ -288,7 +288,7 @@ async function initRiskAnalysis(diff){
   const steps: {[name: string]: ExecResult} = {}
 
   const terraformResult = await terraform(diff)
-  info('Step 2 - Terraform Result: ' + JSON.stringify(terraformResult))
+  info(`Step 2 - Terraform Result for folder ${diff}: ${JSON.stringify(terraformResult)}`)
   let analysisResult;
   // terraformResult.plan = s3FileMock 
   if (uploadFile(terraformResult.plan)){
