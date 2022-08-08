@@ -59,11 +59,13 @@ async function terraform(diffFolder: any) {
       const steps: {[name: string]: ExecResult} = {}
       process.chdir(`${workDir}/${diffFolder}`)
       steps.setupVersion = await exec('curl', ['-L', 'https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh', '|', 'bash']);
+      info('##### Algosec ##### tfswitch Installed successfully')
       if (process?.env?.TF_VERSION == "latest"  || process?.env?.TF_VERSION  == ""){
         steps.switchVersion = await exec('tfswitch', ['--latest']);
       } else {
         steps.switchVersion = await exec('tfswitch', []);
       }
+      info('##### Algosec ##### tfswitch version: ' + process?.env?.TF_VERSION)
       steps.init = await exec('terraform', ['init']);
 
       steps.fmt = await exec('terraform', ['fmt', '-diff'])
