@@ -103,4 +103,4 @@ __tests__/runner/*
 test-repo/
 .history/
 
-src/pull-request.ts
+src/mockData.ts

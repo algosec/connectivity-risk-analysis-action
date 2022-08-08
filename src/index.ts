@@ -10,7 +10,7 @@ import {existsSync, writeFileSync} from 'fs'
 import * as AWS from 'aws-sdk';
 import { PutObjectOutput } from 'aws-sdk/clients/s3'
 import 'dotenv/config'
-
+import {AwsProvider} from './providers/aws'
 const getUuid = require('uuid-by-string')
 
 export type GithubContext = typeof context
@@ -21,7 +21,7 @@ interface ExecResult {
   code: number | null;
 }
 // import {WebhookPayload} from '@actions/github/lib/interfaces'
-// import {githubEventPayloadMock, riskAnalysisMock} from './pull-request'
+// import {githubEventPayloadMock, riskAnalysisMock, terraformPlanFileMock} from './mockData'
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 
 
@@ -55,11 +55,17 @@ async function changedFolders() {
 
 async function terraform(diffFolder: any) {
   try {
-      
-  
+    
       const steps: {[name: string]: ExecResult} = {}
       process.chdir(`${workDir}/${diffFolder}`)
+      steps.setupVersion = await exec('curl', ['-L', 'https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh', '|', 'bash']);
+      if (process?.env?.TF_VERSION == "latest"  || process?.env?.TF_VERSION  == ""){
+        steps.switchVersion = await exec('tfswitch', ['--latest']);
+      } else {
+        steps.switchVersion = await exec('tfswitch', []);
+      }
       steps.init = await exec('terraform', ['init']);
+
       steps.fmt = await exec('terraform', ['fmt', '-diff'])
       steps.validate = await exec('terraform', ['validate', '-no-color'])
       if (!existsSync('./tmp')) {
@@ -173,7 +179,7 @@ async function pollRiskAnalysisResponse() {
   for (let i = 0; i < 50 ; i++) {
     await wait(3000);
     analysisResult = await checkRiskAnalysisResponse()
-    info('Response: ' + JSON.stringify(analysisResult))
+    info('##### Algosec ##### Response: ' + JSON.stringify(analysisResult))
     if (analysisResult) break;
   }
   return analysisResult;
@@ -181,7 +187,7 @@ async function pollRiskAnalysisResponse() {
 
 async function wait(ms = 1000) {
   return new Promise(resolve => {
-    console.log(`waiting ${ms} ms...`);
+    // console.log(`waiting ${ms} ms...`);
     setTimeout(resolve, ms);
   });
 }
@@ -199,9 +205,10 @@ async function checkRiskAnalysisResponse() {
 }
 
 async function uploadFile(json: any) {
+  const aws = new AwsProvider(actionUuid, s3Dest)
   let res = false;
   if (json){
-    const ans = await uploadToS3(actionUuid, JSON.stringify(json))
+    const ans = await aws.uploadToS3(actionUuid, JSON.stringify(json))
     if (ans){
       res = true;
     }
@@ -222,11 +229,11 @@ async function exec(cmd: string, args: string[]): Promise<ExecResult> {
           listeners: {
               stdout(data) {
                   res.stdout += data.toString();
-                  debug(`stdout: ${res.stdout}`);
+                  debug(`##### Algosec ##### stdout: ${res.stdout}`);
               },
               stderr(data) {
                   res.stderr += data.toString();
-                  debug(`stderr: ${res.stderr}`);
+                  debug(`##### Algosec ##### stderr: ${res.stderr}`);
               },
           },
       });
@@ -235,44 +242,33 @@ async function exec(cmd: string, args: string[]): Promise<ExecResult> {
       return res;
   } catch (err) {
       const msg = `Command '${cmd}' failed with args '${args.join(' ')}': ${res.stderr}: ${err}`;
-      debug(`@actions/exec.exec() threw an error: ${msg}`);
+      debug(`##### Algosec ##### @actions/exec.exec() threw an error: ${msg}`);
       throw new Error(msg);
   }
 }
 
-async function uploadToS3(keyName: string, body: any, bucketName?: string): Promise<PutObjectOutput> {
-  debug(`got the following bucket name ${bucketName}`);
-  const s3 = new AWS.S3();
-  const objectParams: AWS.S3.Types.PutObjectRequest = {
-    Bucket: s3Dest,
-    ACL: 'bucket-owner-full-control',
-    Body: body,
-    Key: 'tmp' + keyName + '.out',
-    Metadata: {customer: context.repo.owner, action_id: actionUuid}
 
-  };
-  return s3.putObject(objectParams).promise();
-}
 
 async function run(): Promise<void> {
   try {
     const steps: {[name: string]: ExecResult} = {}
-
+    
     // steps.cloneRepo = await exec('gh', ['repo', 'clone', context.repo.owner+'/'+context.repo.repo, githubWorkspace])
     // process.chdir(githubWorkspace)
     // steps.pr = await exec('gh', ['pr', 'checkout', context.payload.pull_request.number.toString()])
-    if (!existsSync(workDir)) {
-      steps.gitClone = await exec('git' , ['clone', `https://${context.repo.owner}:${ghToken}@github.com/${context.repo.owner}/${context.repo.repo}.git`, workDir])
+    if (debugMode) {
+      await exec('rimraf' , [workDir])
     }
+    steps.gitClone = await exec('git' , ['clone', `https://${context.repo.owner}:${ghToken}@github.com/${context.repo.owner}/${context.repo.repo}.git`, workDir])
     process.chdir(workDir)
     steps.gitFetch = await exec('git' , ['fetch', 'origin', `pull/${context.payload.pull_request.number.toString()}/head:${actionUuid}`])
     steps.gitCheckout = await exec('git' , ['checkout', actionUuid])
     const diffs = await changedFolders()
     if (diffs?.length == 0) {
-    info('No changes were found in terraform plans')
+    info('##### Algosec ##### No changes were found in terraform plans')
       return
     }
-    info('Step 1 - Diffs Result: ' + JSON.stringify(diffs))
+    info('##### Algosec ##### Step 1 - Diffs Result: ' + JSON.stringify(diffs))
     const diffPromises = []
     diffs.forEach(diff => diffPromises.push(initRiskAnalysis(diff)))
     const response = await Promise.all(diffPromises)
@@ -286,34 +282,34 @@ async function run(): Promise<void> {
 
 async function initRiskAnalysis(diff){
   const steps: {[name: string]: ExecResult} = {}
-
   const terraformResult = await terraform(diff)
-  info(`Step 2 - Terraform Result for folder ${diff}: ${JSON.stringify(terraformResult)}`)
+  info(`##### Algosec ##### Step 2 - Terraform Result for folder ${diff}: ${JSON.stringify(terraformResult)}`)
   let analysisResult;
-  // terraformResult.plan = s3FileMock 
-  if (uploadFile(terraformResult.plan)){
-  info('Step 3 - File Uploaded to S3 Successfully')
+  const fileUploaded = await uploadFile(terraformResult?.plan)
+  // const fileUploaded = await uploadFile(terraformPlanFileMock)
+  if (fileUploaded){
+  info('##### Algosec ##### Step 3 - File Uploaded to S3 Successfully')
     analysisResult = await pollRiskAnalysisResponse()
     // let analysisResult = riskAnalysisMock
   }
-  info('Step 4 - Risk Analysis Result: ' + JSON.stringify(analysisResult))
+  info('##### Algosec ##### Step 4 - Risk Analysis Result: ' + JSON.stringify(analysisResult))
   const risks = analysisResult?.additions
   const commentBody = parseRiskAnalysis(risks, terraformResult)
   // git.createComment(commentBody , octokit, context)
   steps.comment = await exec('gh', ['pr', 'comment', context.payload.pull_request.number.toString(), '-b', commentBody])
 
   if (analysisResult?.success) {
-  info('Step 5 - Parsing Risk Analysis')
+  info('##### Algosec ##### Step 5 - Parsing Risk Analysis')
     if (risks?.analysis_state){
-  info('Step 6 - The risks analysis process completed successfully without any risks')
+  info('##### Algosec ##### Step 6 - The risks analysis process completed successfully without any risks')
       return
     } else {
-      setFailed('The risks analysis process completed successfully with risks, please check report')
+      setFailed('##### Algosec ##### The risks analysis process completed successfully with risks, please check report')
     }
   } else {
     let errors = ''
     Object.keys(steps).forEach(step => errors += steps[step].stderr)
-    setFailed('The risks analysis process completed with errors:\n' + errors)
+    setFailed('##### Algosec ##### The risks analysis process completed with errors:\n' + errors)
   }
 }
 

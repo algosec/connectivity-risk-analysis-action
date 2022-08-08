@@ -32,11 +32,17 @@
     "@actions/exec": "^1.1.1",
     "@actions/github": "^5.0.3",
     "@actions/http-client": "^2.0.1",
+    "@aws-sdk/client-s3": "^3.142.0",
+    "@aws-sdk/s3-request-presigner": "^3.142.0",
     "@aws-sdk/types": "^3.127.0",
+    "@types/node-fetch": "^2.6.2",
     "aws-sdk": "^2.1181.0",
     "checkout": "github:actions/checkout",
     "dedent": "^0.7.0",
     "dotenv": "^16.0.1",
+    "es6-promise": "^4.2.8",
+    "isomorphic-fetch": "^3.0.0",
+    "node-fetch": "^3.2.10",
     "uuid-by-string": "^3.0.7"
   },
   "devDependencies": {

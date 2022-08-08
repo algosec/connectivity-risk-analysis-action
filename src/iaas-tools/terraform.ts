@@ -1,11 +1,11 @@
 import { Exec } from "../common/exec";
 import * as core from '@actions/core'
+import { IaaS } from "./iaas.model";
 
 
-export class TerraformExec extends Exec {
+export class TerraformIaaS implements IaaS {
 
     constructor(_tfToken: string = '') {
-        super();
     }
     async init(
             additionalTerraformOptions: string[] = [],

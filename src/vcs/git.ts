@@ -3,6 +3,7 @@ import { GithubContext } from "../index"
 import {Exec} from '../common/exec'
 import {context} from '@actions/github'
 import * as core from '@actions/core'
+import { VersionControlSystem } from "./vcs.model"
 export class GitProcessorExec extends Exec {
   static DEFAULT_GITHUB_URL = 'https://github.com';
 
