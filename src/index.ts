@@ -30,6 +30,7 @@ const debugMode =  process?.env?.ALGOSEC_DEBUG
 const ghSha =  process?.env?.GITHUB_SHA 
 const apiUrl = process.env.RA_API_URL
 const s3Dest = process?.env?.AWS_S3
+const tenantId = process?.env?.TENANT_ID
 const actionUuid = getUuid(ghSha)
 const githubWorkspace =  process?.env?.GITHUB_WORKSPACE//+'_'+actionUuid
 const http = new HttpClient()
@@ -58,13 +59,13 @@ async function terraform(diffFolder: any) {
     
       const steps: {[name: string]: ExecResult} = {}
       process.chdir(`${workDir}/${diffFolder}`)
-      steps.setupVersion = await exec('curl', ['-L', 'https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh', '|', 'bash']);
-      info('##### Algosec ##### tfswitch Installed successfully')
-      if (process?.env?.TF_VERSION == "latest"  || process?.env?.TF_VERSION  == ""){
-        steps.switchVersion = await exec('tfswitch', ['--latest']);
-      } else {
-        steps.switchVersion = await exec('tfswitch', []);
-      }
+      // steps.setupVersion = await exec('curl', ['-L', 'https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh', '|', 'bash']);
+      // info('##### Algosec ##### tfswitch Installed successfully')
+      // if (process?.env?.TF_VERSION == "latest"  || process?.env?.TF_VERSION  == ""){
+      //   steps.switchVersion = await exec('tfswitch', ['--latest']);
+      // } else {
+      //   steps.switchVersion = await exec('tfswitch', []);
+      // }
       info('##### Algosec ##### tfswitch version: ' + process?.env?.TF_VERSION)
       steps.init = await exec('terraform', ['init']);
 
@@ -210,7 +211,7 @@ async function uploadFile(json: any) {
   const aws = new AwsProvider(actionUuid, s3Dest)
   let res = false;
   if (json){
-    const ans = await aws.uploadToS3(actionUuid, JSON.stringify(json))
+    const ans = await aws.uploadToS3(tenantId, JSON.stringify(json))
     if (ans){
       res = true;
     }

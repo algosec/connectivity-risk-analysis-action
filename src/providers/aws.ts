@@ -27,41 +27,21 @@ export class AwsProvider implements CloudProvider {
         });
     }
 
-    async uploadToS3(keyName: string, body: any): Promise<any> {
-        const http = new HttpClient()
-    
-        // Set the parameters.
-   const bucketParams: PutObjectCommandInput = {
-    Bucket: this.s3Dest,
-    ACL: 'bucket-owner-full-control',
-    Body: body,
-    Key: `github-codeanalysis/tmp${keyName}.out`,
-    Metadata: {customer: context.repo.owner, action_id: this.actionUuid}
-  };
-  const command = new PutObjectCommand(bucketParams)
-  // Create the presigned URL.
-  const signedUrl = await getSignedUrl(s3Client, command, {
-      expiresIn: 3600,
-  });
-  const response = await http.put(signedUrl, JSON.stringify(bucketParams.Body));
-  if (response.message.statusCode == 200){
-    return response
-  } else {
-    setFailed(response.message.statusMessage)
-  }
+    async uploadToS3(tenantId: string, body: any): Promise<any> {
 
-        // debug(`got the following bucket name ${bucketName}`);
-        // const s3 = new AWS.S3();
-        // const objectParams: AWS.S3.Types.PutObjectRequest = {
-        //   Bucket: this.s3Dest,
-        //   ACL: 'bucket-owner-full-control',
-        //   Body: body,
-        //   Key: 'tmp' + keyName + '.out',
-        //   Metadata: {customer: context.repo.owner, action_id: actionUuid}
-      
-        // };
-        // return s3.putObject(objectParams).promise();
-      }
+
+        const http = new HttpClient()
+        const getPresignedUrl = `https://kqz04uqejd.execute-api.us-east-1.amazonaws.com/dev/cloudflow/api/devesecops/v1/presignedurl?tenantId=${tenantId}&actionId=${this.actionUuid}&owner=${context.repo.owner}`
+        const presignedUrlResponse = await (await http.get(getPresignedUrl)).readBody()
+        const presignedUrl = JSON.parse(presignedUrlResponse).presignedUrl
+        const response = await (await http.put(presignedUrl, body, {'Content-Type':'application/json'})).readBody()
+        if (response == ''){
+          return true
+        } else {
+          setFailed(response)
+        }
+
+    }
     
 }
 
