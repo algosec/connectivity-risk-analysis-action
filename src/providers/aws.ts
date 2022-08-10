@@ -31,7 +31,7 @@ export class AwsProvider implements CloudProvider {
 
 
         const http = new HttpClient()
-        const getPresignedUrl = `https://kqz04uqejd.execute-api.us-east-1.amazonaws.com/dev/cloudflow/api/devesecops/v1/presignedurl?tenantId=${tenantId}&actionId=${this.actionUuid}&owner=${context.repo.owner}`
+        const getPresignedUrl = `${process?.env?.SI_API_URL}?tenantId=${tenantId}&actionId=${this.actionUuid}&owner=${context.repo.owner}`
         const presignedUrlResponse = await (await http.get(getPresignedUrl)).readBody()
         const presignedUrl = JSON.parse(presignedUrlResponse).presignedUrl
         const response = await (await http.put(presignedUrl, body, {'Content-Type':'application/json'})).readBody()
