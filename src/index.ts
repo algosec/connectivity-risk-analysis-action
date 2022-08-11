@@ -125,8 +125,8 @@ risksTableContents +=
 
 
     })
-    const analysisIcon = analysis?.analysis_state ? 'success' : 'failure'
-    const header = `## <img height="35" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/algosec_logo.png" /><sup> &nbsp; Connectivity Risk Analysis &nbsp; <sub><sub><img height="22" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/${analysisIcon}.png" /><sub><sub><sup><sup> \n`
+    const analysisIcon = analysis?.analysis_state ? 'X' : 'V'
+    const header = `<img height="35" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/RiskAnalysis${analysisIcon}.svg" /> \n`
     const risksTable = `<table>\n
 <thead>\n
 <tr>\n
@@ -139,8 +139,8 @@ risksTableContents +=
 ${risksTableContents}                 
 </tbody>
 </table>\n`
-    const terraformIcon = (terraform?.log?.stderr == '' && terraform?.initLog?.stderr == '') ? 'success' : 'failure' 
-    const terraformContent = `\n## <sup>Terraform Processing &nbsp; <sub><sub><img height="22" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/${terraformIcon}.png" /><sub><sub><sup>\n
+    const terraformIcon = (terraform?.log?.stderr == '' && terraform?.initLog?.stderr == '') ? 'X' : 'V'
+    const terraformContent = `\n<img height="22" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/Terraform${terraformIcon}.svg" />\n
 <details>
 <summary>Terraform Log</summary>
 <br>Output<br>
@@ -203,7 +203,7 @@ async function wait(ms = 1000) {
 async function checkRiskAnalysisResponse() {
     const pollUrl = `${apiUrl}?customer=${context.repo.owner}&action_id=${actionUuid}`
     const response = await http.get(pollUrl)
-    if(response.message.statusCode == 200){
+    if(response?.message?.statusCode == 200){
       const message = JSON.parse(await response.readBody())
       if (message?.message_found) {
         return JSON.parse(message.result)
