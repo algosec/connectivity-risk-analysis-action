@@ -1,14 +1,11 @@
-import {debug, getInput, info, setFailed } from '@actions/core'
+import {debug, info, setFailed } from '@actions/core'
 import {context, getOctokit} from '@actions/github'
 import {HttpClient} from '@actions/http-client'
 
 import {GitProcessorExec} from './vcs/git'
-import {GitHub} from '@actions/github/lib/utils'
 
 import { exec as actionsExec } from '@actions/exec'
-import {existsSync, writeFileSync} from 'fs'
-import * as AWS from 'aws-sdk';
-import { PutObjectOutput } from 'aws-sdk/clients/s3'
+import {existsSync} from 'fs'
 import 'dotenv/config'
 import {AwsProvider} from './providers/aws'
 const getUuid = require('uuid-by-string')
@@ -125,7 +122,7 @@ risksTableContents +=
 
 
     })
-    const analysisIcon = analysis?.analysis_state ? 'X' : 'V'
+    const analysisIcon = analysis?.analysis_state ? 'V' : 'X'
     const header = `<img height="35" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/RiskAnalysis${analysisIcon}.svg" /> \n`
     const risksTable = `<table>\n
 <thead>\n
@@ -139,7 +136,7 @@ risksTableContents +=
 ${risksTableContents}                 
 </tbody>
 </table>\n`
-    const terraformIcon = (terraform?.log?.stderr == '' && terraform?.initLog?.stderr == '') ? 'X' : 'V'
+    const terraformIcon = (terraform?.log?.stderr == '' ) ? 'V' : 'X'
     const terraformContent = `\n<img height="22" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/Terraform${terraformIcon}.svg" />\n
 <details>
 <summary>Terraform Log</summary>
@@ -185,7 +182,7 @@ async function pollRiskAnalysisResponse() {
   for (let i = 0; i < 50 ; i++) {
     await wait(3000);
     analysisResult = await checkRiskAnalysisResponse()
-    if (analysisResult) {
+    if (analysisResult?.additions) {
       info('##### Algosec ##### Response: ' + JSON.stringify(analysisResult))
       break;
     }
