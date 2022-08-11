@@ -259,7 +259,9 @@ async function run(): Promise<void> {
   try {
     const steps: {[name: string]: ExecResult} = {}
     const jwt = await auth(tenantId, clientId, clientSecret, loginAPI)
-
+    if (jwt && jwt != ''){
+      setFailed('##### Algosec ##### Step 0 Failed to generate token')
+    }
     steps.auth = { code: 0,  stdout: jwt , stderr: ''}
     if (debugMode) {
       await exec('rimraf' , [workDir])
@@ -338,7 +340,7 @@ async function auth(tenantId: string, clientID: string, clientSecret: string, lo
               'Passed authentication vs CF\'s login. New token has been generated.');
           return data?.access_token;
       } else {
-          setFailed(`Failed to generate token. Error code ${response_code}, msg: ${data}`);
+          setFailed(`Failed to generate token. Error code ${response_code}, msg: ${JSON.stringify(data)}`);
       }
   } catch (error: any) {
       setFailed(`Failed to generate token. Error msg: ${error.toString()}`); 
