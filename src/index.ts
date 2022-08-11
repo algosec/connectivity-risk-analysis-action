@@ -336,12 +336,12 @@ async function auth(tenantId: string, clientID: string, clientSecret: string, lo
       if (200 <= response_code && response_code <= 300 ) {
           info(
               'Passed authentication vs CF\'s login. New token has been generated.');
-          return data.access_token;
+          return data?.access_token;
       } else {
           setFailed(`Failed to generate token. Error code ${response_code}, msg: ${data}`);
       }
   } catch (error: any) {
-      setFailed(`Error: ${error.toString()}`); 
+      setFailed(`Failed to generate token. Error msg: ${error.toString()}`); 
   }
   return '';
 }
