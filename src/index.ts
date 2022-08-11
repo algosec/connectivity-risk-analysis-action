@@ -28,7 +28,7 @@ interface ExecResult {
 const ghToken =  process?.env?.GITHUB_TOKEN 
 const debugMode =  process?.env?.ALGOSEC_DEBUG 
 const ghSha =  process?.env?.GITHUB_SHA 
-const apiUrl = process.env.RA_API_URL
+const apiUrl = process?.env?.RA_API_URL
 const s3Dest = process?.env?.AWS_S3
 const tenantId = process?.env?.TENANT_ID
 const clientId = process?.env?.CF_CLIENT_ID
@@ -202,12 +202,18 @@ async function wait(ms = 1000) {
 
 async function checkRiskAnalysisResponse() {
     const pollUrl = `${apiUrl}?customer=${context.repo.owner}&action_id=${actionUuid}`
-    const response = JSON.parse(await (await http.get(pollUrl)).readBody())
-    if (response.message_found) {
-      return JSON.parse(response.result)
+    const response = await http.get(pollUrl)
+    if(response.message.statusCode == 200){
+      const message = JSON.parse(await response.readBody())
+      if (message?.message_found) {
+        return JSON.parse(message.result)
+      } else {
+        return null
+      }
     } else {
-      return null
+      setFailed('##### Algosec ##### Poll Request failed: ' +response.message.statusMessage)
     }
+    
   
   
 }
