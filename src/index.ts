@@ -123,7 +123,7 @@ risksTableContents +=
 
     })
     const analysisIcon = analysis?.analysis_state ? 'V' : 'X'
-    const header = `<img height="35" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/RiskAnalysis${analysisIcon}.svg" /> \n`
+    const header = `<img height="50" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/RiskAnalysis${analysisIcon}.svg" /> \n`
     const risksTable = `<table>\n
 <thead>\n
 <tr>\n
@@ -137,7 +137,7 @@ ${risksTableContents}
 </tbody>
 </table>\n`
     const terraformIcon = (terraform?.log?.stderr == '' ) ? 'V' : 'X'
-    const terraformContent = `\n<img height="22" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/Terraform${terraformIcon}.svg" />\n
+    const terraformContent = `\n<img height="50" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/Terraform${terraformIcon}.svg" />\n
 <details>
 <summary>Terraform Log</summary>
 <br>Output<br>
