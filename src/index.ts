@@ -259,7 +259,7 @@ async function run(): Promise<void> {
   try {
     const steps: {[name: string]: ExecResult} = {}
     const jwt = await auth(tenantId, clientId, clientSecret, loginAPI)
-    if (jwt && jwt != ''){
+    if (!jwt || jwt == ''){
       setFailed('##### Algosec ##### Step 0 Failed to generate token')
     }
     steps.auth = { code: 0,  stdout: jwt , stderr: ''}
