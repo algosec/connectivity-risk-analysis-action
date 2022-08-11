@@ -20,9 +20,9 @@ interface ExecResult {
   stderr: string;
   code: number | null;
 }
-import {WebhookPayload} from '@actions/github/lib/interfaces'
-import {githubEventPayloadMock, riskAnalysisMock, terraformPlanFileMock} from './mockData'
-context.payload = githubEventPayloadMock as WebhookPayload & any
+// import {WebhookPayload} from '@actions/github/lib/interfaces'
+// import {githubEventPayloadMock, riskAnalysisMock, terraformPlanFileMock} from './mockData'
+// context.payload = githubEventPayloadMock as WebhookPayload & any
 
 
 const ghToken =  process?.env?.GITHUB_TOKEN 
@@ -168,7 +168,7 @@ ${CODE_BLOCK}\n
 
   const markdownOutput = 
     header +
-    risksTable + 
+    (analysis?.analysis_result?.length > 0 ? risksTable : '') + 
    `<details open="true">\n` +
     (analysis?.analysis_result?.length > 0 ? riskAnalysisContent : 'No Risks Found\n') +
     terraformContent +
@@ -261,6 +261,7 @@ async function run(): Promise<void> {
     const jwt = await auth(tenantId, clientId, clientSecret, loginAPI)
     if (!jwt || jwt == ''){
       setFailed('##### Algosec ##### Step 0 Failed to generate token')
+      return
     }
     steps.auth = { code: 0,  stdout: jwt , stderr: ''}
     if (debugMode) {
@@ -298,6 +299,10 @@ async function initRiskAnalysis(steps, diff){
   info('##### Algosec ##### Step 3 - File Uploaded to S3 Successfully')
     analysisResult = await pollRiskAnalysisResponse()
     // let analysisResult = riskAnalysisMock
+  }
+  if (!analysisResult){
+    setFailed('##### Algosec ##### Risk Analysis failed to due timeout')
+    return
   }
   info('##### Algosec ##### Step 4 - Risk Analysis Result: ' + JSON.stringify(analysisResult))
   const risks = analysisResult?.additions
