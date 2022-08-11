@@ -5,7 +5,7 @@ import { s3Client } from './s3Client'
 import { CloudProvider } from './provider.model';
 import { context } from '@actions/github';
 import { PutObjectCommand, PutObjectCommandInput, PutObjectOutput } from '@aws-sdk/client-s3';
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+// import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { HttpClient } from '@actions/http-client';
 
 export class AwsProvider implements CloudProvider {
@@ -27,11 +27,11 @@ export class AwsProvider implements CloudProvider {
         });
     }
 
-    async uploadToS3(tenantId: string, body: any): Promise<any> {
+    async uploadToS3(tenantId: string, body: any, jwt: string): Promise<any> {
 
 
         const http = new HttpClient()
-        const getPresignedUrl = `${process?.env?.SI_API_URL}?tenantId=${tenantId}&actionId=${this.actionUuid}&owner=${context.repo.owner}`
+        const getPresignedUrl = `${process?.env?.SI_API_URL}?jwt=${jwt}&tenantId=${tenantId}&actionId=${this.actionUuid}&owner=${context.repo.owner}`
         const presignedUrlResponse = await (await http.get(getPresignedUrl)).readBody()
         const presignedUrl = JSON.parse(presignedUrlResponse).presignedUrl
         const response = await (await http.put(presignedUrl, body, {'Content-Type':'application/json'})).readBody()

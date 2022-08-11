@@ -20,9 +20,9 @@ interface ExecResult {
   stderr: string;
   code: number | null;
 }
-// import {WebhookPayload} from '@actions/github/lib/interfaces'
-// import {githubEventPayloadMock, riskAnalysisMock, terraformPlanFileMock} from './mockData'
-// context.payload = githubEventPayloadMock as WebhookPayload & any
+import {WebhookPayload} from '@actions/github/lib/interfaces'
+import {githubEventPayloadMock, riskAnalysisMock, terraformPlanFileMock} from './mockData'
+context.payload = githubEventPayloadMock as WebhookPayload & any
 
 
 const ghToken =  process?.env?.GITHUB_TOKEN 
@@ -31,6 +31,9 @@ const ghSha =  process?.env?.GITHUB_SHA
 const apiUrl = process.env.RA_API_URL
 const s3Dest = process?.env?.AWS_S3
 const tenantId = process?.env?.TENANT_ID
+const clientId = process?.env?.CF_CLIENT_ID
+const clientSecret = process?.env?.CF_CLIENT_SECRET
+const loginAPI = process?.env?.CF_LOGIN_API
 const actionUuid = getUuid(ghSha)
 const githubWorkspace =  process?.env?.GITHUB_WORKSPACE//+'_'+actionUuid
 const http = new HttpClient()
@@ -148,7 +151,7 @@ ${terraform?.log?.stdout}\n
 ${CODE_BLOCK}\n
 Errors\n
 ${CODE_BLOCK}\n
-${terraform?.log?.stderr ?? terraform.initLog.stderr}\n
+${terraform?.log?.stderr ?? terraform?.initLog.stderr}\n
 ${CODE_BLOCK}\n
 </details> <!-- End Format Logs -->\n`
     const riskAnalysisContent = `<summary>Report</summary>\n
@@ -207,11 +210,11 @@ async function checkRiskAnalysisResponse() {
   
 }
 
-async function uploadFile(json: any) {
+async function uploadFile(json: any, jwt: string) {
   const aws = new AwsProvider(actionUuid, s3Dest)
   let res = false;
   if (json){
-    const ans = await aws.uploadToS3(tenantId, JSON.stringify(json))
+    const ans = await aws.uploadToS3(tenantId, JSON.stringify(json), jwt)
     if (ans){
       res = true;
     }
@@ -255,10 +258,8 @@ async function exec(cmd: string, args: string[]): Promise<ExecResult> {
 async function run(): Promise<void> {
   try {
     const steps: {[name: string]: ExecResult} = {}
-    
-    // steps.cloneRepo = await exec('gh', ['repo', 'clone', context.repo.owner+'/'+context.repo.repo, githubWorkspace])
-    // process.chdir(githubWorkspace)
-    // steps.pr = await exec('gh', ['pr', 'checkout', context.payload.pull_request.number.toString()])
+    const jwt = await auth(tenantId, clientId, clientSecret, loginAPI)
+    steps.auth = { code: 0,  stdout: jwt , stderr: ''}
     if (debugMode) {
       await exec('rimraf' , [workDir])
     }
@@ -273,7 +274,7 @@ async function run(): Promise<void> {
     }
     info('##### Algosec ##### Step 1 - Diffs Result: ' + JSON.stringify(diffs))
     const diffPromises = []
-    diffs.forEach(diff => diffPromises.push(initRiskAnalysis(diff)))
+    diffs.forEach(diff => diffPromises.push(initRiskAnalysis(steps, diff)))
     const response = await Promise.all(diffPromises)
     console.log(response)
     
@@ -283,12 +284,12 @@ async function run(): Promise<void> {
 
 }
 
-async function initRiskAnalysis(diff){
-  const steps: {[name: string]: ExecResult} = {}
+async function initRiskAnalysis(steps, diff){
+
   const terraformResult = await terraform(diff)
   info(`##### Algosec ##### Step 2 - Terraform Result for folder ${diff}: ${JSON.stringify(terraformResult)}`)
   let analysisResult;
-  const fileUploaded = await uploadFile(terraformResult?.plan)
+  const fileUploaded = await uploadFile(terraformResult?.plan, steps.auth.stdout)
   // const fileUploaded = await uploadFile(terraformPlanFileMock)
   if (fileUploaded){
   info('##### Algosec ##### Step 3 - File Uploaded to S3 Successfully')
@@ -314,6 +315,34 @@ async function initRiskAnalysis(diff){
     Object.keys(steps).forEach(step => errors += steps[step].stderr)
     setFailed('##### Algosec ##### The risks analysis process completed with errors:\n' + errors)
   }
+}
+
+async function auth(tenantId: string, clientID: string, clientSecret: string, loginAPI: string): Promise<string> {
+  const payload = {
+      "tenantId": tenantId,
+      "clientId": clientID,
+      "clientSecret": clientSecret
+  };
+
+  const headers = {
+      "Content-Type": "application/json"
+  }
+  try {
+      const res = await http.post(loginAPI, JSON.stringify(payload),headers)
+      
+      const response_code = res.message.statusCode;
+      const data = JSON.parse(await res.readBody())
+      if (200 <= response_code && response_code <= 300 ) {
+          info(
+              'Passed authentication vs CF\'s login. New token has been generated.');
+          return data.access_token;
+      } else {
+          throw Error(`Failed to generate token. Error code ${response_code}, msg: ${data}`);
+      }
+  } catch (error: any) {
+      setFailed(`Error: ${error.toString()}`); 
+  }
+  return '';
 }
 
 run()
