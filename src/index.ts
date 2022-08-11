@@ -185,8 +185,10 @@ async function pollRiskAnalysisResponse() {
   for (let i = 0; i < 50 ; i++) {
     await wait(3000);
     analysisResult = await checkRiskAnalysisResponse()
-    info('##### Algosec ##### Response: ' + JSON.stringify(analysisResult))
-    if (analysisResult) break;
+    if (analysisResult) {
+      info('##### Algosec ##### Response: ' + JSON.stringify(analysisResult))
+      break;
+    }
   }
   return analysisResult;
 }
