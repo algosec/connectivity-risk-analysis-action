@@ -1,27 +1,19 @@
-import { Exec } from "../common/exec";
+import { exec, ExecResult } from "../common/exec";
 import * as core from '@actions/core'
-import { IaaS } from "./iaas.model";
+import { IFramework } from "./framework.model";
+import { info } from "@actions/core";
+import { existsSync } from "fs";
 
 
-export class TerraformIaaS implements IaaS {
-
+export class Terraform implements IFramework {
     constructor(_tfToken: string = '') {
+
     }
-    async init(
-            additionalTerraformOptions: string[] = [],
-            ...options: string[]
-        ): Promise<string> {
-            
-            core.debug(`Executing 'git clone' to directory with token and options '${options.join(' ')}'`);
-        
-            // const remote = this.getRepoRemoteUrl(token, ghRepository);
-            let args = ['init'];
-            if (options.length > 0) {
-                args = args.concat(options);
-            }
-        
-            return this.cmd(additionalTerraformOptions, ...args);
-   }
+
+    async init(options: any){
+        const terraformResult = await this.terraform(options)
+            info(`##### Algosec ##### Step 2 - Terraform Result for folder ${options.runFolder}: ${JSON.stringify(terraformResult)}`)
+    }
 
    
    async fmt(
@@ -84,16 +76,40 @@ export class TerraformIaaS implements IaaS {
         return this.cmd(additionalTerraformOptions, ...args);
     }
 
-    async cmd(additionalTerraformOptions: string[], ...args: string[]): Promise<string> {
-        core.debug(`Executing Git: ${args.join(' ')}`);
-        // const serverUrl = this.getServerUrl(context.payload.repository?.html_url);
-        const userArgs = [
-            ...additionalTerraformOptions,
-        ];
-        const res = await this.capture('terraform', userArgs.concat(args));
-        if (res.code !== 0) {
-            throw new Error(`Command 'terraform ${args.join(' ')}' failed: ${JSON.stringify(res)}`);
+
+    async terraform(options: any) {
+        try {
+          
+            const steps: {[name: string]: ExecResult} = {}
+            process.chdir(`${options.workDir}/${options.runFolder}`)
+            // steps.setupVersion = await exec('curl', ['-L', 'https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh', '|', 'bash']);
+            // info('##### Algosec ##### tfswitch Installed successfully')
+            // if (process?.env?.TF_VERSION == "latest"  || process?.env?.TF_VERSION  == ""){
+            //   steps.switchVersion = await exec('tfswitch', ['--latest']);
+            // } else {
+            //   steps.switchVersion = await exec('tfswitch', []);
+            // }
+            info('##### Algosec ##### tfswitch version: ' + process?.env?.TF_VERSION)
+            steps.init = await exec('terraform', ['init']);
+      
+            steps.fmt = await exec('terraform', ['fmt', '-diff'])
+            steps.validate = await exec('terraform', ['validate', '-no-color'])
+            if (!existsSync('./tmp')) {
+              await exec('mkdir', ['tmp'])
+            }
+            steps.plan = await exec('terraform', ['plan', '-input=false', '-no-color', `-out=${process?.cwd()}\\tmp\\tf-${options.runFolder}.out`])
+            const initLog = {
+              stdout: steps.init.stdout.concat(steps.fmt.stdout, steps.validate.stdout, steps.plan.stdout),
+              stderr: steps.init.stderr.concat(steps.fmt.stderr, steps.validate.stderr, steps.plan.stderr)
+            }
+            let jsonPlan = {};
+            if (steps.plan.stdout){
+              jsonPlan = JSON.parse((await exec('terraform', ['show', '-json', `${process?.cwd()}\\tmp\\tf-${options.runFolder}.out`])).stdout)
+            }
+            process.chdir(options.workDir)
+            return {plan: jsonPlan, log: steps.plan, initLog};
+        } catch (error: any) {
+          if (error instanceof Error) console.log(error.message) //setFailed(error.message)
         }
-        return res.stdout;
       }
 }

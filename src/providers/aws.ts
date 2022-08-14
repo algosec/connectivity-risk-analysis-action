@@ -2,19 +2,23 @@
 import AWS, { config } from 'aws-sdk'; 
 import{debug, getInput, setFailed } from '@actions/core'
 import { s3Client } from './s3Client'
-import { CloudProvider } from './provider.model';
+import { ICloudProvider } from './provider.model';
 import { context } from '@actions/github';
 import { PutObjectCommand, PutObjectCommandInput, PutObjectOutput } from '@aws-sdk/client-s3';
 // import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { HttpClient } from '@actions/http-client';
 
-export class AwsProvider implements CloudProvider {
+export class Aws implements ICloudProvider {
     s3Dest: string
     actionUuid: string
 
-    constructor(actionUuid: string, s3Dest: string){
+    constructor(actionUuid?: string, s3Dest?: string){
         this.s3Dest = s3Dest
         this.actionUuid = actionUuid
+    }
+
+    init() {
+        return 'Aws'
     }
 
     async login() {

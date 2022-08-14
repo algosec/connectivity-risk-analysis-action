@@ -1,8 +1,9 @@
-import { exec } from '@actions/exec';
+import { exec as actionsExec } from '@actions/exec'
 import * as core from '@actions/core';
+import { debug } from '@actions/core';
 
 
-export abstract class Exec {
+export class Exec {
      async capture(cmd: string, args: string[]): Promise<ExecResult> {
         const res: ExecResult = {
             stdout: '',
@@ -34,7 +35,7 @@ export abstract class Exec {
 
 }
 
-interface ExecResult {
+export interface ExecResult {
     stdout: string;
     stderr: string;
     code: number | null;
@@ -43,3 +44,32 @@ interface ExecResult {
 
 
 
+export async function exec(cmd: string, args: string[]): Promise<ExecResult> {
+    const res: ExecResult = {
+        stdout: '',
+        stderr: '',
+        code: null,
+    };
+  
+    try {
+        const code = await actionsExec(cmd, args, {
+            listeners: {
+                stdout(data) {
+                    res.stdout += data.toString();
+                    debug(`##### Algosec ##### stdout: ${res.stdout}`);
+                },
+                stderr(data) {
+                    res.stderr += data.toString();
+                    debug(`##### Algosec ##### stderr: ${res.stderr}`);
+                },
+            },
+        });
+        
+        res.code = code;
+        return res;
+    } catch (err) {
+        const msg = `Command '${cmd}' failed with args '${args.join(' ')}': ${res.stderr}: ${err}`;
+        debug(`##### Algosec ##### @actions/exec.exec() threw an error: ${msg}`);
+        throw new Error(msg);
+    }
+  }

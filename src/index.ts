@@ -1,13 +1,14 @@
-import {debug, info, setFailed } from '@actions/core'
+import {info, setFailed } from '@actions/core'
 import {context, getOctokit} from '@actions/github'
 import {HttpClient} from '@actions/http-client'
-
-import {GitProcessorExec} from './vcs/git'
-
-import { exec as actionsExec } from '@actions/exec'
-import {existsSync} from 'fs'
+import {Github} from './vcs/github'
+import { exec } from './common/exec'
 import 'dotenv/config'
-import {AwsProvider} from './providers/aws'
+import {VersionControlService} from './vcs/vcs.service'
+import {FrameworkKeys} from './iaas-tools/framework.model'
+import {FrameworkService } from './iaas-tools/framework.service'
+import { Aws } from './providers/aws'
+import { VersionControlKeys } from './vcs/vcs.model'
 const getUuid = require('uuid-by-string')
 
 export type GithubContext = typeof context
@@ -21,87 +22,58 @@ interface ExecResult {
 // import {githubEventPayloadMock, riskAnalysisMock, terraformPlanFileMock} from './mockData'
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 
-
-const ghToken =  process?.env?.GITHUB_TOKEN 
-const debugMode =  process?.env?.ALGOSEC_DEBUG 
-const ghSha =  process?.env?.GITHUB_SHA 
-const apiUrl = process?.env?.RA_API_URL
-const s3Dest = process?.env?.AWS_S3
-const tenantId = process?.env?.TENANT_ID
-const clientId = process?.env?.CF_CLIENT_ID
-const clientSecret = process?.env?.CF_CLIENT_SECRET
-const loginAPI = process?.env?.CF_LOGIN_API
-const actionUuid = getUuid(ghSha)
-const githubWorkspace =  process?.env?.GITHUB_WORKSPACE//+'_'+actionUuid
-const http = new HttpClient()
-const workDir = githubWorkspace+'_'+actionUuid
-
-async function changedFolders() {
-  const octokit = getOctokit(ghToken)
-  const git = new GitProcessorExec()
-  let diffFolders
-  try {
-    if (octokit && context?.payload?.pull_request) {
-      const diffs = await git.getDiff(octokit)
-      const foldersSet = new Set(diffs
-        .filter(diff => diff?.filename?.endsWith('.tf'))
-        .map(diff => diff?.filename.split('/')[0]))
-      diffFolders = [...foldersSet]
-    }
-  } catch (error: unknown) {
-    if (error instanceof Error) setFailed(error.message)
-  }
-  return diffFolders
-}
-
-async function terraform(diffFolder: any) {
-  try {
-    
-      const steps: {[name: string]: ExecResult} = {}
-      process.chdir(`${workDir}/${diffFolder}`)
-      // steps.setupVersion = await exec('curl', ['-L', 'https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh', '|', 'bash']);
-      // info('##### Algosec ##### tfswitch Installed successfully')
-      // if (process?.env?.TF_VERSION == "latest"  || process?.env?.TF_VERSION  == ""){
-      //   steps.switchVersion = await exec('tfswitch', ['--latest']);
-      // } else {
-      //   steps.switchVersion = await exec('tfswitch', []);
-      // }
-      info('##### Algosec ##### tfswitch version: ' + process?.env?.TF_VERSION)
-      steps.init = await exec('terraform', ['init']);
-
-      steps.fmt = await exec('terraform', ['fmt', '-diff'])
-      steps.validate = await exec('terraform', ['validate', '-no-color'])
-      if (!existsSync('./tmp')) {
-        await exec('mkdir', ['tmp'])
-      }
-      steps.plan = await exec('terraform', ['plan', '-input=false', '-no-color', `-out=${process?.cwd()}\\tmp\\tf-${diffFolder}.out`])
-      const initLog = {
-        stdout: steps.init.stdout.concat(steps.fmt.stdout, steps.validate.stdout, steps.plan.stdout),
-        stderr: steps.init.stderr.concat(steps.fmt.stderr, steps.validate.stderr, steps.plan.stderr)
-      }
-      let jsonPlan = {};
-      if (steps.plan.stdout){
-        jsonPlan = JSON.parse((await exec('terraform', ['show', '-json', `${process?.cwd()}\\tmp\\tf-${diffFolder}.out`])).stdout)
-      }
-      process.chdir(workDir)
-      return {plan: jsonPlan, log: steps.plan, initLog};
-  } catch (error: any) {
-    if (error instanceof Error) console.log(error.message) //setFailed(error.message)
-  }
-}
-
-function parseRiskAnalysis(analysis, terraform) {
-  const body = parseToGithubSyntax(analysis, terraform)
-  return body;
-}
-
-function parseToGithubSyntax(analysis, terraform) {
+export class RiskAnalysis{
+  steps: {[name: string]: ExecResult} = {}
+  ghToken =  process?.env?.GITHUB_TOKEN 
+  debugMode =  process?.env?.ALGOSEC_DEBUG 
+  ghSha =  process?.env?.GITHUB_SHA 
+  apiUrl = process?.env?.RA_API_URL
+  s3Dest = process?.env?.AWS_S3
+  tenantId = process?.env?.TENANT_ID
+  clientId = process?.env?.CF_CLIENT_ID
+  clientSecret = process?.env?.CF_CLIENT_SECRET
+  loginAPI = process?.env?.CF_LOGIN_API
+  actionUuid = getUuid(this.ghSha)
+  githubWorkspace =  process?.env?.GITHUB_WORKSPACE//+'_'+actionUuid
+  http = new HttpClient()
+  workDir = this.githubWorkspace+'_'+this.actionUuid
+  frameworkType: FrameworkKeys = process?.env?.FRAMEWORK_TYPE as FrameworkKeys
+  vcsType: VersionControlKeys = process?.env?.VCS_TYPE as VersionControlKeys
+  fileType = process?.env?.FILE_TYPE
   
-    const CODE_BLOCK = '```';
-    
-    let risksList = '' 
-    let risksTableContents = ''
-    analysis?.analysis_result?.forEach(risk => {
+  constructor(){
+  }
+     
+  async checkForDiff(fileType: string) {
+    const octokit = getOctokit(this.ghToken)
+    const git = new Github()
+    let diffFolders
+    try {
+      if (octokit && context?.payload?.pull_request) {
+        const diffs = await git.getDiff(octokit)
+        const foldersSet = new Set(diffs
+          .filter(diff => diff?.filename?.endsWith(fileType))
+          .map(diff => diff?.filename.split('/')[0]))
+        diffFolders = [...foldersSet]
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) setFailed(error.message)
+    }
+    if (diffFolders?.length == 0) {
+      info('##### Algosec ##### No changes were found in terraform plans')
+        return
+      }
+      info('##### Algosec ##### Step 1 - Diffs Result: ' + JSON.stringify(diffFolders))
+    return diffFolders
+  }
+
+  parseRiskAnalysis(analysis, terraform) {
+
+      const CODE_BLOCK = '```';
+
+      let risksList = '' 
+      let risksTableContents = ''
+      analysis?.analysis_result?.forEach(risk => {
       risksList +=
       `<details open="true">\n
 <summary><img width="10" height="10" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/${risk.riskSeverity}.png" />  ${risk.riskId} | ${risk.riskTitle}</summary> \n
@@ -121,10 +93,10 @@ risksTableContents +=
 </tr>\n`
 
 
-    })
-    const analysisIcon = analysis?.analysis_state ? 'V' : 'X'
-    const header = `<img height="50" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/RiskAnalysis${analysisIcon}.svg" /> \n`
-    const risksTable = `<table>\n
+      })
+      const analysisIcon = analysis?.analysis_state ? 'V' : 'X'
+      const header = `<img height="50" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/RiskAnalysis${analysisIcon}.svg" /> \n`
+      const risksTable = `<table>\n
 <thead>\n
 <tr>\n
 <th align="left" scope="col">Risk ID</th>\n
@@ -135,9 +107,9 @@ risksTableContents +=
 <tbody id="tableBody">\n
 ${risksTableContents}                 
 </tbody>
-</table>\n`
-    const terraformIcon = (terraform?.log?.stderr == '' ) ? 'V' : 'X'
-    const terraformContent = `\n<img height="50" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/Terraform${terraformIcon}.svg" />\n
+  </table>\n`
+      const terraformIcon = (terraform?.log?.stderr == '' ) ? 'V' : 'X'
+      const terraformContent = `\n<img height="50" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/Terraform${terraformIcon}.svg" />\n
 <details>
 <summary>Terraform Log</summary>
 <br>Output<br>
@@ -150,214 +122,203 @@ Errors\n
 ${CODE_BLOCK}\n
 ${terraform?.log?.stderr ?? terraform?.initLog.stderr}\n
 ${CODE_BLOCK}\n
-</details> <!-- End Format Logs -->\n`
-    const riskAnalysisContent = `<summary>Report</summary>\n
-${risksList}\n
-<details>
-<summary>Logs</summary>
-<br>Output<br>
-&nbsp;
+  </details> <!-- End Format Logs -->\n`
+      const riskAnalysisContent = `<summary>Report</summary>\n
+  ${risksList}\n
+  <details>
+  <summary>Logs</summary>
+  <br>Output<br>
+  &nbsp;
 
-${CODE_BLOCK}\n
-${JSON.stringify(analysis?.analysis_result, null, "\t")}\n
-${CODE_BLOCK}\n
-</details>\n`
+  ${CODE_BLOCK}\n
+  ${JSON.stringify(analysis?.analysis_result, null, "\t")}\n
+  ${CODE_BLOCK}\n
+  </details>\n`
 
-  const markdownOutput = 
-    header +
-    (analysis?.analysis_result?.length > 0 ? risksTable : '') + 
-   `<details open="true">\n` +
-    (analysis?.analysis_result?.length > 0 ? riskAnalysisContent : 'No Risks Found\n') +
-    terraformContent +
-    `</details>\n` +
-`<br>*Pusher: @${context?.actor}, Action: \`${context?.eventName}\`, Working Directory: \'${githubWorkspace}\', Workflow: \'${context?.workflow }\'*`
-   
+    const markdownOutput = 
+      header +
+      (analysis?.analysis_result?.length > 0 ? risksTable : '') + 
+     `<details open="true">\n` +
+      (analysis?.analysis_result?.length > 0 ? riskAnalysisContent : 'No Risks Found\n') +
+      terraformContent +
+      `</details>\n` +
+  `<br>*Pusher: @${context?.actor}, Action: \`${context?.eventName}\`, Working Directory: \'${this.githubWorkspace}\', Workflow: \'${context?.workflow }\'*`
+    
 
-  return markdownOutput
-}
-
-async function pollRiskAnalysisResponse() {
-
-  let analysisResult = await checkRiskAnalysisResponse()
-  for (let i = 0; i < 50 ; i++) {
-    await wait(3000);
-    analysisResult = await checkRiskAnalysisResponse()
-    if (analysisResult?.additions) {
-      info('##### Algosec ##### Response: ' + JSON.stringify(analysisResult))
-      break;
-    }
+    return markdownOutput
   }
-  return analysisResult;
-}
 
-async function wait(ms = 1000) {
-  return new Promise(resolve => {
-    // console.log(`waiting ${ms} ms...`);
-    setTimeout(resolve, ms);
-  });
-}
+  async pollRiskAnalysisResponse() {
 
-async function checkRiskAnalysisResponse() {
-    const pollUrl = `${apiUrl}?customer=${context.repo.owner}&action_id=${actionUuid}`
-    const response = await http.get(pollUrl)
-    if(response?.message?.statusCode == 200){
-      const message = JSON.parse(await response.readBody())
-      if (message?.message_found) {
-        return JSON.parse(message.result)
+    let analysisResult = await this.checkRiskAnalysisResponse()
+    for (let i = 0; i < 50 ; i++) {
+      await this.wait(3000);
+      analysisResult = await this.checkRiskAnalysisResponse()
+      if (analysisResult?.additions) {
+        info('##### Algosec ##### Response: ' + JSON.stringify(analysisResult))
+        break;
+      }
+    }
+    return analysisResult;
+  }
+
+  async wait(ms = 1000) {
+    return new Promise(resolve => {
+      info(`waiting for response...`);
+      setTimeout(resolve, ms);
+    });
+  }
+
+  async checkRiskAnalysisResponse() {
+      const pollUrl = `${this.apiUrl}?customer=${context.repo.owner}&action_id=${this.actionUuid}`
+      const response = await this.http.get(pollUrl)
+      if(response?.message?.statusCode == 200){
+        const message = JSON.parse(await response.readBody())
+        if (message?.message_found) {
+          return JSON.parse(message.result)
+        } else {
+          return null
+        }
       } else {
-        return null
+        setFailed('##### Algosec ##### Poll Request failed: ' +response.message.statusMessage)
+      }
+
+    
+    
+  }
+
+  async uploadFile(json: any, jwt: string) {
+    const aws = new Aws(this.actionUuid, this.s3Dest)
+    let res = false;
+    if (json){
+      const ans = await aws.uploadToS3(this.tenantId, JSON.stringify(json), jwt)
+      if (ans){
+        res = true;
+      }
+    }
+    return res
+  }
+
+  async run(): Promise<void> {
+    try {
+
+      const jwt = await this.auth(this.tenantId, this.clientId, this.clientSecret, this.loginAPI)
+      if (!jwt || jwt == ''){
+        setFailed('##### Algosec ##### Step 0 Failed to generate token')
+        return
+      }
+      this.steps.auth = { code: 0,  stdout: jwt , stderr: ''}
+      const vcs =  new VersionControlService().getInstanceByType(this.vcsType)
+      if (this.debugMode) {
+        await exec('rimraf' , [this.workDir])
+      }
+      await this.prepareRepo()
+
+      const foldersToRunCheck = await this.checkForDiff(this.fileType)
+      const framework =  new FrameworkService().getInstanceByType(this.frameworkType)
+
+      const asyncIterable = async (iterable, action) => {
+        for (const [index, value] of iterable.entries()) {
+          await action(value)
+          info(`##### Algosec ##### Step 2.${index}- ${this.frameworkType} Result for folder ${value}: ${JSON.stringify(framework)}`)
+        }
+      }
+      const filesToUpload = await asyncIterable(foldersToRunCheck, framework.init())
+      await this.triggerRiskAnalysis(filesToUpload, this.steps.jwt.stdout)
+    
+      const riskAnalysisResponse = await this.getRiskAnalysis()
+      await this.parseOutput(riskAnalysisResponse)
+    } catch (error) {
+      info(error)
+    }
+
+  }
+
+  async  parseOutput(analysisResult){
+    const risks = analysisResult?.additions
+    const commentBody = this.parseRiskAnalysis(risks, this.steps.framework)
+    // git.createComment(commentBody , octokit, context)
+    this.steps.comment = await exec('gh', ['pr', 'comment', context.payload.pull_request.number.toString(), '-b', commentBody])
+
+    if (analysisResult?.success) {
+    info('##### Algosec ##### Step 5 - Parsing Risk Analysis')
+      if (risks?.analysis_state){
+    info('##### Algosec ##### Step 6 - The risks analysis process completed successfully without any risks')
+        return
+      } else {
+        setFailed('##### Algosec ##### The risks analysis process completed successfully with risks, please check report')
       }
     } else {
-      setFailed('##### Algosec ##### Poll Request failed: ' +response.message.statusMessage)
-    }
-    
-  
-  
-}
-
-async function uploadFile(json: any, jwt: string) {
-  const aws = new AwsProvider(actionUuid, s3Dest)
-  let res = false;
-  if (json){
-    const ans = await aws.uploadToS3(tenantId, JSON.stringify(json), jwt)
-    if (ans){
-      res = true;
+      let errors = ''
+      Object.keys(this.steps).forEach(step => errors += this.steps[step].stderr)
+      setFailed('##### Algosec ##### The risks analysis process completed with errors:\n' + errors)
     }
   }
 
-  return res
-}
+  async triggerRiskAnalysis(filesToUpload, jwt){
 
-async function exec(cmd: string, args: string[]): Promise<ExecResult> {
-  const res: ExecResult = {
-      stdout: '',
-      stderr: '',
-      code: null,
-  };
+      const fileUploadPromises = []
+      filesToUpload.forEach(file => fileUploadPromises.push(this.uploadFile(file, jwt)))
+      const response = await Promise.all(fileUploadPromises)
 
-  try {
-      const code = await actionsExec(cmd, args, {
-          listeners: {
-              stdout(data) {
-                  res.stdout += data.toString();
-                  debug(`##### Algosec ##### stdout: ${res.stdout}`);
-              },
-              stderr(data) {
-                  res.stderr += data.toString();
-                  debug(`##### Algosec ##### stderr: ${res.stderr}`);
-              },
-          },
-      });
-      
-      res.code = code;
-      return res;
-  } catch (err) {
-      const msg = `Command '${cmd}' failed with args '${args.join(' ')}': ${res.stderr}: ${err}`;
-      debug(`##### Algosec ##### @actions/exec.exec() threw an error: ${msg}`);
-      throw new Error(msg);
-  }
-}
-
-
-
-async function run(): Promise<void> {
-  try {
-    const steps: {[name: string]: ExecResult} = {}
-    const jwt = await auth(tenantId, clientId, clientSecret, loginAPI)
-    if (!jwt || jwt == ''){
-      setFailed('##### Algosec ##### Step 0 Failed to generate token')
-      return
-    }
-    steps.auth = { code: 0,  stdout: jwt , stderr: ''}
-    if (debugMode) {
-      await exec('rimraf' , [workDir])
-    }
-    steps.gitClone = await exec('git' , ['clone', `https://${context.repo.owner}:${ghToken}@github.com/${context.repo.owner}/${context.repo.repo}.git`, workDir])
-    process.chdir(workDir)
-    steps.gitFetch = await exec('git' , ['fetch', 'origin', `pull/${context.payload.pull_request.number.toString()}/head:${actionUuid}`])
-    steps.gitCheckout = await exec('git' , ['checkout', actionUuid])
-    const diffs = await changedFolders()
-    if (diffs?.length == 0) {
-    info('##### Algosec ##### No changes were found in terraform plans')
-      return
-    }
-    info('##### Algosec ##### Step 1 - Diffs Result: ' + JSON.stringify(diffs))
-    const diffPromises = []
-    diffs.forEach(diff => diffPromises.push(initRiskAnalysis(steps, diff)))
-    const response = await Promise.all(diffPromises)
-    console.log(response)
-    
-  } catch (error) {
-    console.log(error)
-  }
-
-}
-
-async function initRiskAnalysis(steps, diff){
-
-  const terraformResult = await terraform(diff)
-  info(`##### Algosec ##### Step 2 - Terraform Result for folder ${diff}: ${JSON.stringify(terraformResult)}`)
-  let analysisResult;
-  const fileUploaded = await uploadFile(terraformResult?.plan, steps.auth.stdout)
-  // const fileUploaded = await uploadFile(terraformPlanFileMock)
-  if (fileUploaded){
-  info('##### Algosec ##### Step 3 - File Uploaded to S3 Successfully')
-    analysisResult = await pollRiskAnalysisResponse()
-    // let analysisResult = riskAnalysisMock
-  }
-  if (!analysisResult){
-    setFailed('##### Algosec ##### Risk Analysis failed to due timeout')
-    return
-  }
-  info('##### Algosec ##### Step 4 - Risk Analysis Result: ' + JSON.stringify(analysisResult))
-  const risks = analysisResult?.additions
-  const commentBody = parseRiskAnalysis(risks, terraformResult)
-  // git.createComment(commentBody , octokit, context)
-  steps.comment = await exec('gh', ['pr', 'comment', context.payload.pull_request.number.toString(), '-b', commentBody])
-
-  if (analysisResult?.success) {
-  info('##### Algosec ##### Step 5 - Parsing Risk Analysis')
-    if (risks?.analysis_state){
-  info('##### Algosec ##### Step 6 - The risks analysis process completed successfully without any risks')
-      return
-    } else {
-      setFailed('##### Algosec ##### The risks analysis process completed successfully with risks, please check report')
-    }
-  } else {
-    let errors = ''
-    Object.keys(steps).forEach(step => errors += steps[step].stderr)
-    setFailed('##### Algosec ##### The risks analysis process completed with errors:\n' + errors)
-  }
-}
-
-async function auth(tenantId: string, clientID: string, clientSecret: string, loginAPI: string): Promise<string> {
-  const payload = {
-      "tenantId": tenantId,
-      "clientId": clientID,
-      "clientSecret": clientSecret
-  };
-
-  const headers = {
-      "Content-Type": "application/json"
-  }
-  try {
-      const res = await http.post(loginAPI, JSON.stringify(payload),headers)
-      
-      const response_code = res.message.statusCode;
-      const data = JSON.parse(await res.readBody())
-      if (200 <= response_code && response_code <= 300 ) {
-          info(
-              'Passed authentication vs CF\'s login. New token has been generated.');
-          return data?.access_token;
-      } else {
-          setFailed(`Failed to generate token. Error code ${response_code}, msg: ${JSON.stringify(data)}`);
+        if (response){
+        info('##### Algosec ##### Step 3 - File/s Uploaded Successfully')
       }
-  } catch (error: any) {
-      setFailed(`Failed to generate token. Error msg: ${error.toString()}`); 
   }
-  return '';
+
+  async prepareRepo(){
+      this.steps.gitClone = await exec('git' , ['clone', `https://${context.repo.owner}:${this.ghToken}@github.com/${context.repo.owner}/${context.repo.repo}.git`, this.workDir])
+      process.chdir(this.workDir)
+      this.steps.gitFetch = await exec('git' , ['fetch', 'origin', `pull/${context.payload.pull_request.number.toString()}/head:${this.actionUuid}`])
+      this.steps.gitCheckout = await exec('git' , ['checkout', this.actionUuid])
+  }
+
+  async getRiskAnalysis(){
+
+    let analysisResult;
+
+      analysisResult = await this.pollRiskAnalysisResponse()
+      // let analysisResult = riskAnalysisMock
+    if (!analysisResult){
+      setFailed('##### Algosec ##### Risk Analysis failed to due timeout')
+      return
+    }
+    info('##### Algosec ##### Step 4 - Risk Analysis Result: ' + JSON.stringify(analysisResult))
+
+  }
+
+  async auth(tenantId: string, clientID: string, clientSecret: string, loginAPI: string): Promise<string> {
+    const payload = {
+        "tenantId": tenantId,
+        "clientId": clientID,
+        "clientSecret": clientSecret
+    };
+
+    const headers = {
+        "Content-Type": "application/json"
+    }
+    try {
+        const res = await this.http.post(loginAPI, JSON.stringify(payload),headers)
+
+        const response_code = res.message.statusCode;
+        const data = JSON.parse(await res.readBody())
+        if (200 <= response_code && response_code <= 300 ) {
+            info(
+                'Passed authentication vs CF\'s login. New token has been generated.');
+            return data?.access_token;
+        } else {
+            setFailed(`Failed to generate token. Error code ${response_code}, msg: ${JSON.stringify(data)}`);
+        }
+    } catch (error: any) {
+        setFailed(`Failed to generate token. Error msg: ${error.toString()}`); 
+    }
+    return '';
+  }
+  
 }
 
-run()
+
+const riskAnalyzer = new RiskAnalysis()
+riskAnalyzer.run()
 
 
