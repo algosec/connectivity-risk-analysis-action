@@ -37,11 +37,11 @@ export class Github implements IVersionControl {
 
   }
 
-  async createComment(options){
+  async createComment(body){
     await this.octokit.rest.issues.createComment({
       ...context.repo,
       issue_number: context.issue.number,
-      body: options.comment
+      body
     });
   }
 
@@ -126,9 +126,9 @@ ${CODE_BLOCK}\n
   return markdownOutput
   }
 
-  async parseCodeAnalysis(analysis, terraform) {
+  parseCodeAnalysis(analysis, terraform) {
     const commentBodyArray = []
-    analysis.forEach(file => commentBodyArray.push(!file || !terraform ? '' : this.convertToMarkdown(file, terraform)))
+    analysis.forEach(folderAnalysis => commentBodyArray.push((!folderAnalysis?.additions) ? '' : this.convertToMarkdown(folderAnalysis?.additions, terraform)))
     return commentBodyArray.join('<br><br><br>')
   }
 

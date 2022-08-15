@@ -128,11 +128,11 @@ export class CodeAnalysis{
       }
   }
 
-  async uploadFile(file: {folder: string, output: any}, jwt: string) {
+  async uploadFile(file: {uuid: string, output: any}, jwt: string) {
     const aws = new Aws(this.s3Dest)
     let res = false;
     if (file?.output){
-      const ans = await aws.uploadToS3(file.folder, uuid.v4(), JSON.stringify(file.output), jwt)
+      const ans = await aws.uploadToS3(file?.uuid, JSON.stringify(file?.output?.plan), jwt)
       if (ans){
         res = true;
       }
@@ -140,11 +140,11 @@ export class CodeAnalysis{
     return res
   }
 
-  async getCodeAnalysis(foldersToRunCheck){
+  async getCodeAnalysis(filesToUpload){
 
     let analysisResult
     const codeAnalysisPromises = []
-    foldersToRunCheck.forEach(folder => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(folder)))
+    filesToUpload.forEach(file => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)))
     analysisResult = await Promise.all(codeAnalysisPromises)
     if (!analysisResult){
       setFailed('##### Algosec ##### Code Analysis failed to due timeout')
@@ -155,12 +155,12 @@ export class CodeAnalysis{
 
   }
 
-  async pollCodeAnalysisResponse(folderName: string) {
+  async pollCodeAnalysisResponse(file) {
 
-    let analysisResult = await this.checkCodeAnalysisResponse(folderName)
+    let analysisResult = await this.checkCodeAnalysisResponse(file)
     for (let i = 0; i < 50 ; i++) {
       await this.wait(3000);
-      analysisResult = await this.checkCodeAnalysisResponse(folderName)
+      analysisResult = await this.checkCodeAnalysisResponse(file)
       if (analysisResult?.additions) {
         info('##### Algosec ##### Response: ' + JSON.stringify(analysisResult))
         break;
@@ -176,8 +176,8 @@ export class CodeAnalysis{
     });
   }
 
-  async checkCodeAnalysisResponse(folderName: string) {
-      const pollUrl = `${this.apiUrl}?customer=${context.repo.owner}&action_id=${this.actionUuid}&folder_name=${folderName}`
+  async checkCodeAnalysisResponse(file) {
+      const pollUrl = `${this.apiUrl}?customer=${context.repo.owner}&action_id=${file.uuid}`
       const response = await this.http.get(pollUrl)
       if(response?.message?.statusCode == 200){
         const body = await response.readBody()
@@ -190,9 +190,6 @@ export class CodeAnalysis{
       } else {
         setFailed('##### Algosec ##### Poll Request failed: ' +response.message.statusMessage)
       }
-
-    
-    
   }
 
   async parseOutput(analysisResult){
@@ -218,7 +215,8 @@ export class CodeAnalysis{
       const filesToUpload = await this.framework.check(foldersToRunCheck, this.workDir)
       // const filesToUpload = terraformPlanFileMock
       await this.triggerCodeAnalysis(filesToUpload, jwt)
-      const codeAnalysisResponse = await this.getCodeAnalysis(foldersToRunCheck)
+      // const codeAnalysisResponse = codeAnalysisMock as any
+      const codeAnalysisResponse = await this.getCodeAnalysis(filesToUpload)
       await this.parseOutput(codeAnalysisResponse)
       if (codeAnalysisResponse?.success) {
         info('##### Algosec ##### Step 5 - Parsing Code Analysis')

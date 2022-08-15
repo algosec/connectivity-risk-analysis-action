@@ -3,6 +3,7 @@ import * as core from '@actions/core'
 import { FrameworkKeys, IFramework } from "./framework.model";
 import { info } from "@actions/core";
 import { existsSync } from "fs";
+import getUuidByString from "uuid-by-string";
 
 
 export class Terraform implements IFramework {
@@ -58,7 +59,7 @@ export class Terraform implements IFramework {
         const asyncIterable = async (iterable, action) => {
             for (const [index, value] of iterable.entries()) {
               const output = await action({runFolder: value, workDir})
-              res.push({folder:value, output})
+              res.push({uuid: getUuidByString(value),folder:value, output})
               info(`##### Algosec ##### Step 2.${index}- ${this.type} Result for folder ${value}: ${JSON.stringify(this)}`)
             }
           }
