@@ -6,7 +6,7 @@ export interface IVersionControl {
     sha: string
     octokit?: any
     createComment(body: string)
-    parseRiskAnalysis(analysis, VersionControl)
+    parseCodeAnalysis(analysis, VersionControl)
     init(): any
     getDiff(vcsObject)
    
@@ -34,7 +34,7 @@ export class GitLab implements IVersionControl {
 
     }
 
-    parseRiskAnalysis(analysis, VersionControl){
+    parseCodeAnalysis(analysis, VersionControl){
 
     }
 }

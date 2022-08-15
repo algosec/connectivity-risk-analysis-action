@@ -57,12 +57,17 @@ export class Terraform implements IFramework {
         const res = []
         const asyncIterable = async (iterable, action) => {
             for (const [index, value] of iterable.entries()) {
-              const ret = await action({runFolder: value, workDir})
-              res.push(ret)
+              const output = await action({runFolder: value, workDir})
+              res.push({folder:value, output})
               info(`##### Algosec ##### Step 2.${index}- ${this.type} Result for folder ${value}: ${JSON.stringify(this)}`)
             }
           }
-          const filesToUpload = await asyncIterable(foldersToRunCheck, this.terraform)
+          try {
+            await asyncIterable(foldersToRunCheck, this.terraform)
+            
+          } catch (error) {
+            info('Framework check failed '+error)
+          }
           return res
     }
     

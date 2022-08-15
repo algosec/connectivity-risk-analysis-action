@@ -2,7 +2,7 @@
   <a href="https://www.algosec.com"><img height="30" alt="Algosec" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/critical.png"></a>
 </p>
 
-# Run Risk Analysis
+# Run Code Analysis
 
 ```yaml
 name: 'Your Repo CI/CD Yaml Workflow'
@@ -12,10 +12,10 @@ on:
       - 'main'
 jobs:
   algosec-risk-analysis-job:
-     name: 'Risk Analysis Job'
+     name: 'Code Analysis Job'
      runs-on: ubuntu-latest
      steps:
-      - name: 'Risk Analysis Action'
+      - name: 'Code Analysis Action'
         uses: alonnalgo/action-test@v0.0.51
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -29,7 +29,7 @@ jobs:
           TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
 ```
 
-Use this template to add Risk Analysis Action on IaC repository.
+Use this template to add Code Analysis Action on IaC repository.
 
 This template includes the needed environment variables for the next run
 

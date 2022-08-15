@@ -45,8 +45,8 @@ export class Github implements IVersionControl {
     });
   }
 
-  parseRiskAnalysis(analysis, terraform) {
-
+  convertToMarkdown(analysis, terraform) {
+    
     const CODE_BLOCK = '```';
 
     let risksList = '' 
@@ -73,7 +73,7 @@ risksTableContents +=
 
     })
     const analysisIcon = analysis?.analysis_state ? 'V' : 'X'
-    const header = `<img height="50" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/RiskAnalysis${analysisIcon}.svg" /> \n`
+    const header = `<img height="50" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/CodeAnalysis${analysisIcon}.svg" /> \n`
     const risksTable = `<table>\n
 <thead>\n
 <tr>\n
@@ -101,7 +101,7 @@ ${CODE_BLOCK}\n
 ${terraform?.log?.stderr ?? terraform?.initLog.stderr}\n
 ${CODE_BLOCK}\n
 </details> <!-- End Format Logs -->\n`
-    const riskAnalysisContent = `<summary>Report</summary>\n
+    const codeAnalysisContent = `<summary>Report</summary>\n
 ${risksList}\n
 <details>
 <summary>Logs</summary>
@@ -117,13 +117,19 @@ ${CODE_BLOCK}\n
     header +
     (analysis?.analysis_result?.length > 0 ? risksTable : '') + 
    `<details open="true">\n` +
-    (analysis?.analysis_result?.length > 0 ? riskAnalysisContent : 'No Risks Found\n') +
+    (analysis?.analysis_result?.length > 0 ? codeAnalysisContent : 'No Risks Found\n') +
     terraformContent +
     `</details>\n` +
 `<br>*Pusher: @${context?.actor}, Action: \`${context?.eventName}\`, Working Directory: \'${this.workspace}\', Workflow: \'${context?.workflow }\'*`
   
 
   return markdownOutput
+  }
+
+  async parseCodeAnalysis(analysis, terraform) {
+    const commentBodyArray = []
+    analysis.forEach(file => commentBodyArray.push(!file || !terraform ? '' : this.convertToMarkdown(file, terraform)))
+    return commentBodyArray.join('<br><br><br>')
   }
 
   getCurrentRepoRemoteUrl(token: string): string {

@@ -10,7 +10,7 @@ import {FrameworkService } from './iaas-tools/framework.service'
 import { Aws } from './providers/aws'
 import { IVersionControl, VersionControlKeys } from './vcs/vcs.model'
 const getUuid = require('uuid-by-string')
-
+const uuid = require('uuid');
 export type GithubContext = typeof context
 
 interface ExecResult {
@@ -19,10 +19,10 @@ interface ExecResult {
   code: number | null;
 }
 import {WebhookPayload} from '@actions/github/lib/interfaces'
-import {githubEventPayloadMock, riskAnalysisMock, terraformPlanFileMock} from './mockData'
+import {githubEventPayloadMock, codeAnalysisMock, terraformPlanFileMock} from './mockData'
 context.payload = githubEventPayloadMock as WebhookPayload & any
 
-export class RiskAnalysis{
+export class CodeAnalysis{
   steps: {[name: string]: ExecResult} = {}
   debugMode
   apiUrl
@@ -117,8 +117,8 @@ export class RiskAnalysis{
     return diffFolders
   }
 
-  async triggerRiskAnalysis(filesToUpload, jwt){
-
+  async triggerCodeAnalysis(filesToUpload, jwt){
+      
       const fileUploadPromises = []
       filesToUpload.forEach(file => fileUploadPromises.push(this.uploadFile(file, jwt)))
       const response = await Promise.all(fileUploadPromises)
@@ -128,11 +128,11 @@ export class RiskAnalysis{
       }
   }
 
-  async uploadFile(json: any, jwt: string) {
-    const aws = new Aws(this.actionUuid, this.s3Dest)
+  async uploadFile(file: {folder: string, output: any}, jwt: string) {
+    const aws = new Aws(this.s3Dest)
     let res = false;
-    if (json){
-      const ans = await aws.uploadToS3(this.tenantId, JSON.stringify(json), jwt)
+    if (file?.output){
+      const ans = await aws.uploadToS3(file.folder, uuid.v4(), JSON.stringify(file.output), jwt)
       if (ans){
         res = true;
       }
@@ -140,27 +140,27 @@ export class RiskAnalysis{
     return res
   }
 
-  async getRiskAnalysis(){
+  async getCodeAnalysis(foldersToRunCheck){
 
     let analysisResult
-
-      analysisResult = await this.pollRiskAnalysisResponse()
-      // let analysisResult = riskAnalysisMock
+    const codeAnalysisPromises = []
+    foldersToRunCheck.forEach(folder => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(folder)))
+    analysisResult = await Promise.all(codeAnalysisPromises)
     if (!analysisResult){
-      setFailed('##### Algosec ##### Risk Analysis failed to due timeout')
+      setFailed('##### Algosec ##### Code Analysis failed to due timeout')
       return
     }
-    info('##### Algosec ##### Step 4 - Risk Analysis Result: ' + JSON.stringify(analysisResult))
+    info('##### Algosec ##### Step 4 - Code Analysis Result: ' + JSON.stringify(analysisResult))
     return analysisResult
 
   }
 
-  async pollRiskAnalysisResponse() {
+  async pollCodeAnalysisResponse(folderName: string) {
 
-    let analysisResult = await this.checkRiskAnalysisResponse()
+    let analysisResult = await this.checkCodeAnalysisResponse(folderName)
     for (let i = 0; i < 50 ; i++) {
       await this.wait(3000);
-      analysisResult = await this.checkRiskAnalysisResponse()
+      analysisResult = await this.checkCodeAnalysisResponse(folderName)
       if (analysisResult?.additions) {
         info('##### Algosec ##### Response: ' + JSON.stringify(analysisResult))
         break;
@@ -176,13 +176,14 @@ export class RiskAnalysis{
     });
   }
 
-  async checkRiskAnalysisResponse() {
-      const pollUrl = `${this.apiUrl}?customer=${context.repo.owner}&action_id=${this.actionUuid}`
+  async checkCodeAnalysisResponse(folderName: string) {
+      const pollUrl = `${this.apiUrl}?customer=${context.repo.owner}&action_id=${this.actionUuid}&folder_name=${folderName}`
       const response = await this.http.get(pollUrl)
       if(response?.message?.statusCode == 200){
-        const message = JSON.parse(await response.readBody())
+        const body = await response.readBody()
+        const message = body && body != '' ? JSON.parse(body) : null
         if (message?.message_found) {
-          return JSON.parse(message.result)
+          return message?.result ? JSON.parse(message?.result) : null
         } else {
           return null
         }
@@ -195,8 +196,7 @@ export class RiskAnalysis{
   }
 
   async parseOutput(analysisResult){
-    const risks = analysisResult?.additions
-    const body = this.vcs.parseRiskAnalysis(risks, this.steps.framework)
+    const body = this.vcs.parseCodeAnalysis(analysisResult, this.steps.framework)
     this.steps.comment = this.vcs.createComment(body)
     // this.steps.comment = await exec('gh', ['pr', 'comment', context.payload.pull_request.number.toString(), '-b', commentBody])
   }
@@ -215,13 +215,14 @@ export class RiskAnalysis{
       }
       await this.prepareRepo()
       const foldersToRunCheck = await this.checkForDiff(this.framework.fileTypes)
-      const filesToUpload = await this.framework.check(foldersToRunCheck, this.workDir)
-      await this.triggerRiskAnalysis(filesToUpload, this.steps.jwt.stdout)
-      const riskAnalysisResponse = await this.getRiskAnalysis()
-      await this.parseOutput(riskAnalysisResponse)
-      if (riskAnalysisResponse?.success) {
-        info('##### Algosec ##### Step 5 - Parsing Risk Analysis')
-          if (riskAnalysisResponse?.additions?.analysis_state){
+      // const filesToUpload = await this.framework.check(foldersToRunCheck, this.workDir)
+      const filesToUpload = terraformPlanFileMock
+      await this.triggerCodeAnalysis(filesToUpload, jwt)
+      const codeAnalysisResponse = await this.getCodeAnalysis(foldersToRunCheck)
+      await this.parseOutput(codeAnalysisResponse)
+      if (codeAnalysisResponse?.success) {
+        info('##### Algosec ##### Step 5 - Parsing Code Analysis')
+          if (codeAnalysisResponse?.additions?.analysis_state){
         info('##### Algosec ##### Step 6 - The risks analysis process completed successfully without any risks')
             return
           } else {
@@ -241,7 +242,7 @@ export class RiskAnalysis{
 }
 
 
-const riskAnalyzer = new RiskAnalysis()
-riskAnalyzer.run()
+const codeAnalyzer = new CodeAnalysis()
+codeAnalyzer.run()
 
 
