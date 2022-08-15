@@ -1,81 +1,20 @@
 import { exec, ExecResult } from "../common/exec";
 import * as core from '@actions/core'
-import { IFramework } from "./framework.model";
+import { FrameworkKeys, IFramework } from "./framework.model";
 import { info } from "@actions/core";
 import { existsSync } from "fs";
 
 
 export class Terraform implements IFramework {
-    constructor(_tfToken: string = '') {
+    fileTypes = ['.tf']
+    type: FrameworkKeys = 'terraform'
+    constructor() {
 
     }
 
-    async init(options: any){
-        const terraformResult = await this.terraform(options)
-            info(`##### Algosec ##### Step 2 - Terraform Result for folder ${options.runFolder}: ${JSON.stringify(terraformResult)}`)
+    init(options: any){
+        return this
     }
-
-   
-   async fmt(
-        additionalTerraformOptions: string[] = [],
-        ...options: string[]
-    ): Promise<string> {
-        core.debug(`Executing 'git clone' to directory with token and options '${options.join(' ')}'`);
-
-        // const remote = this.getRepoRemoteUrl(token, ghRepository);
-        let args = ['fmt', '--diff'];
-        if (options.length > 0) {
-            args = args.concat(options);
-        }
-
-        return this.cmd(additionalTerraformOptions, ...args);
-    }
-
-   async validate(
-            additionalTerraformOptions: string[] = [],
-            ...options: string[]
-        ): Promise<string> {
-            core.debug(`Executing 'git clone' to directory with token and options '${options.join(' ')}'`);
-
-            // const remote = this.getRepoRemoteUrl(token, ghRepository);
-            let args = ['fmt', '--diff'];
-            if (options.length > 0) {
-                args = args.concat(options);
-            }
-
-            return this.cmd(additionalTerraformOptions, ...args);
-    }
-
-   async plan(
-        additionalTerraformOptions: string[] = [],
-        ...options: string[]
-    ): Promise<string> {
-        core.debug(`Executing 'git clone' to directory with token and options '${options.join(' ')}'`);
-
-        // const remote = this.getRepoRemoteUrl(token, ghRepository);
-        let args = ['plan', '-input=false,  -no-color,  -out=/tmp/tf.out'];
-        if (options.length > 0) {
-            args = args.concat(options);
-        }
-
-        return this.cmd(additionalTerraformOptions, ...args);
-    }
-
-    async show(
-        additionalTerraformOptions: string[] = [],
-        ...options: string[]
-    ): Promise<string> {
-        core.debug(`Executing 'git clone' to directory with token and options '${options.join(' ')}'`);
-
-        // const remote = this.getRepoRemoteUrl(token, ghRepository);
-        let args = ['plan', '-input=false,  -no-color,  -out=/tmp/tf.out'];
-        if (options.length > 0) {
-            args = args.concat(options);
-        }
-
-        return this.cmd(additionalTerraformOptions, ...args);
-    }
-
 
     async terraform(options: any) {
         try {
@@ -112,4 +51,19 @@ export class Terraform implements IFramework {
           if (error instanceof Error) console.log(error.message) //setFailed(error.message)
         }
       }
+
+    
+    async check(foldersToRunCheck: any, workDir: string) {
+        const res = []
+        const asyncIterable = async (iterable, action) => {
+            for (const [index, value] of iterable.entries()) {
+              const ret = await action({runFolder: value, workDir})
+              res.push(ret)
+              info(`##### Algosec ##### Step 2.${index}- ${this.type} Result for folder ${value}: ${JSON.stringify(this)}`)
+            }
+          }
+          const filesToUpload = await asyncIterable(foldersToRunCheck, this.terraform)
+          return res
+    }
+    
 }

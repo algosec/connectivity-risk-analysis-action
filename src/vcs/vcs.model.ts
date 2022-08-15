@@ -1,36 +1,64 @@
 import { Github } from "./github";
 
 export interface IVersionControl {
-    init(): string
+    workspace: string
+    token: string
+    sha: string
+    octokit?: any
+    createComment(body: string)
+    parseRiskAnalysis(analysis, VersionControl)
+    init(): any
+    getDiff(vcsObject)
    
 }
 
 export class GitLab implements IVersionControl {
+    workspace: string
+    token: string
+    sha: string
+
+    constructor(){
+        this.workspace = process?.env?.GITLAB_WORKSPACE
+        this.token =  process?.env?.GITLAB_TOKEN 
+        this.sha =  process?.env?.GITLAB_SHA 
+    }
     init(): string {
         return 'GitLab'
+    }
+
+    getDiff(client){
+
+    }
+
+    createComment(options){
+
+    }
+
+    parseRiskAnalysis(analysis, VersionControl){
+
     }
 }
 
 export const versionControlMap = {
     github: Github,
-    gitlab: GitLab,
+    gitlab: GitLab
 }
 export type VersionControlMap = typeof versionControlMap;
 
 export type VersionControlKeys = keyof VersionControlMap;
 
-type Tuples<T> = T extends VersionControlKeys ? [T, InstanceType<VersionControlMap[T]>] : never;
+type VersionControlTuples<T> = T extends VersionControlKeys ? [T, InstanceType<VersionControlMap[T]>] : never;
 
 export type VersionControlSingleKeys<K> = [K] extends (K extends VersionControlKeys ? [K] : never) ? K : never;
 
-type ClassType<A extends VersionControlKeys> = Extract<Tuples<VersionControlKeys>, [A, any]>[1];
+type VersionControlClassType<A extends VersionControlKeys> = Extract<VersionControlTuples<VersionControlKeys>, [A, any]>[1];
 
 
 
 
 
 export class VersionControlFactory {
-    static getInstance<K extends VersionControlKeys>(versionControlKey: VersionControlSingleKeys<K>): ClassType<K> {
+    static getInstance<K extends VersionControlKeys>(versionControlKey: VersionControlSingleKeys<K>): VersionControlClassType<K> {
         return new versionControlMap[versionControlKey]()
     }
 }

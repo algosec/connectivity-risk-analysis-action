@@ -19,14 +19,14 @@ export type CloudProviderMap = typeof cloudProviderMap;
 
 export type CloudProviderKeys = keyof CloudProviderMap;
 
-type Tuples<T> = T extends CloudProviderKeys ? [T, InstanceType<CloudProviderMap[T]>] : never;
+type CloudProviderTuples<T> = T extends CloudProviderKeys ? [T, InstanceType<CloudProviderMap[T]>] : never;
 
 export type ProviderSingleKeys<K> = [K] extends (K extends CloudProviderKeys ? [K] : never) ? K : never;
 
-type ClassType<A extends CloudProviderKeys> = Extract<Tuples<CloudProviderKeys>, [A, any]>[1];
+type CloudProviderClassType<A extends CloudProviderKeys> = Extract<CloudProviderTuples<CloudProviderKeys>, [A, any]>[1];
 
 export class CloudProviderFactory {
-    static getInstance<K extends CloudProviderKeys>(cloudProviderKey: ProviderSingleKeys<K>): ClassType<K> {
+    static getInstance<K extends CloudProviderKeys>(cloudProviderKey: ProviderSingleKeys<K>): CloudProviderClassType<K> {
         return new cloudProviderMap[cloudProviderKey]()
     }
 }

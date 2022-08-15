@@ -1,13 +1,20 @@
 import { Terraform } from "./terraform";
 
 export interface IFramework {
+    fileTypes: string[]
     init(options?: any): any
+    check(foldersToRunCheck: any, workDir: any)
    
 }
 
 export class CloudFormation implements IFramework {
+
+    fileTypes = ['json', 'yaml']
     init(): string {
         return 'CloudFormation'
+    }
+    check(foldersToRunCheck: any, workDir: any) {
+        
     }
 }
 
@@ -19,18 +26,18 @@ export type FrameworkMap = typeof frameworkMap;
 
 export type FrameworkKeys = keyof FrameworkMap;
 
-type Tuples<T> = T extends FrameworkKeys ? [T, InstanceType<FrameworkMap[T]>] : never;
+export type FrameworkTuples<T> = T extends FrameworkKeys ? [T, InstanceType<FrameworkMap[T]>] : never;
 
 export type FrameworkSingleKeys<K> = [K] extends (K extends FrameworkKeys ? [K] : never) ? K : never;
 
-type ClassType<A extends FrameworkKeys> = Extract<Tuples<FrameworkKeys>, [A, any]>[1];
+export type FrameworkClassType<A extends FrameworkKeys> = Extract<FrameworkTuples<FrameworkKeys>, [A, any]>[1];
 
 
 
 
 
 export class FrameworkFactory {
-    static getInstance<K extends FrameworkKeys>(frameworkKey: FrameworkSingleKeys<K>): ClassType<K> {
+    static getInstance<K extends FrameworkKeys>(frameworkKey: FrameworkSingleKeys<K>): FrameworkClassType<K> {
         return new frameworkMap[frameworkKey]()
     }
 }
