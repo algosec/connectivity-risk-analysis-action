@@ -18,9 +18,9 @@ interface ExecResult {
   stderr: string;
   code: number | null;
 }
-import {WebhookPayload} from '@actions/github/lib/interfaces'
-import {githubEventPayloadMock, codeAnalysisMock, terraformPlanFileMock} from './mockData'
-context.payload = githubEventPayloadMock as WebhookPayload & any
+// import {WebhookPayload} from '@actions/github/lib/interfaces'
+// import {githubEventPayloadMock, codeAnalysisMock, terraformPlanFileMock} from './mockData'
+// context.payload = githubEventPayloadMock as WebhookPayload & any
 
 export class CodeAnalysis{
   steps: {[name: string]: ExecResult} = {}
@@ -215,8 +215,8 @@ export class CodeAnalysis{
       }
       await this.prepareRepo()
       const foldersToRunCheck = await this.checkForDiff(this.framework.fileTypes)
-      // const filesToUpload = await this.framework.check(foldersToRunCheck, this.workDir)
-      const filesToUpload = terraformPlanFileMock
+      const filesToUpload = await this.framework.check(foldersToRunCheck, this.workDir)
+      // const filesToUpload = terraformPlanFileMock
       await this.triggerCodeAnalysis(filesToUpload, jwt)
       const codeAnalysisResponse = await this.getCodeAnalysis(foldersToRunCheck)
       await this.parseOutput(codeAnalysisResponse)
