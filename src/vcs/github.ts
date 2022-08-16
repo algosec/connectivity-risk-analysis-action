@@ -13,7 +13,7 @@ export class Github implements IVersionControl {
 
   constructor(){
     this.workspace = process?.env?.GITHUB_WORKSPACE
-    this.token =  process?.env?.GITHUB_TOKEN 
+    this.token =  process?.env?.GH_TOKEN 
     this.sha =  process?.env?.GITHUB_SHA 
     this.octokit = getOctokit(this.token)
   }
