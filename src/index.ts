@@ -26,7 +26,6 @@ export class CodeAnalysis{
   steps: {[name: string]: ExecResult} = {}
   debugMode
   apiUrl
-  s3Dest
   tenantId
   clientId
   clientSecret
@@ -44,8 +43,7 @@ export class CodeAnalysis{
   constructor(){
    
     this.debugMode =  process?.env?.ALGOSEC_DEBUG 
-    this.apiUrl = process?.env?.RA_API_URL
-    this.s3Dest = process?.env?.AWS_S3
+    this.apiUrl = process?.env?.API_URL
     this.tenantId = process?.env?.TENANT_ID
     this.clientId = process?.env?.CF_CLIENT_ID
     this.clientSecret = process?.env?.CF_CLIENT_SECRET
@@ -129,7 +127,7 @@ export class CodeAnalysis{
   }
 
   async uploadFile(file: {uuid: string, output: any}, jwt: string) {
-    const aws = new Aws(this.s3Dest)
+    const aws = new Aws()
     let res = false;
     if (file?.output){
       const ans = await aws.uploadToS3(file?.uuid, JSON.stringify(file?.output?.plan), jwt)
@@ -177,7 +175,7 @@ export class CodeAnalysis{
   }
 
   async checkCodeAnalysisResponse(file) {
-      const pollUrl = `${this.apiUrl}?customer=${context.repo.owner}&action_id=${file.uuid}`
+      const pollUrl = `${this.apiUrl}/message?customer=${context.repo.owner}&action_id=${file.uuid}`
       const response = await this.http.get(pollUrl)
       if(response?.message?.statusCode == 200){
         const body = await response.readBody()
@@ -192,8 +190,8 @@ export class CodeAnalysis{
       }
   }
 
-  async parseOutput(analysisResult){
-    const body = this.vcs.parseCodeAnalysis(analysisResult, this.steps.framework)
+  async parseOutput(filesToUpload, analysisResult){
+    const body = this.vcs.parseCodeAnalysis(filesToUpload, analysisResult)
     this.steps.comment = this.vcs.createComment(body)
     // this.steps.comment = await exec('gh', ['pr', 'comment', context.payload.pull_request.number.toString(), '-b', commentBody])
   }
@@ -217,7 +215,7 @@ export class CodeAnalysis{
       await this.triggerCodeAnalysis(filesToUpload, jwt)
       // const codeAnalysisResponse = codeAnalysisMock as any
       const codeAnalysisResponse = await this.getCodeAnalysis(filesToUpload)
-      await this.parseOutput(codeAnalysisResponse)
+      await this.parseOutput(filesToUpload, codeAnalysisResponse)
       if (codeAnalysisResponse?.success) {
         info('##### Algosec ##### Step 5 - Parsing Code Analysis')
           if (codeAnalysisResponse?.additions?.analysis_state){

@@ -21,11 +21,10 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-west-2
-          AWS_S3: ${{ secrets.AWS_S3 }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_WORKSPACE: ${{ github.workspace }}
-          RA_API_URL: ${{ secrets.RA_API_URL }}
+          API_URL: ${{ secrets.API_URL }}
           TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
 ```
 

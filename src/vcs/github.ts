@@ -73,7 +73,7 @@ risksTableContents +=
 
     })
     const analysisIcon = analysis?.analysis_state ? 'V' : 'X'
-    const header = `<img height="50" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/CodeAnalysis${analysisIcon}.svg" /> \n`
+    const header = `<img height="50" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/RiskAnalysis${analysisIcon}.svg" /> \n`
     const risksTable = `<table>\n
 <thead>\n
 <tr>\n
@@ -126,9 +126,11 @@ ${CODE_BLOCK}\n
   return markdownOutput
   }
 
-  parseCodeAnalysis(analysis, terraform) {
+  parseCodeAnalysis(filesToUpload, analysisResult) {
     const commentBodyArray = []
-    analysis.forEach(folderAnalysis => commentBodyArray.push((!folderAnalysis?.additions) ? '' : this.convertToMarkdown(folderAnalysis?.additions, terraform)))
+    analysisResult.forEach(folderAnalysis => 
+      commentBodyArray.push((!folderAnalysis?.additions) ? 
+      '' : this.convertToMarkdown(folderAnalysis?.additions, filesToUpload.find(file => folderAnalysis?.proceeded_file?.includes(file.uuid)))))
     return commentBodyArray.join('<br><br><br>')
   }
 
