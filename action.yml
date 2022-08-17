@@ -1,4 +1,4 @@
-name: 'Algosec Risk Analysis Action'
+name: 'Algosec Code Analysis Action'
 description: 'This GitHub Action runs Algosec Risk Analysis against an Infrastructure-as-Code repository.'
 author: 'alon.noy@algosec.com'
 branding:
