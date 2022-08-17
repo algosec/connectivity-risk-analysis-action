@@ -117,10 +117,11 @@ ${CODE_BLOCK}\n
     header +
     (analysis?.analysis_result?.length > 0 ? risksTable : '') + 
    `<details open="true">\n` +
-    (analysis?.analysis_result?.length > 0 ? codeAnalysisContent : 'No Risks Found\n') +
+    (analysis?.analysis_result?.length > 0 ? codeAnalysisContent : '\n### No Risks Found\n') +
     terraformContent +
-    `</details>\n` +
-`<br>*Pusher: @${context?.actor}, Action: \`${context?.eventName}\`, Working Directory: \'${this.workspace}\', Workflow: \'${context?.workflow }\'*`
+    `</details><br>
+\n
+*Pusher: @${context?.actor}, Action: \`${context?.eventName}\`, Working Directory: \'${this.workspace}\', Workflow: \'${context?.workflow }\'*`
   
 
   return markdownOutput
