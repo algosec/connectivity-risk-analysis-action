@@ -18,9 +18,9 @@ interface ExecResult {
   stderr: string;
   code: number | null;
 }
-import {WebhookPayload} from '@actions/github/lib/interfaces'
-import {githubEventPayloadMock, codeAnalysisMock, terraformPlanFileMock, terraformSinglePlanFileMock} from './mockData'
-context.payload = githubEventPayloadMock as WebhookPayload & any
+// import {WebhookPayload} from '@actions/github/lib/interfaces'
+// import {githubEventPayloadMock, codeAnalysisMock, terraformPlanFileMock, terraformSinglePlanFileMock} from './mockData'
+// context.payload = githubEventPayloadMock as WebhookPayload & any
 
 export class CodeAnalysis{
   steps: {[name: string]: ExecResult} = {}
@@ -212,10 +212,10 @@ export class CodeAnalysis{
       if (this.debugMode) {
         await exec('rimraf' , [this.workDir])
       }
-      // await this.prepareRepo()
-      // const foldersToRunCheck = await this.checkForDiff(this.framework.fileTypes)
-      // const filesToUpload = await this.framework.check(foldersToRunCheck, this.workDir)
-      const filesToUpload = terraformSinglePlanFileMock
+      await this.prepareRepo()
+      const foldersToRunCheck = await this.checkForDiff(this.framework.fileTypes)
+      const filesToUpload = await this.framework.check(foldersToRunCheck, this.workDir)
+      // const filesToUpload = terraformSinglePlanFileMock
       await this.triggerCodeAnalysis(filesToUpload)
       // const codeAnalysisResponse = codeAnalysisMock as any
       const codeAnalysisResponse = await this.getCodeAnalysis(filesToUpload)
