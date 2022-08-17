@@ -9,9 +9,9 @@ import getUuidByString from "uuid-by-string";
 export class Terraform implements IFramework {
     fileTypes = ['.tf']
     type: FrameworkKeys = 'terraform'
-    steps: {[name: string]: ExecResult} = {}
+    steps: {[name: string]: ExecResult}
     constructor() {
-
+        this.steps = {}
     }
 
     init(options: any){
@@ -19,35 +19,36 @@ export class Terraform implements IFramework {
     }
 
     async terraform(options: any) {
+        const steps: {[name: string]: ExecResult} = {}
         try {
           
             process.chdir(`${options.workDir}/${options.runFolder}`)
-            // this.steps.setupVersion = await exec('curl', ['-L', 'https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh', '|', 'bash']);
+            // steps.setupVersion = await exec('curl', ['-L', 'https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh', '|', 'bash']);
             // info('##### Algosec ##### tfswitch Installed successfully')
             // if (process?.env?.TF_VERSION == "latest"  || process?.env?.TF_VERSION  == ""){
-            //   this.steps.switchVersion = await exec('tfswitch', ['--latest']);
+            //   steps.switchVersion = await exec('tfswitch', ['--latest']);
             // } else {
-            //   this.steps.switchVersion = await exec('tfswitch', []);
+            //   steps.switchVersion = await exec('tfswitch', []);
             // }
             info('##### Algosec ##### tfswitch version: ' + process?.env?.TF_VERSION)
-            this.steps.init = await exec('terraform', ['init']);
+            steps.init = await exec('terraform', ['init']);
       
-            this.steps.fmt = await exec('terraform', ['fmt', '-diff'])
-            this.steps.validate = await exec('terraform', ['validate', '-no-color'])
+            steps.fmt = await exec('terraform', ['fmt', '-diff'])
+            steps.validate = await exec('terraform', ['validate', '-no-color'])
             if (!existsSync('./tmp')) {
               await exec('mkdir', ['tmp'])
             }
-            this.steps.plan = await exec('terraform', ['plan', '-input=false', '-no-color', `-out=${process?.cwd()}\\tmp\\tf-${options.runFolder}.out`])
+            steps.plan = await exec('terraform', ['plan', '-input=false', '-no-color', `-out=${process?.cwd()}\\tmp\\tf-${options.runFolder}.out`])
             const initLog = {
-              stdout: this.steps.init.stdout.concat(this.steps.fmt.stdout, this.steps.validate.stdout, this.steps.plan.stdout),
-              stderr: this.steps.init.stderr.concat(this.steps.fmt.stderr, this.steps.validate.stderr, this.steps.plan.stderr)
+              stdout: steps.init.stdout.concat(steps.fmt.stdout, steps.validate.stdout, steps.plan.stdout),
+              stderr: steps.init.stderr.concat(steps.fmt.stderr, steps.validate.stderr, steps.plan.stderr)
             }
             let jsonPlan = {};
-            if (this.steps.plan.stdout){
+            if (steps.plan.stdout){
               jsonPlan = JSON.parse((await exec('terraform', ['show', '-json', `${process?.cwd()}\\tmp\\tf-${options.runFolder}.out`])).stdout)
             }
             process.chdir(options.workDir)
-            return {plan: jsonPlan, log: this.steps.plan, initLog};
+            return {plan: jsonPlan, log: steps.plan, initLog};
         } catch (error: any) {
           if (error instanceof Error) console.log(error.message) //setFailed(error.message)
         }

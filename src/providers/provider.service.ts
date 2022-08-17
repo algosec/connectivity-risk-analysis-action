@@ -3,7 +3,7 @@ import {CloudProviderKeys, ProviderSingleKeys, CloudProviderFactory} from './pro
 export class CloudProviderService {
 
     getInstanceByType<K extends CloudProviderKeys>(type: ProviderSingleKeys<K>){
-        return CloudProviderFactory.getInstance(type).init()
+        return CloudProviderFactory.getInstance(type)
     }
 }
 

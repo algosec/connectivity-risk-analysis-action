@@ -13,8 +13,7 @@
     "all": "npm run build && npm run format && npm run lint && npm run package ",
     "ready": "npm run build  && npm run package ",
     "debug": "node dist/index.js",
-    "dev": "nodemon --config nodemon.json src/index.ts",
-    "dev:debug": "nodemon --config nodemon.json --inspect-brk src/index.ts"
+    "dev:debug": "nodemon --config nodemon.json src/index.ts"
   },
   "repository": {
     "type": "git",

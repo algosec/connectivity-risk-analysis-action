@@ -18,9 +18,9 @@ interface ExecResult {
   stderr: string;
   code: number | null;
 }
-// import {WebhookPayload} from '@actions/github/lib/interfaces'
-// import {githubEventPayloadMock, codeAnalysisMock, terraformPlanFileMock} from './mockData'
-// context.payload = githubEventPayloadMock as WebhookPayload & any
+import {WebhookPayload} from '@actions/github/lib/interfaces'
+import {githubEventPayloadMock, codeAnalysisMock, terraformPlanFileMock, terraformSinglePlanFileMock} from './mockData'
+context.payload = githubEventPayloadMock as WebhookPayload & any
 
 export class CodeAnalysis{
   steps: {[name: string]: ExecResult} = {}
@@ -38,6 +38,7 @@ export class CodeAnalysis{
   vcsType: VersionControlKeys
   framework: IFramework
   vcs: IVersionControl
+  jwt: string
 
   
   constructor(){
@@ -115,10 +116,10 @@ export class CodeAnalysis{
     return diffFolders
   }
 
-  async triggerCodeAnalysis(filesToUpload, jwt){
+  async triggerCodeAnalysis(filesToUpload){
       
       const fileUploadPromises = []
-      filesToUpload.forEach(file => fileUploadPromises.push(this.uploadFile(file, jwt)))
+      filesToUpload.forEach(file => fileUploadPromises.push(this.uploadFile(file)))
       const response = await Promise.all(fileUploadPromises)
 
         if (response){
@@ -126,11 +127,11 @@ export class CodeAnalysis{
       }
   }
 
-  async uploadFile(file: {uuid: string, output: any}, jwt: string) {
+  async uploadFile(file: {uuid: string, output: any}) {
     const aws = new Aws()
     let res = false;
     if (file?.output){
-      const ans = await aws.uploadToS3(file?.uuid, JSON.stringify(file?.output?.plan), jwt)
+      const ans = await aws.uploadToS3(file?.uuid, JSON.stringify(file?.output?.plan), this.jwt)
       if (ans){
         res = true;
       }
@@ -144,8 +145,8 @@ export class CodeAnalysis{
     const codeAnalysisPromises = []
     filesToUpload.forEach(file => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)))
     analysisResult = await Promise.all(codeAnalysisPromises)
-    if (!analysisResult){
-      setFailed('##### Algosec ##### Code Analysis failed to due timeout')
+    if (!analysisResult || analysisResult?.error){
+      setFailed('##### Algosec ##### Code Analysis failed')
       return
     }
     info('##### Algosec ##### Step 4 - Code Analysis Result: ' + JSON.stringify(analysisResult))
@@ -162,6 +163,9 @@ export class CodeAnalysis{
       if (analysisResult?.additions) {
         info('##### Algosec ##### Response: ' + JSON.stringify(analysisResult))
         break;
+      } else if (analysisResult.error) {
+        setFailed('##### Algosec ##### Poll Request failed: ' + analysisResult.error)
+        break;
       }
     }
     return analysisResult;
@@ -176,7 +180,7 @@ export class CodeAnalysis{
 
   async checkCodeAnalysisResponse(file) {
       const pollUrl = `${this.apiUrl}/message?customer=${context.repo.owner}&action_id=${file.uuid}`
-      const response = await this.http.get(pollUrl)
+      const response = await this.http.get(pollUrl, { 'Authorization': 'Bearer ' + this.jwt})
       if(response?.message?.statusCode == 200){
         const body = await response.readBody()
         const message = body && body != '' ? JSON.parse(body) : null
@@ -186,7 +190,7 @@ export class CodeAnalysis{
           return null
         }
       } else {
-        setFailed('##### Algosec ##### Poll Request failed: ' +response.message.statusMessage)
+          return  {error: response.message.statusMessage}
       }
   }
 
@@ -199,20 +203,20 @@ export class CodeAnalysis{
   async run(): Promise<void> {
     try {
 
-      const jwt = await this.auth(this.tenantId, this.clientId, this.clientSecret, this.loginAPI)
-      if (!jwt || jwt == ''){
+      this.jwt = await this.auth(this.tenantId, this.clientId, this.clientSecret, this.loginAPI)
+      if (!this.jwt || this.jwt == ''){
         setFailed('##### Algosec ##### Step 0 Failed to generate token')
         return
       }
-      this.steps.auth = { code: 0,  stdout: jwt , stderr: ''}
+      this.steps.auth = { code: 0,  stdout: this.jwt , stderr: ''}
       if (this.debugMode) {
         await exec('rimraf' , [this.workDir])
       }
-      await this.prepareRepo()
-      const foldersToRunCheck = await this.checkForDiff(this.framework.fileTypes)
-      const filesToUpload = await this.framework.check(foldersToRunCheck, this.workDir)
-      // const filesToUpload = terraformPlanFileMock
-      await this.triggerCodeAnalysis(filesToUpload, jwt)
+      // await this.prepareRepo()
+      // const foldersToRunCheck = await this.checkForDiff(this.framework.fileTypes)
+      // const filesToUpload = await this.framework.check(foldersToRunCheck, this.workDir)
+      const filesToUpload = terraformSinglePlanFileMock
+      await this.triggerCodeAnalysis(filesToUpload)
       // const codeAnalysisResponse = codeAnalysisMock as any
       const codeAnalysisResponse = await this.getCodeAnalysis(filesToUpload)
       await this.parseOutput(filesToUpload, codeAnalysisResponse)

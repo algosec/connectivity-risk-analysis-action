@@ -4,6 +4,6 @@ import {VersionControlKeys, VersionControlSingleKeys, VersionControlFactory} fro
 export class VersionControlService {
 
     getInstanceByType<K extends VersionControlKeys>(type: VersionControlSingleKeys<K>){
-        return VersionControlFactory.getInstance(type).init()
+        return VersionControlFactory.getInstance(type)
     }
 }
