@@ -13,11 +13,11 @@
     "all": "npm run build && npm run format && npm run lint && npm run package ",
     "ready": "npm run build  && npm run package ",
     "debug": "node dist/index.js",
-    "dev:debug": "nodemon --config nodemon.json src/index.ts"
+    "dev:debug": "nodemon src/index.ts"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alonnalgoDevSecOps/risk-analysis-action.git"
+    "url": "git+https://github.com/algosec/risk-analysis-action.git"
   },
   "keywords": [
     "actions",

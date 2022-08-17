@@ -30,7 +30,7 @@ export class Terraform implements IFramework {
             // } else {
             //   steps.switchVersion = await exec('tfswitch', []);
             // }
-            info('##### Algosec ##### tfswitch version: ' + process?.env?.TF_VERSION)
+            // info('##### Algosec ##### tfswitch version: ' + process?.env?.TF_VERSION)
             steps.init = await exec('terraform', ['init']);
       
             steps.fmt = await exec('terraform', ['fmt', '-diff'])

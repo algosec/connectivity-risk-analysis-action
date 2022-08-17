@@ -159,7 +159,6 @@ class Terraform {
         return this;
     }
     terraform(options) {
-        var _a;
         return __awaiter(this, void 0, void 0, function* () {
             const steps = {};
             try {
@@ -171,7 +170,7 @@ class Terraform {
                 // } else {
                 //   steps.switchVersion = await exec('tfswitch', []);
                 // }
-                (0, core_1.info)('##### Algosec ##### tfswitch version: ' + ((_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.TF_VERSION));
+                // info('##### Algosec ##### tfswitch version: ' + process?.env?.TF_VERSION)
                 steps.init = yield (0, exec_1.exec)('terraform', ['init']);
                 steps.fmt = yield (0, exec_1.exec)('terraform', ['fmt', '-diff']);
                 steps.validate = yield (0, exec_1.exec)('terraform', ['validate', '-no-color']);
@@ -252,18 +251,18 @@ const uuid = __nccwpck_require__(5840);
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 class CodeAnalysis {
     constructor() {
-        var _a, _b, _c, _d, _e, _f, _g, _h;
+        var _a, _b, _c, _d, _f, _g, _h, _j;
         this.steps = {};
         this.http = new http_client_1.HttpClient();
         this.debugMode = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.ALGOSEC_DEBUG;
         this.apiUrl = (_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.API_URL;
         this.tenantId = (_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.TENANT_ID;
         this.clientId = (_d = process === null || process === void 0 ? void 0 : process.env) === null || _d === void 0 ? void 0 : _d.CF_CLIENT_ID;
-        this.clientSecret = (_e = process === null || process === void 0 ? void 0 : process.env) === null || _e === void 0 ? void 0 : _e.CF_CLIENT_SECRET;
-        this.loginAPI = (_f = process === null || process === void 0 ? void 0 : process.env) === null || _f === void 0 ? void 0 : _f.CF_LOGIN_API;
+        this.clientSecret = (_f = process === null || process === void 0 ? void 0 : process.env) === null || _f === void 0 ? void 0 : _f.CF_CLIENT_SECRET;
+        this.loginAPI = (_g = process === null || process === void 0 ? void 0 : process.env) === null || _g === void 0 ? void 0 : _g.CF_LOGIN_API;
         this.http = new http_client_1.HttpClient();
-        this.frameworkType = (_g = process === null || process === void 0 ? void 0 : process.env) === null || _g === void 0 ? void 0 : _g.FRAMEWORK_TYPE;
-        this.vcsType = (_h = process === null || process === void 0 ? void 0 : process.env) === null || _h === void 0 ? void 0 : _h.VCS_TYPE;
+        this.frameworkType = (_h = process === null || process === void 0 ? void 0 : process.env) === null || _h === void 0 ? void 0 : _h.FRAMEWORK_TYPE;
+        this.vcsType = (_j = process === null || process === void 0 ? void 0 : process.env) === null || _j === void 0 ? void 0 : _j.VCS_TYPE;
         this.framework = new framework_service_1.FrameworkService().getInstanceByType(this.frameworkType);
         this.vcs = new vcs_service_1.VersionControlService().getInstanceByType(this.vcsType);
         this.actionUuid = getUuid(this.vcs.sha);
@@ -422,7 +421,6 @@ class CodeAnalysis {
         });
     }
     run() {
-        var _a;
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 this.jwt = yield this.auth(this.tenantId, this.clientId, this.clientSecret, this.loginAPI);
@@ -440,26 +438,26 @@ class CodeAnalysis {
                 // const filesToUpload = terraformSinglePlanFileMock
                 yield this.triggerCodeAnalysis(filesToUpload);
                 // const codeAnalysisResponse = codeAnalysisMock as any
-                const codeAnalysisResponse = yield this.getCodeAnalysis(filesToUpload);
-                yield this.parseOutput(filesToUpload, codeAnalysisResponse);
-                if (codeAnalysisResponse === null || codeAnalysisResponse === void 0 ? void 0 : codeAnalysisResponse.success) {
+                const codeAnalysisResponses = yield this.getCodeAnalysis(filesToUpload);
+                yield this.parseOutput(filesToUpload, codeAnalysisResponses);
+                if (codeAnalysisResponses.some(response => !(response === null || response === void 0 ? void 0 : response.success))) {
+                    let errors = '';
+                    // Object.keys(this.steps).forEach(step => errors += this.steps[step].stderr)
+                    (0, core_1.setFailed)('##### Algosec ##### The risks analysis process completed with errors:\n' + errors);
+                }
+                else {
                     (0, core_1.info)('##### Algosec ##### Step 5 - Parsing Code Analysis');
-                    if ((_a = codeAnalysisResponse === null || codeAnalysisResponse === void 0 ? void 0 : codeAnalysisResponse.additions) === null || _a === void 0 ? void 0 : _a.analysis_state) {
+                    if (codeAnalysisResponses.some(response => { var _a; return !((_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_state); })) {
+                        (0, core_1.setFailed)('##### Algosec ##### The risks analysis process completed successfully with risks, please check report');
+                    }
+                    else {
                         (0, core_1.info)('##### Algosec ##### Step 6 - The risks analysis process completed successfully without any risks');
                         return;
                     }
-                    else {
-                        (0, core_1.setFailed)('##### Algosec ##### The risks analysis process completed successfully with risks, please check report');
-                    }
-                }
-                else {
-                    let errors = '';
-                    Object.keys(this.steps).forEach(step => errors += this.steps[step].stderr);
-                    (0, core_1.setFailed)('##### Algosec ##### The risks analysis process completed with errors:\n' + errors);
                 }
             }
-            catch (error) {
-                (0, core_1.info)(error);
+            catch (_e) {
+                (0, core_1.error)(_e);
             }
         });
     }
@@ -581,14 +579,14 @@ class Github {
         });
     }
     convertToMarkdown(analysis, terraform) {
-        var _a, _b, _c, _d, _e, _f, _g;
+        var _a, _b, _c, _d, _e, _f, _g, _h;
         const CODE_BLOCK = '```';
         let risksList = '';
         let risksTableContents = '';
         (_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.forEach(risk => {
             risksList +=
                 `<details open="true">\n
-<summary><img width="10" height="10" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/${risk.riskSeverity}.png" />  ${risk.riskId} | ${risk.riskTitle}</summary> \n
+<summary><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/main/icons/${risk.riskSeverity}.png" />  ${risk.riskId} | ${risk.riskTitle}</summary> \n
 ### **Description:**\n${risk.riskDescription}\n
 ### **Recommendation:**\n${risk.riskRecommendation.toString()}\n
 ### **Details:**\n
@@ -599,12 +597,12 @@ ${CODE_BLOCK}\n
             risksTableContents +=
                 `<tr>\n
 <td>${risk.riskId}</td>\n
-<td><img width="10" height="10" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/${risk.riskSeverity}.png" /> ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
+<td><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/main/icons/${risk.riskSeverity}.png" /> ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
 <td>${risk.riskTitle}</td>\n
 </tr>\n`;
         });
         const analysisIcon = (analysis === null || analysis === void 0 ? void 0 : analysis.analysis_state) ? 'V' : 'X';
-        const header = `<img height="50" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/RiskAnalysis${analysisIcon}.svg" /> \n`;
+        const header = `<img height="50" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/main/icons/RiskAnalysis${analysisIcon}.svg" /> \n`;
         const risksTable = `<table>\n
 <thead>\n
 <tr>\n
@@ -618,7 +616,7 @@ ${risksTableContents}
 </tbody>
 </table>\n`;
         const terraformIcon = (((_b = terraform === null || terraform === void 0 ? void 0 : terraform.log) === null || _b === void 0 ? void 0 : _b.stderr) == '') ? 'V' : 'X';
-        const terraformContent = `\n<img height="50" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/Terraform${terraformIcon}.svg" />\n
+        const terraformContent = `\n<img height="50" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/main/icons/Terraform${terraformIcon}.svg" />\n
 <details>
 <summary>Terraform Log</summary>
 <br>Output<br>
@@ -629,7 +627,7 @@ ${(_c = terraform === null || terraform === void 0 ? void 0 : terraform.log) ===
 ${CODE_BLOCK}\n
 Errors\n
 ${CODE_BLOCK}\n
-${(_e = (_d = terraform === null || terraform === void 0 ? void 0 : terraform.log) === null || _d === void 0 ? void 0 : _d.stderr) !== null && _e !== void 0 ? _e : terraform === null || terraform === void 0 ? void 0 : terraform.initLog.stderr}\n
+${(_e = (_d = terraform === null || terraform === void 0 ? void 0 : terraform.log) === null || _d === void 0 ? void 0 : _d.stderr) !== null && _e !== void 0 ? _e : (_f = terraform === null || terraform === void 0 ? void 0 : terraform.initLog) === null || _f === void 0 ? void 0 : _f.stderr}\n
 ${CODE_BLOCK}\n
 </details> <!-- End Format Logs -->\n`;
         const codeAnalysisContent = `<summary>Report</summary>\n
@@ -644,9 +642,9 @@ ${JSON.stringify(analysis === null || analysis === void 0 ? void 0 : analysis.an
 ${CODE_BLOCK}\n
 </details>\n`;
         const markdownOutput = header +
-            (((_f = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _f === void 0 ? void 0 : _f.length) > 0 ? risksTable : '') +
+            (((_g = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _g === void 0 ? void 0 : _g.length) > 0 ? risksTable : '') +
             `<details open="true">\n` +
-            (((_g = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _g === void 0 ? void 0 : _g.length) > 0 ? codeAnalysisContent : 'No Risks Found\n') +
+            (((_h = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _h === void 0 ? void 0 : _h.length) > 0 ? codeAnalysisContent : 'No Risks Found\n') +
             terraformContent +
             `</details>\n` +
             `<br>*Pusher: @${github_1.context === null || github_1.context === void 0 ? void 0 : github_1.context.actor}, Action: \`${github_1.context === null || github_1.context === void 0 ? void 0 : github_1.context.eventName}\`, Working Directory: \'${this.workspace}\', Workflow: \'${github_1.context === null || github_1.context === void 0 ? void 0 : github_1.context.workflow}\'*`;

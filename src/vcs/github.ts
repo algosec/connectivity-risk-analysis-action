@@ -54,7 +54,7 @@ export class Github implements IVersionControl {
     analysis?.analysis_result?.forEach(risk => {
     risksList +=
     `<details open="true">\n
-<summary><img width="10" height="10" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/${risk.riskSeverity}.png" />  ${risk.riskId} | ${risk.riskTitle}</summary> \n
+<summary><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/main/icons/${risk.riskSeverity}.png" />  ${risk.riskId} | ${risk.riskTitle}</summary> \n
 ### **Description:**\n${risk.riskDescription}\n
 ### **Recommendation:**\n${risk.riskRecommendation.toString()}\n
 ### **Details:**\n
@@ -66,14 +66,14 @@ ${CODE_BLOCK}\n
 risksTableContents +=   
 `<tr>\n
 <td>${risk.riskId}</td>\n
-<td><img width="10" height="10" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/${risk.riskSeverity}.png" /> ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
+<td><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/main/icons/${risk.riskSeverity}.png" /> ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
 <td>${risk.riskTitle}</td>\n
 </tr>\n`
 
 
     })
     const analysisIcon = analysis?.analysis_state ? 'V' : 'X'
-    const header = `<img height="50" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/RiskAnalysis${analysisIcon}.svg" /> \n`
+    const header = `<img height="50" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/main/icons/RiskAnalysis${analysisIcon}.svg" /> \n`
     const risksTable = `<table>\n
 <thead>\n
 <tr>\n
@@ -87,7 +87,7 @@ ${risksTableContents}
 </tbody>
 </table>\n`
     const terraformIcon = (terraform?.log?.stderr == '' ) ? 'V' : 'X'
-    const terraformContent = `\n<img height="50" src="https://raw.githubusercontent.com/alonnalgoDevSecOps/risk-analysis-action/main/icons/Terraform${terraformIcon}.svg" />\n
+    const terraformContent = `\n<img height="50" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/main/icons/Terraform${terraformIcon}.svg" />\n
 <details>
 <summary>Terraform Log</summary>
 <br>Output<br>
@@ -98,7 +98,7 @@ ${terraform?.log?.stdout}\n
 ${CODE_BLOCK}\n
 Errors\n
 ${CODE_BLOCK}\n
-${terraform?.log?.stderr ?? terraform?.initLog.stderr}\n
+${terraform?.log?.stderr ?? terraform?.initLog?.stderr}\n
 ${CODE_BLOCK}\n
 </details> <!-- End Format Logs -->\n`
     const codeAnalysisContent = `<summary>Report</summary>\n

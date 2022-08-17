@@ -1,4 +1,4 @@
-import {info, setFailed } from '@actions/core'
+import {info, error, setFailed } from '@actions/core'
 import {context, getOctokit} from '@actions/github'
 import {HttpClient} from '@actions/http-client'
 import {Github} from './vcs/github'
@@ -218,23 +218,23 @@ export class CodeAnalysis{
       // const filesToUpload = terraformSinglePlanFileMock
       await this.triggerCodeAnalysis(filesToUpload)
       // const codeAnalysisResponse = codeAnalysisMock as any
-      const codeAnalysisResponse = await this.getCodeAnalysis(filesToUpload)
-      await this.parseOutput(filesToUpload, codeAnalysisResponse)
-      if (codeAnalysisResponse?.success) {
-        info('##### Algosec ##### Step 5 - Parsing Code Analysis')
-          if (codeAnalysisResponse?.additions?.analysis_state){
-        info('##### Algosec ##### Step 6 - The risks analysis process completed successfully without any risks')
-            return
-          } else {
-            setFailed('##### Algosec ##### The risks analysis process completed successfully with risks, please check report')
-          }
-      } else {
+      const codeAnalysisResponses = await this.getCodeAnalysis(filesToUpload)
+      await this.parseOutput(filesToUpload, codeAnalysisResponses)
+      if (codeAnalysisResponses.some(response => !response?.success)) {
         let errors = ''
-        Object.keys(this.steps).forEach(step => errors += this.steps[step].stderr)
+        // Object.keys(this.steps).forEach(step => errors += this.steps[step].stderr)
         setFailed('##### Algosec ##### The risks analysis process completed with errors:\n' + errors)
+      } else {
+        info('##### Algosec ##### Step 5 - Parsing Code Analysis')
+        if (codeAnalysisResponses.some(response => !response?.additions?.analysis_state)) {
+          setFailed('##### Algosec ##### The risks analysis process completed successfully with risks, please check report')
+        } else {
+          info('##### Algosec ##### Step 6 - The risks analysis process completed successfully without any risks')
+          return
+        }
       }
-    } catch (error) {
-      info(error)
+    } catch (_e) {
+        error(_e)
     }
 
   }
