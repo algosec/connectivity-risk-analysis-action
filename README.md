@@ -1,7 +1,3 @@
-<p align="left">
-  <a href="https://www.algosec.com"><img height="30" alt="Algosec" src="https://raw.githubusercontent.com/alonnalgo/action-test/main/icons/critical.png"></a>
-</p>
-
 # Run Code Analysis
 
 ```yaml
