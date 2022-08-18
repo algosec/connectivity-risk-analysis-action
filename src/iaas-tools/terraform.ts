@@ -1,10 +1,7 @@
 import { exec, ExecResult } from "../common/exec";
-import * as core from '@actions/core'
 import { FrameworkKeys, IFramework } from "./framework.model";
-import { info } from "@actions/core";
 import { existsSync } from "fs";
 import getUuidByString from "uuid-by-string";
-
 
 export class Terraform implements IFramework {
     fileTypes = ['.tf']
@@ -14,7 +11,7 @@ export class Terraform implements IFramework {
         this.steps = {}
     }
 
-    init(options: any){
+    init(){
         return this
     }
 
@@ -23,14 +20,7 @@ export class Terraform implements IFramework {
         try {
           
             process.chdir(`${options.workDir}/${options.runFolder}`)
-            // steps.setupVersion = await exec('curl', ['-L', 'https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh', '|', 'bash']);
-            // info('##### Algosec ##### tfswitch Installed successfully')
-            // if (process?.env?.TF_VERSION == "latest"  || process?.env?.TF_VERSION  == ""){
-            //   steps.switchVersion = await exec('tfswitch', ['--latest']);
-            // } else {
-            //   steps.switchVersion = await exec('tfswitch', []);
-            // }
-            // info('##### Algosec ##### tfswitch version: ' + process?.env?.TF_VERSION)
+          
             steps.init = await exec('terraform', ['init']);
       
             steps.fmt = await exec('terraform', ['fmt', '-diff'])
@@ -50,25 +40,34 @@ export class Terraform implements IFramework {
             process.chdir(options.workDir)
             return {plan: jsonPlan, log: steps.plan, initLog};
         } catch (error: any) {
-          if (error instanceof Error) console.log(error?.message) //setFailed(error.message)
+          if (error instanceof Error) console.log(error?.message) //setFailed(error?.message)
         }
-      }
+    }
 
-    
+    async terraformSetVersion(steps){
+        steps.setupVersion = await exec('curl', ['-L', 'https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh', '|', 'bash']);
+        console.log('##### Algosec ##### tfswitch Installed successfully')
+        if (process?.env?.TF_VERSION == "latest"  || process?.env?.TF_VERSION  == ""){
+          steps.switchVersion = await exec('tfswitch', ['--latest']);
+        } else {
+          steps.switchVersion = await exec('tfswitch', []);
+        }
+        console.log('##### Algosec ##### tfswitch version: ' + process?.env?.TF_VERSION)
+    }
     async check(foldersToRunCheck: any, workDir: string) {
         const res = []
         const asyncIterable = async (iterable, action) => {
             for (const [index, value] of iterable?.entries()) {
               const output = await action({runFolder: value, workDir})
               res.push({uuid: getUuidByString(value),folder:value, output})
-              info(`##### Algosec ##### Step 2.${index}- ${this.type} Result for folder ${value}: ${JSON.stringify(this)}`)
-            }
+              console.log(`##### Algosec ##### Step 2.${index}- ${this.type} Result for folder ${value}: ${JSON.stringify(this)}`)
+            } 
           }
           try {
             await asyncIterable(foldersToRunCheck, this.terraform)
             
           } catch (error) {
-            info('Framework check failed '+error)
+            console.log('Framework check failed '+error)
           }
           return res
     }

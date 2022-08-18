@@ -1,34 +1,54 @@
 import { GitHub } from "@actions/github/lib/utils"
-import { GithubContext } from "../index"
-import {Exec} from '../common/exec'
 import {context, getOctokit} from '@actions/github'
-import * as core from '@actions/core'
+import {info, error, debug, setFailed as exit} from '@actions/core'
+import {HttpClient} from '@actions/http-client'
 import { IVersionControl } from "./vcs.model"
+import {WebhookPayload} from '@actions/github/lib/interfaces'
+// import { githubEventPayloadMock } from "../mockData"
+export type GithubContext = typeof context
+
+// DEBUG
+// context.payload = githubEventPayloadMock as WebhookPayload & any
+
 export class Github implements IVersionControl {
   workspace: string
   token: string
   sha: string
   octokit: InstanceType<typeof GitHub>
   static DEFAULT_GITHUB_URL = 'https://github.com'
+  http: HttpClient
+  logger
+  private _context
+  repo: any
+  payload: WebhookPayload
+  pullRequest: string
 
   constructor(){
+    this.http = new HttpClient()
+    this.logger = {info, error, debug, exit}
     this.workspace = process?.env?.GITHUB_WORKSPACE
     this.token =  process?.env?.GH_TOKEN 
     this.sha =  process?.env?.GITHUB_SHA 
+    this._context = context
     this.octokit = getOctokit(this.token)
+    this.payload = this._context?.payload
+    this.repo = this._context.repo
+    this.pullRequest = this._context.payload.pull_request.number.toString()
   }
 
   init(){
     return this
   }
 
+
+
   async getDiff(octokit: InstanceType<typeof GitHub>) {
 
     const result = await octokit.rest.repos.compareCommits({
-      repo: context.repo.repo,
-      owner: context.repo.owner,
-      head: context?.payload?.pull_request?.head.sha,
-      base: context?.payload?.pull_request?.base.sha,
+      repo: this._context.repo.repo,
+      owner: this._context.repo.owner,
+      head: this._context?.payload?.pull_request?.head.sha,
+      base: this._context?.payload?.pull_request?.base.sha,
       per_page: 100
     })
     const answer = result.data.files || []
@@ -39,8 +59,8 @@ export class Github implements IVersionControl {
 
   async createComment(body){
     await this.octokit.rest.issues.createComment({
-      ...context.repo,
-      issue_number: context.issue.number,
+      ...this._context.repo,
+      issue_number: this._context.issue.number,
       body
     });
   }
@@ -121,7 +141,7 @@ ${CODE_BLOCK}\n
     terraformContent +
     `</details><br>
 \n
-*Pusher: @${context?.actor}, Action: \`${context?.eventName}\`, Working Directory: \'${this.workspace}\', Workflow: \'${context?.workflow }\'*`
+*Pusher: @${this._context?.actor}, Action: \`${this._context?.eventName}\`, Working Directory: \'${this.workspace}\', Workflow: \'${this._context?.workflow }\'*`
   
 
   return markdownOutput
@@ -135,14 +155,15 @@ ${CODE_BLOCK}\n
     return commentBodyArray.join('<br><br><br>')
   }
 
-  getCurrentRepoRemoteUrl(token: string): string {
-    const { repo, owner } = context.repo;
-    const serverName = this.getServerName(context.payload.repository?.html_url);
-    return this.getRepoRemoteUrl(token, `${serverName}/${owner}/${repo}`);
-  }
+  // getCurrentRepoRemoteUrl(token: string): string {
+  //   const { repo, owner } = this._context.repo;
+  //   const serverName = this.getServerName(this._context.payload.repository?.html_url);
+  //   return this.getRepoRemoteUrl(token, `${serverName}/${owner}/${repo}`);
+  // }
 
-  getRepoRemoteUrl(token: string, repoUrl: string): string {
-    return `https://x-access-token:${token}@${repoUrl}.git`;
+  getRepoRemoteUrl(): string {
+    // return `https://x-access-token:${token}@${repoUrl}.git`;
+    return `https://${this.repo.owner}:${this.token}@github.com/${this.repo.owner}/${this.repo.repo}.git`
   }
 
   getServerName(repositoryUrl: string | undefined): string {
@@ -158,9 +179,9 @@ ${CODE_BLOCK}\n
     additionalGitOptions: string[] = [],
     ...options: string[]
 ): Promise<string> {
-    core.debug(`Executing 'git clone' to directory '${baseDirectory}' with token and options '${options.join(' ')}'`);
+    debug(`Executing 'git clone' to directory '${baseDirectory}' with token and options '${options.join(' ')}'`);
 
-    const remote = this.getRepoRemoteUrl(token, this.getServerName(undefined) + '/' + context.repo.owner + '/' + context.repo.repo);
+    const remote = this.getRepoRemoteUrl();
     let args = ['clone', remote, baseDirectory];
     if (options.length > 0) {
         args = args.concat(options);
@@ -175,7 +196,7 @@ ${CODE_BLOCK}\n
     additionalGitOptions: string[] = [],
     ...options: string[]
 ): Promise<string> {
-    core.debug(`Executing 'git checkout' to ref '${ghRef}' with token and options '${options.join(' ')}'`);
+    debug(`Executing 'git checkout' to ref '${ghRef}' with token and options '${options.join(' ')}'`);
 
     let args = ['checkout', ghRef];
     if (options.length > 0) {

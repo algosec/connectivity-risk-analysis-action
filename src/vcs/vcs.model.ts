@@ -1,6 +1,12 @@
 import { Github } from "./github";
 
 export interface IVersionControl {
+    pullRequest: any;
+    getRepoRemoteUrl(): string;
+    payload: any;
+    repo: any;
+    logger: any;
+    http: any;
     workspace: string
     token: string
     sha: string
@@ -13,6 +19,11 @@ export interface IVersionControl {
 }
 
 export class GitLab implements IVersionControl {
+    pullRequest: any;
+    payload: any;
+    repo: any;
+    logger: any;
+    http: any;
     workspace: string
     token: string
     sha: string
@@ -36,6 +47,10 @@ export class GitLab implements IVersionControl {
 
     parseCodeAnalysis(analysis, VersionControl){
 
+    }
+
+    getRepoRemoteUrl(){
+        return ''
     }
 }
 

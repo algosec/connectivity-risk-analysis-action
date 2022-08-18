@@ -56,11 +56,11 @@ export async function exec(cmd: string, args: string[]): Promise<ExecResult> {
             listeners: {
                 stdout(data) {
                     res.stdout += data.toString();
-                    debug(`##### Algosec ##### stdout: ${res.stdout}`);
+                    // debug(`##### Algosec ##### stdout: ${res.stdout}`);
                 },
                 stderr(data) {
                     res.stderr += data.toString();
-                    debug(`##### Algosec ##### stderr: ${res.stderr}`);
+                    // debug(`##### Algosec ##### stderr: ${res.stderr}`);
                 },
             },
         });

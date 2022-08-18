@@ -9,6 +9,246 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 
 /***/ }),
 
+/***/ 1153:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AshCodeAnalysis = void 0;
+const exec_1 = __nccwpck_require__(898);
+__nccwpck_require__(4227);
+const vcs_service_1 = __nccwpck_require__(9701);
+const framework_service_1 = __nccwpck_require__(2162);
+const aws_1 = __nccwpck_require__(3895);
+// import { codeAnalysisMock, terraformSinglePlanFileMock } from "./mockData"
+const getUuid = __nccwpck_require__(7777);
+class AshCodeAnalysis {
+    constructor() {
+        var _a, _b, _c, _d, _f, _g, _h, _j;
+        this.steps = {};
+        this.debugMode = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.ALGOSEC_DEBUG;
+        this.apiUrl = (_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.API_URL;
+        this.tenantId = (_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.TENANT_ID;
+        this.clientId = (_d = process === null || process === void 0 ? void 0 : process.env) === null || _d === void 0 ? void 0 : _d.CF_CLIENT_ID;
+        this.clientSecret = (_f = process === null || process === void 0 ? void 0 : process.env) === null || _f === void 0 ? void 0 : _f.CF_CLIENT_SECRET;
+        this.loginAPI = (_g = process === null || process === void 0 ? void 0 : process.env) === null || _g === void 0 ? void 0 : _g.CF_LOGIN_API;
+        this.frameworkType = (_h = process === null || process === void 0 ? void 0 : process.env) === null || _h === void 0 ? void 0 : _h.FRAMEWORK_TYPE;
+        this.vcsType = (_j = process === null || process === void 0 ? void 0 : process.env) === null || _j === void 0 ? void 0 : _j.VCS_TYPE;
+        this.framework = new framework_service_1.FrameworkService().getInstanceByType(this.frameworkType);
+        this.vcs = new vcs_service_1.VersionControlService().getInstanceByType(this.vcsType);
+        this.actionUuid = getUuid(this.vcs.sha);
+        this.workDir = this.vcs.workspace + '_' + this.actionUuid;
+    }
+    auth(tenantId, clientID, clientSecret, loginAPI) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const payload = {
+                "tenantId": tenantId,
+                "clientId": clientID,
+                "clientSecret": clientSecret
+            };
+            const headers = {
+                "Content-Type": "application/json"
+            };
+            try {
+                const res = yield this.vcs.http.post(loginAPI, JSON.stringify(payload), headers);
+                const response_code = res.message.statusCode;
+                const data = JSON.parse(yield res.readBody());
+                if (200 <= response_code && response_code <= 300) {
+                    this.vcs.logger.info('Passed authentication vs CF\'s login. New token has been generated.');
+                    return data === null || data === void 0 ? void 0 : data.access_token;
+                }
+                else {
+                    this.vcs.logger.exit(`Failed to generate token. Error code ${response_code}, msg: ${JSON.stringify(data)}`);
+                }
+            }
+            catch (error) {
+                this.vcs.logger.exit(`Failed to generate token. Error msg: ${error.toString()}`);
+            }
+            return '';
+        });
+    }
+    prepareRepo() {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.steps.gitClone = yield (0, exec_1.exec)('git', ['clone', this.vcs.getRepoRemoteUrl(), this.workDir]);
+            process.chdir(this.workDir);
+            this.steps.gitFetch = yield (0, exec_1.exec)('git', ['fetch', 'origin', `pull/${this.vcs.pullRequest}/head:${this.actionUuid}`]);
+            this.steps.gitCheckout = yield (0, exec_1.exec)('git', ['checkout', this.actionUuid]);
+        });
+    }
+    checkForDiff(fileTypes) {
+        var _a, _b, _c;
+        return __awaiter(this, void 0, void 0, function* () {
+            let diffFolders;
+            try {
+                if (((_a = this === null || this === void 0 ? void 0 : this.vcs) === null || _a === void 0 ? void 0 : _a.octokit) && ((_c = (_b = this.vcs) === null || _b === void 0 ? void 0 : _b.payload) === null || _c === void 0 ? void 0 : _c.pull_request)) {
+                    const diffs = yield this.vcs.getDiff(this.vcs.octokit);
+                    const foldersSet = new Set(diffs
+                        .filter(diff => fileTypes.some(fileType => { var _a; return (_a = diff === null || diff === void 0 ? void 0 : diff.filename) === null || _a === void 0 ? void 0 : _a.endsWith(fileType); }))
+                        .map(diff => diff === null || diff === void 0 ? void 0 : diff.filename.split('/')[0]));
+                    diffFolders = [...foldersSet];
+                }
+            }
+            catch (error) {
+                if (error instanceof Error)
+                    this.vcs.logger.exit(error === null || error === void 0 ? void 0 : error.message);
+            }
+            if ((diffFolders === null || diffFolders === void 0 ? void 0 : diffFolders.length) == 0) {
+                this.vcs.logger.info('##### Algosec ##### No changes were found in terraform plans');
+                return;
+            }
+            this.vcs.logger.info('##### Algosec ##### Step 1 - Diffs Result: ' + JSON.stringify(diffFolders));
+            return diffFolders;
+        });
+    }
+    triggerCodeAnalysis(filesToUpload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const fileUploadPromises = [];
+            filesToUpload.forEach(file => fileUploadPromises.push(this.uploadFile(file)));
+            const response = yield Promise.all(fileUploadPromises);
+            if (response) {
+                this.vcs.logger.info('##### Algosec ##### Step 3 - File/s Uploaded Successfully');
+            }
+        });
+    }
+    uploadFile(file) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            const aws = new aws_1.Aws();
+            let res = false;
+            if (file === null || file === void 0 ? void 0 : file.output) {
+                const ans = yield aws.uploadToS3(file === null || file === void 0 ? void 0 : file.uuid, JSON.stringify((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan), this.jwt);
+                if (ans) {
+                    res = true;
+                }
+            }
+            return res;
+        });
+    }
+    getCodeAnalysis(filesToUpload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let analysisResult;
+            const codeAnalysisPromises = [];
+            filesToUpload.forEach(file => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
+            analysisResult = yield Promise.all(codeAnalysisPromises);
+            if (!analysisResult || (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error)) {
+                this.vcs.logger.exit('##### Algosec ##### Code Analysis failed');
+                return;
+            }
+            this.vcs.logger.info('##### Algosec ##### Step 4 - Code Analysis Result: ' + JSON.stringify(analysisResult));
+            return analysisResult;
+        });
+    }
+    pollCodeAnalysisResponse(file) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let analysisResult = yield this.checkCodeAnalysisResponse(file);
+            for (let i = 0; i < 50; i++) {
+                yield this.wait(3000);
+                analysisResult = yield this.checkCodeAnalysisResponse(file);
+                if (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.additions) {
+                    this.vcs.logger.info('##### Algosec ##### Response: ' + JSON.stringify(analysisResult));
+                    break;
+                }
+                else if (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error) {
+                    this.vcs.logger.exit('##### Algosec ##### Poll Request failed: ' + (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error));
+                    break;
+                }
+            }
+            return analysisResult;
+        });
+    }
+    wait(ms = 1000) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise(resolve => {
+                this.vcs.logger.info(`waiting for response...`);
+                setTimeout(resolve, ms);
+            });
+        });
+    }
+    checkCodeAnalysisResponse(file) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            const pollUrl = `${this.apiUrl}/message?customer=${this.vcs.repo.owner}&action_id=${file.uuid}`;
+            const response = yield this.vcs.http.get(pollUrl, { 'Authorization': 'Bearer ' + this.jwt });
+            if (((_a = response === null || response === void 0 ? void 0 : response.message) === null || _a === void 0 ? void 0 : _a.statusCode) == 200) {
+                const body = yield response.readBody();
+                const message = body && body != '' ? JSON.parse(body) : null;
+                if (message === null || message === void 0 ? void 0 : message.message_found) {
+                    return (message === null || message === void 0 ? void 0 : message.result) ? JSON.parse(message === null || message === void 0 ? void 0 : message.result) : null;
+                }
+                else {
+                    return null;
+                }
+            }
+            else {
+                return { error: response.message.statusMessage };
+            }
+        });
+    }
+    parseOutput(filesToUpload, analysisResult) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const body = this.vcs.parseCodeAnalysis(filesToUpload, analysisResult);
+            if (body && body != '')
+                this.steps.comment = this.vcs.createComment(body);
+        });
+    }
+    run() {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                this.jwt = yield this.auth(this.tenantId, this.clientId, this.clientSecret, this.loginAPI);
+                if (!this.jwt || this.jwt == '') {
+                    this.vcs.logger.exit('##### Algosec ##### Step 0 Failed to generate token');
+                    return;
+                }
+                this.steps.auth = { code: 0, stdout: this.jwt, stderr: '' };
+                if (this.debugMode) {
+                    yield (0, exec_1.exec)('rimraf', [this.workDir]);
+                }
+                yield this.prepareRepo();
+                const foldersToRunCheck = yield this.checkForDiff(this.framework.fileTypes);
+                const filesToUpload = yield this.framework.check(foldersToRunCheck, this.workDir);
+                // const filesToUpload = terraformSinglePlanFileMock
+                yield this.triggerCodeAnalysis(filesToUpload);
+                // const codeAnalysisResponse = codeAnalysisMock as any
+                const codeAnalysisResponses = yield this.getCodeAnalysis(filesToUpload);
+                yield this.parseOutput(filesToUpload, codeAnalysisResponses);
+                if (codeAnalysisResponses.some(response => !(response === null || response === void 0 ? void 0 : response.success))) {
+                    let errors = '';
+                    Object.keys(this.steps).forEach(step => { var _a, _b; return errors += (_b = (_a = this === null || this === void 0 ? void 0 : this.steps[step]) === null || _a === void 0 ? void 0 : _a.stderr) !== null && _b !== void 0 ? _b : ''; });
+                    this.vcs.logger.exit('##### Algosec ##### The risks analysis process failed:\n' + errors);
+                }
+                else {
+                    this.vcs.logger.info('##### Algosec ##### Step 5 - Parsing Code Analysis');
+                    if (codeAnalysisResponses.some(response => { var _a; return !((_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_state); })) {
+                        this.vcs.logger.exit('##### Algosec ##### The risks analysis process completed successfully with risks, please check report');
+                    }
+                    else {
+                        this.vcs.logger.info('##### Algosec ##### Step 6 - The risks analysis process completed successfully without any risks');
+                        return;
+                    }
+                }
+            }
+            catch (_e) {
+                (_a = this.vcs.logger) === null || _a === void 0 ? void 0 : _a.error(_e);
+            }
+        });
+    }
+}
+exports.AshCodeAnalysis = AshCodeAnalysis;
+
+
+/***/ }),
+
 /***/ 898:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -42,11 +282,11 @@ function exec(cmd, args) {
                 listeners: {
                     stdout(data) {
                         res.stdout += data.toString();
-                        (0, core_1.debug)(`##### Algosec ##### stdout: ${res.stdout}`);
+                        // debug(`##### Algosec ##### stdout: ${res.stdout}`);
                     },
                     stderr(data) {
                         res.stderr += data.toString();
-                        (0, core_1.debug)(`##### Algosec ##### stderr: ${res.stderr}`);
+                        // debug(`##### Algosec ##### stderr: ${res.stderr}`);
                     },
                 },
             });
@@ -146,7 +386,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Terraform = void 0;
 const exec_1 = __nccwpck_require__(898);
-const core_1 = __nccwpck_require__(2186);
 const fs_1 = __nccwpck_require__(5747);
 const uuid_by_string_1 = __importDefault(__nccwpck_require__(7777));
 class Terraform {
@@ -155,7 +394,7 @@ class Terraform {
         this.type = 'terraform';
         this.steps = {};
     }
-    init(options) {
+    init() {
         return this;
     }
     terraform(options) {
@@ -163,14 +402,6 @@ class Terraform {
             const steps = {};
             try {
                 process.chdir(`${options.workDir}/${options.runFolder}`);
-                // steps.setupVersion = await exec('curl', ['-L', 'https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh', '|', 'bash']);
-                // info('##### Algosec ##### tfswitch Installed successfully')
-                // if (process?.env?.TF_VERSION == "latest"  || process?.env?.TF_VERSION  == ""){
-                //   steps.switchVersion = await exec('tfswitch', ['--latest']);
-                // } else {
-                //   steps.switchVersion = await exec('tfswitch', []);
-                // }
-                // info('##### Algosec ##### tfswitch version: ' + process?.env?.TF_VERSION)
                 steps.init = yield (0, exec_1.exec)('terraform', ['init']);
                 steps.fmt = yield (0, exec_1.exec)('terraform', ['fmt', '-diff']);
                 steps.validate = yield (0, exec_1.exec)('terraform', ['validate', '-no-color']);
@@ -191,8 +422,22 @@ class Terraform {
             }
             catch (error) {
                 if (error instanceof Error)
-                    console.log(error === null || error === void 0 ? void 0 : error.message); //setFailed(error.message)
+                    console.log(error === null || error === void 0 ? void 0 : error.message); //setFailed(error?.message)
             }
+        });
+    }
+    terraformSetVersion(steps) {
+        var _a, _b, _c;
+        return __awaiter(this, void 0, void 0, function* () {
+            steps.setupVersion = yield (0, exec_1.exec)('curl', ['-L', 'https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh', '|', 'bash']);
+            console.log('##### Algosec ##### tfswitch Installed successfully');
+            if (((_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.TF_VERSION) == "latest" || ((_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.TF_VERSION) == "") {
+                steps.switchVersion = yield (0, exec_1.exec)('tfswitch', ['--latest']);
+            }
+            else {
+                steps.switchVersion = yield (0, exec_1.exec)('tfswitch', []);
+            }
+            console.log('##### Algosec ##### tfswitch version: ' + ((_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.TF_VERSION));
         });
     }
     check(foldersToRunCheck, workDir) {
@@ -202,269 +447,20 @@ class Terraform {
                 for (const [index, value] of iterable === null || iterable === void 0 ? void 0 : iterable.entries()) {
                     const output = yield action({ runFolder: value, workDir });
                     res.push({ uuid: (0, uuid_by_string_1.default)(value), folder: value, output });
-                    (0, core_1.info)(`##### Algosec ##### Step 2.${index}- ${this.type} Result for folder ${value}: ${JSON.stringify(this)}`);
+                    console.log(`##### Algosec ##### Step 2.${index}- ${this.type} Result for folder ${value}: ${JSON.stringify(this)}`);
                 }
             });
             try {
                 yield asyncIterable(foldersToRunCheck, this.terraform);
             }
             catch (error) {
-                (0, core_1.info)('Framework check failed ' + error);
+                console.log('Framework check failed ' + error);
             }
             return res;
         });
     }
 }
 exports.Terraform = Terraform;
-
-
-/***/ }),
-
-/***/ 4822:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CodeAnalysis = void 0;
-const core_1 = __nccwpck_require__(2186);
-const github_1 = __nccwpck_require__(5438);
-const http_client_1 = __nccwpck_require__(6255);
-const exec_1 = __nccwpck_require__(898);
-__nccwpck_require__(4227);
-const vcs_service_1 = __nccwpck_require__(9701);
-const framework_service_1 = __nccwpck_require__(2162);
-const aws_1 = __nccwpck_require__(3895);
-const getUuid = __nccwpck_require__(7777);
-const uuid = __nccwpck_require__(5840);
-// import {WebhookPayload} from '@actions/github/lib/interfaces'
-// import {githubEventPayloadMock, codeAnalysisMock, terraformPlanFileMock, terraformSinglePlanFileMock} from './mockData'
-// context.payload = githubEventPayloadMock as WebhookPayload & any
-class CodeAnalysis {
-    constructor() {
-        var _a, _b, _c, _d, _f, _g, _h, _j;
-        this.steps = {};
-        this.http = new http_client_1.HttpClient();
-        this.debugMode = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.ALGOSEC_DEBUG;
-        this.apiUrl = (_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.API_URL;
-        this.tenantId = (_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.TENANT_ID;
-        this.clientId = (_d = process === null || process === void 0 ? void 0 : process.env) === null || _d === void 0 ? void 0 : _d.CF_CLIENT_ID;
-        this.clientSecret = (_f = process === null || process === void 0 ? void 0 : process.env) === null || _f === void 0 ? void 0 : _f.CF_CLIENT_SECRET;
-        this.loginAPI = (_g = process === null || process === void 0 ? void 0 : process.env) === null || _g === void 0 ? void 0 : _g.CF_LOGIN_API;
-        this.http = new http_client_1.HttpClient();
-        this.frameworkType = (_h = process === null || process === void 0 ? void 0 : process.env) === null || _h === void 0 ? void 0 : _h.FRAMEWORK_TYPE;
-        this.vcsType = (_j = process === null || process === void 0 ? void 0 : process.env) === null || _j === void 0 ? void 0 : _j.VCS_TYPE;
-        this.framework = new framework_service_1.FrameworkService().getInstanceByType(this.frameworkType);
-        this.vcs = new vcs_service_1.VersionControlService().getInstanceByType(this.vcsType);
-        this.actionUuid = getUuid(this.vcs.sha);
-        this.workDir = this.vcs.workspace + '_' + this.actionUuid;
-    }
-    auth(tenantId, clientID, clientSecret, loginAPI) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const payload = {
-                "tenantId": tenantId,
-                "clientId": clientID,
-                "clientSecret": clientSecret
-            };
-            const headers = {
-                "Content-Type": "application/json"
-            };
-            try {
-                const res = yield this.http.post(loginAPI, JSON.stringify(payload), headers);
-                const response_code = res.message.statusCode;
-                const data = JSON.parse(yield res.readBody());
-                if (200 <= response_code && response_code <= 300) {
-                    (0, core_1.info)('Passed authentication vs CF\'s login. New token has been generated.');
-                    return data === null || data === void 0 ? void 0 : data.access_token;
-                }
-                else {
-                    (0, core_1.setFailed)(`Failed to generate token. Error code ${response_code}, msg: ${JSON.stringify(data)}`);
-                }
-            }
-            catch (error) {
-                (0, core_1.setFailed)(`Failed to generate token. Error msg: ${error.toString()}`);
-            }
-            return '';
-        });
-    }
-    prepareRepo() {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.steps.gitClone = yield (0, exec_1.exec)('git', ['clone', `https://${github_1.context.repo.owner}:${this.vcs.token}@github.com/${github_1.context.repo.owner}/${github_1.context.repo.repo}.git`, this.workDir]);
-            process.chdir(this.workDir);
-            this.steps.gitFetch = yield (0, exec_1.exec)('git', ['fetch', 'origin', `pull/${github_1.context.payload.pull_request.number.toString()}/head:${this.actionUuid}`]);
-            this.steps.gitCheckout = yield (0, exec_1.exec)('git', ['checkout', this.actionUuid]);
-        });
-    }
-    checkForDiff(fileTypes) {
-        var _a, _b;
-        return __awaiter(this, void 0, void 0, function* () {
-            let diffFolders;
-            try {
-                if (((_a = this === null || this === void 0 ? void 0 : this.vcs) === null || _a === void 0 ? void 0 : _a.octokit) && ((_b = github_1.context === null || github_1.context === void 0 ? void 0 : github_1.context.payload) === null || _b === void 0 ? void 0 : _b.pull_request)) {
-                    const diffs = yield this.vcs.getDiff(this.vcs.octokit);
-                    const foldersSet = new Set(diffs
-                        .filter(diff => fileTypes.some(fileType => { var _a; return (_a = diff === null || diff === void 0 ? void 0 : diff.filename) === null || _a === void 0 ? void 0 : _a.endsWith(fileType); }))
-                        .map(diff => diff === null || diff === void 0 ? void 0 : diff.filename.split('/')[0]));
-                    diffFolders = [...foldersSet];
-                }
-            }
-            catch (error) {
-                if (error instanceof Error)
-                    (0, core_1.setFailed)(error.message);
-            }
-            if ((diffFolders === null || diffFolders === void 0 ? void 0 : diffFolders.length) == 0) {
-                (0, core_1.info)('##### Algosec ##### No changes were found in terraform plans');
-                return;
-            }
-            (0, core_1.info)('##### Algosec ##### Step 1 - Diffs Result: ' + JSON.stringify(diffFolders));
-            return diffFolders;
-        });
-    }
-    triggerCodeAnalysis(filesToUpload) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const fileUploadPromises = [];
-            filesToUpload.forEach(file => fileUploadPromises.push(this.uploadFile(file)));
-            const response = yield Promise.all(fileUploadPromises);
-            if (response) {
-                (0, core_1.info)('##### Algosec ##### Step 3 - File/s Uploaded Successfully');
-            }
-        });
-    }
-    uploadFile(file) {
-        var _a;
-        return __awaiter(this, void 0, void 0, function* () {
-            const aws = new aws_1.Aws();
-            let res = false;
-            if (file === null || file === void 0 ? void 0 : file.output) {
-                const ans = yield aws.uploadToS3(file === null || file === void 0 ? void 0 : file.uuid, JSON.stringify((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan), this.jwt);
-                if (ans) {
-                    res = true;
-                }
-            }
-            return res;
-        });
-    }
-    getCodeAnalysis(filesToUpload) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let analysisResult;
-            const codeAnalysisPromises = [];
-            filesToUpload.forEach(file => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
-            analysisResult = yield Promise.all(codeAnalysisPromises);
-            if (!analysisResult || (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error)) {
-                (0, core_1.setFailed)('##### Algosec ##### Code Analysis failed');
-                return;
-            }
-            (0, core_1.info)('##### Algosec ##### Step 4 - Code Analysis Result: ' + JSON.stringify(analysisResult));
-            return analysisResult;
-        });
-    }
-    pollCodeAnalysisResponse(file) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let analysisResult = yield this.checkCodeAnalysisResponse(file);
-            for (let i = 0; i < 50; i++) {
-                yield this.wait(3000);
-                analysisResult = yield this.checkCodeAnalysisResponse(file);
-                if (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.additions) {
-                    (0, core_1.info)('##### Algosec ##### Response: ' + JSON.stringify(analysisResult));
-                    break;
-                }
-                else if (analysisResult.error) {
-                    (0, core_1.setFailed)('##### Algosec ##### Poll Request failed: ' + analysisResult.error);
-                    break;
-                }
-            }
-            return analysisResult;
-        });
-    }
-    wait(ms = 1000) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return new Promise(resolve => {
-                (0, core_1.info)(`waiting for response...`);
-                setTimeout(resolve, ms);
-            });
-        });
-    }
-    checkCodeAnalysisResponse(file) {
-        var _a;
-        return __awaiter(this, void 0, void 0, function* () {
-            const pollUrl = `${this.apiUrl}/message?customer=${github_1.context.repo.owner}&action_id=${file.uuid}`;
-            const response = yield this.http.get(pollUrl, { 'Authorization': 'Bearer ' + this.jwt });
-            if (((_a = response === null || response === void 0 ? void 0 : response.message) === null || _a === void 0 ? void 0 : _a.statusCode) == 200) {
-                const body = yield response.readBody();
-                const message = body && body != '' ? JSON.parse(body) : null;
-                if (message === null || message === void 0 ? void 0 : message.message_found) {
-                    return (message === null || message === void 0 ? void 0 : message.result) ? JSON.parse(message === null || message === void 0 ? void 0 : message.result) : null;
-                }
-                else {
-                    return null;
-                }
-            }
-            else {
-                return { error: response.message.statusMessage };
-            }
-        });
-    }
-    parseOutput(filesToUpload, analysisResult) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const body = this.vcs.parseCodeAnalysis(filesToUpload, analysisResult);
-            this.steps.comment = this.vcs.createComment(body);
-            // this.steps.comment = await exec('gh', ['pr', 'comment', context.payload.pull_request.number.toString(), '-b', commentBody])
-        });
-    }
-    run() {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                this.jwt = yield this.auth(this.tenantId, this.clientId, this.clientSecret, this.loginAPI);
-                if (!this.jwt || this.jwt == '') {
-                    (0, core_1.setFailed)('##### Algosec ##### Step 0 Failed to generate token');
-                    return;
-                }
-                this.steps.auth = { code: 0, stdout: this.jwt, stderr: '' };
-                if (this.debugMode) {
-                    yield (0, exec_1.exec)('rimraf', [this.workDir]);
-                }
-                yield this.prepareRepo();
-                const foldersToRunCheck = yield this.checkForDiff(this.framework.fileTypes);
-                const filesToUpload = yield this.framework.check(foldersToRunCheck, this.workDir);
-                // const filesToUpload = terraformSinglePlanFileMock
-                yield this.triggerCodeAnalysis(filesToUpload);
-                // const codeAnalysisResponse = codeAnalysisMock as any
-                const codeAnalysisResponses = yield this.getCodeAnalysis(filesToUpload);
-                yield this.parseOutput(filesToUpload, codeAnalysisResponses);
-                if (codeAnalysisResponses.some(response => !(response === null || response === void 0 ? void 0 : response.success))) {
-                    let errors = '';
-                    // Object.keys(this.steps).forEach(step => errors += this.steps[step].stderr)
-                    (0, core_1.setFailed)('##### Algosec ##### The risks analysis process completed with errors:\n' + errors);
-                }
-                else {
-                    (0, core_1.info)('##### Algosec ##### Step 5 - Parsing Code Analysis');
-                    if (codeAnalysisResponses.some(response => { var _a; return !((_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_state); })) {
-                        (0, core_1.setFailed)('##### Algosec ##### The risks analysis process completed successfully with risks, please check report');
-                    }
-                    else {
-                        (0, core_1.info)('##### Algosec ##### Step 6 - The risks analysis process completed successfully without any risks');
-                        return;
-                    }
-                }
-            }
-            catch (_e) {
-                (0, core_1.error)(_e);
-            }
-        });
-    }
-}
-exports.CodeAnalysis = CodeAnalysis;
-const codeAnalyzer = new CodeAnalysis();
-codeAnalyzer.run();
 
 
 /***/ }),
@@ -516,25 +512,6 @@ exports.Aws = Aws;
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -547,26 +524,35 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Github = void 0;
 const github_1 = __nccwpck_require__(5438);
-const core = __importStar(__nccwpck_require__(2186));
+const core_1 = __nccwpck_require__(2186);
+const http_client_1 = __nccwpck_require__(6255);
+// DEBUG
+// context.payload = githubEventPayloadMock as WebhookPayload & any
 class Github {
     constructor() {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
+        this.http = new http_client_1.HttpClient();
+        this.logger = { info: core_1.info, error: core_1.error, debug: core_1.debug, exit: core_1.setFailed };
         this.workspace = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.GITHUB_WORKSPACE;
         this.token = (_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.GH_TOKEN;
         this.sha = (_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.GITHUB_SHA;
+        this._context = github_1.context;
         this.octokit = (0, github_1.getOctokit)(this.token);
+        this.payload = (_d = this._context) === null || _d === void 0 ? void 0 : _d.payload;
+        this.repo = this._context.repo;
+        this.pullRequest = this._context.payload.pull_request.number.toString();
     }
     init() {
         return this;
     }
     getDiff(octokit) {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e, _f;
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield octokit.rest.repos.compareCommits({
-                repo: github_1.context.repo.repo,
-                owner: github_1.context.repo.owner,
-                head: (_b = (_a = github_1.context === null || github_1.context === void 0 ? void 0 : github_1.context.payload) === null || _a === void 0 ? void 0 : _a.pull_request) === null || _b === void 0 ? void 0 : _b.head.sha,
-                base: (_d = (_c = github_1.context === null || github_1.context === void 0 ? void 0 : github_1.context.payload) === null || _c === void 0 ? void 0 : _c.pull_request) === null || _d === void 0 ? void 0 : _d.base.sha,
+                repo: this._context.repo.repo,
+                owner: this._context.repo.owner,
+                head: (_c = (_b = (_a = this._context) === null || _a === void 0 ? void 0 : _a.payload) === null || _b === void 0 ? void 0 : _b.pull_request) === null || _c === void 0 ? void 0 : _c.head.sha,
+                base: (_f = (_e = (_d = this._context) === null || _d === void 0 ? void 0 : _d.payload) === null || _e === void 0 ? void 0 : _e.pull_request) === null || _f === void 0 ? void 0 : _f.base.sha,
                 per_page: 100
             });
             const answer = result.data.files || [];
@@ -575,11 +561,11 @@ class Github {
     }
     createComment(body) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.octokit.rest.issues.createComment(Object.assign(Object.assign({}, github_1.context.repo), { issue_number: github_1.context.issue.number, body }));
+            yield this.octokit.rest.issues.createComment(Object.assign(Object.assign({}, this._context.repo), { issue_number: this._context.issue.number, body }));
         });
     }
     convertToMarkdown(analysis, terraform) {
-        var _a, _b, _c, _d, _e, _f, _g, _h;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
         const CODE_BLOCK = '```';
         let risksList = '';
         let risksTableContents = '';
@@ -648,7 +634,7 @@ ${CODE_BLOCK}\n
             terraformContent +
             `</details><br>
 \n
-*Pusher: @${github_1.context === null || github_1.context === void 0 ? void 0 : github_1.context.actor}, Action: \`${github_1.context === null || github_1.context === void 0 ? void 0 : github_1.context.eventName}\`, Working Directory: \'${this.workspace}\', Workflow: \'${github_1.context === null || github_1.context === void 0 ? void 0 : github_1.context.workflow}\'*`;
+*Pusher: @${(_j = this._context) === null || _j === void 0 ? void 0 : _j.actor}, Action: \`${(_k = this._context) === null || _k === void 0 ? void 0 : _k.eventName}\`, Working Directory: \'${this.workspace}\', Workflow: \'${(_l = this._context) === null || _l === void 0 ? void 0 : _l.workflow}\'*`;
         return markdownOutput;
     }
     parseCodeAnalysis(filesToUpload, analysisResult) {
@@ -657,14 +643,14 @@ ${CODE_BLOCK}\n
             '' : this.convertToMarkdown(folderAnalysis === null || folderAnalysis === void 0 ? void 0 : folderAnalysis.additions, filesToUpload.find(file => { var _a; return (_a = folderAnalysis === null || folderAnalysis === void 0 ? void 0 : folderAnalysis.proceeded_file) === null || _a === void 0 ? void 0 : _a.includes(file.uuid); }))));
         return commentBodyArray.join('<br><br><br>');
     }
-    getCurrentRepoRemoteUrl(token) {
-        var _a;
-        const { repo, owner } = github_1.context.repo;
-        const serverName = this.getServerName((_a = github_1.context.payload.repository) === null || _a === void 0 ? void 0 : _a.html_url);
-        return this.getRepoRemoteUrl(token, `${serverName}/${owner}/${repo}`);
-    }
-    getRepoRemoteUrl(token, repoUrl) {
-        return `https://x-access-token:${token}@${repoUrl}.git`;
+    // getCurrentRepoRemoteUrl(token: string): string {
+    //   const { repo, owner } = this._context.repo;
+    //   const serverName = this.getServerName(this._context.payload.repository?.html_url);
+    //   return this.getRepoRemoteUrl(token, `${serverName}/${owner}/${repo}`);
+    // }
+    getRepoRemoteUrl() {
+        // return `https://x-access-token:${token}@${repoUrl}.git`;
+        return `https://${this.repo.owner}:${this.token}@github.com/${this.repo.owner}/${this.repo.repo}.git`;
     }
     getServerName(repositoryUrl) {
         const urlObj = repositoryUrl ? new URL(repositoryUrl) : new URL(Github.DEFAULT_GITHUB_URL);
@@ -672,8 +658,8 @@ ${CODE_BLOCK}\n
     }
     clone(token, context, baseDirectory, additionalGitOptions = [], ...options) {
         return __awaiter(this, void 0, void 0, function* () {
-            core.debug(`Executing 'git clone' to directory '${baseDirectory}' with token and options '${options.join(' ')}'`);
-            const remote = this.getRepoRemoteUrl(token, this.getServerName(undefined) + '/' + context.repo.owner + '/' + context.repo.repo);
+            (0, core_1.debug)(`Executing 'git clone' to directory '${baseDirectory}' with token and options '${options.join(' ')}'`);
+            const remote = this.getRepoRemoteUrl();
             let args = ['clone', remote, baseDirectory];
             if (options.length > 0) {
                 args = args.concat(options);
@@ -684,7 +670,7 @@ ${CODE_BLOCK}\n
     }
     checkout(ghRef, additionalGitOptions = [], ...options) {
         return __awaiter(this, void 0, void 0, function* () {
-            core.debug(`Executing 'git checkout' to ref '${ghRef}' with token and options '${options.join(' ')}'`);
+            (0, core_1.debug)(`Executing 'git checkout' to ref '${ghRef}' with token and options '${options.join(' ')}'`);
             let args = ['checkout', ghRef];
             if (options.length > 0) {
                 args = args.concat(options);
@@ -727,6 +713,9 @@ class GitLab {
     createComment(options) {
     }
     parseCodeAnalysis(analysis, VersionControl) {
+    }
+    getRepoRemoteUrl() {
+        return '';
     }
 }
 exports.GitLab = GitLab;
@@ -772,7 +761,7 @@ exports.VersionControlService = VersionControlService;
 
 /***/ }),
 
-/***/ 7351:
+/***/ 5241:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -906,7 +895,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getIDToken = exports.getState = exports.saveState = exports.group = exports.endGroup = exports.startGroup = exports.info = exports.notice = exports.warning = exports.error = exports.debug = exports.isDebug = exports.setFailed = exports.setCommandEcho = exports.setOutput = exports.getBooleanInput = exports.getMultilineInput = exports.getInput = exports.addPath = exports.setSecret = exports.exportVariable = exports.ExitCode = void 0;
-const command_1 = __nccwpck_require__(7351);
+const command_1 = __nccwpck_require__(5241);
 const file_command_1 = __nccwpck_require__(717);
 const utils_1 = __nccwpck_require__(5278);
 const os = __importStar(__nccwpck_require__(2087));
@@ -2195,7 +2184,7 @@ const os = __importStar(__nccwpck_require__(2087));
 const events = __importStar(__nccwpck_require__(8614));
 const child = __importStar(__nccwpck_require__(3129));
 const path = __importStar(__nccwpck_require__(5622));
-const io = __importStar(__nccwpck_require__(7436));
+const io = __importStar(__nccwpck_require__(7351));
 const ioUtil = __importStar(__nccwpck_require__(1962));
 const timers_1 = __nccwpck_require__(8213);
 /* eslint-disable @typescript-eslint/unbound-method */
@@ -3860,7 +3849,7 @@ exports.getCmdPath = getCmdPath;
 
 /***/ }),
 
-/***/ 7436:
+/***/ 7351:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -12479,652 +12468,6 @@ module.exports = {
 
 /***/ }),
 
-/***/ 5840:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-Object.defineProperty(exports, "v1", ({
-  enumerable: true,
-  get: function () {
-    return _v.default;
-  }
-}));
-Object.defineProperty(exports, "v3", ({
-  enumerable: true,
-  get: function () {
-    return _v2.default;
-  }
-}));
-Object.defineProperty(exports, "v4", ({
-  enumerable: true,
-  get: function () {
-    return _v3.default;
-  }
-}));
-Object.defineProperty(exports, "v5", ({
-  enumerable: true,
-  get: function () {
-    return _v4.default;
-  }
-}));
-Object.defineProperty(exports, "NIL", ({
-  enumerable: true,
-  get: function () {
-    return _nil.default;
-  }
-}));
-Object.defineProperty(exports, "version", ({
-  enumerable: true,
-  get: function () {
-    return _version.default;
-  }
-}));
-Object.defineProperty(exports, "validate", ({
-  enumerable: true,
-  get: function () {
-    return _validate.default;
-  }
-}));
-Object.defineProperty(exports, "stringify", ({
-  enumerable: true,
-  get: function () {
-    return _stringify.default;
-  }
-}));
-Object.defineProperty(exports, "parse", ({
-  enumerable: true,
-  get: function () {
-    return _parse.default;
-  }
-}));
-
-var _v = _interopRequireDefault(__nccwpck_require__(8628));
-
-var _v2 = _interopRequireDefault(__nccwpck_require__(6409));
-
-var _v3 = _interopRequireDefault(__nccwpck_require__(5122));
-
-var _v4 = _interopRequireDefault(__nccwpck_require__(9120));
-
-var _nil = _interopRequireDefault(__nccwpck_require__(5332));
-
-var _version = _interopRequireDefault(__nccwpck_require__(1595));
-
-var _validate = _interopRequireDefault(__nccwpck_require__(6900));
-
-var _stringify = _interopRequireDefault(__nccwpck_require__(8950));
-
-var _parse = _interopRequireDefault(__nccwpck_require__(2746));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/***/ }),
-
-/***/ 4569:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = void 0;
-
-var _crypto = _interopRequireDefault(__nccwpck_require__(6417));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function md5(bytes) {
-  if (Array.isArray(bytes)) {
-    bytes = Buffer.from(bytes);
-  } else if (typeof bytes === 'string') {
-    bytes = Buffer.from(bytes, 'utf8');
-  }
-
-  return _crypto.default.createHash('md5').update(bytes).digest();
-}
-
-var _default = md5;
-exports.default = _default;
-
-/***/ }),
-
-/***/ 5332:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = void 0;
-var _default = '00000000-0000-0000-0000-000000000000';
-exports.default = _default;
-
-/***/ }),
-
-/***/ 2746:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = void 0;
-
-var _validate = _interopRequireDefault(__nccwpck_require__(6900));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function parse(uuid) {
-  if (!(0, _validate.default)(uuid)) {
-    throw TypeError('Invalid UUID');
-  }
-
-  let v;
-  const arr = new Uint8Array(16); // Parse ########-....-....-....-............
-
-  arr[0] = (v = parseInt(uuid.slice(0, 8), 16)) >>> 24;
-  arr[1] = v >>> 16 & 0xff;
-  arr[2] = v >>> 8 & 0xff;
-  arr[3] = v & 0xff; // Parse ........-####-....-....-............
-
-  arr[4] = (v = parseInt(uuid.slice(9, 13), 16)) >>> 8;
-  arr[5] = v & 0xff; // Parse ........-....-####-....-............
-
-  arr[6] = (v = parseInt(uuid.slice(14, 18), 16)) >>> 8;
-  arr[7] = v & 0xff; // Parse ........-....-....-####-............
-
-  arr[8] = (v = parseInt(uuid.slice(19, 23), 16)) >>> 8;
-  arr[9] = v & 0xff; // Parse ........-....-....-....-############
-  // (Use "/" to avoid 32-bit truncation when bit-shifting high-order bytes)
-
-  arr[10] = (v = parseInt(uuid.slice(24, 36), 16)) / 0x10000000000 & 0xff;
-  arr[11] = v / 0x100000000 & 0xff;
-  arr[12] = v >>> 24 & 0xff;
-  arr[13] = v >>> 16 & 0xff;
-  arr[14] = v >>> 8 & 0xff;
-  arr[15] = v & 0xff;
-  return arr;
-}
-
-var _default = parse;
-exports.default = _default;
-
-/***/ }),
-
-/***/ 814:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = void 0;
-var _default = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i;
-exports.default = _default;
-
-/***/ }),
-
-/***/ 807:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = rng;
-
-var _crypto = _interopRequireDefault(__nccwpck_require__(6417));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const rnds8Pool = new Uint8Array(256); // # of random values to pre-allocate
-
-let poolPtr = rnds8Pool.length;
-
-function rng() {
-  if (poolPtr > rnds8Pool.length - 16) {
-    _crypto.default.randomFillSync(rnds8Pool);
-
-    poolPtr = 0;
-  }
-
-  return rnds8Pool.slice(poolPtr, poolPtr += 16);
-}
-
-/***/ }),
-
-/***/ 5274:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = void 0;
-
-var _crypto = _interopRequireDefault(__nccwpck_require__(6417));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function sha1(bytes) {
-  if (Array.isArray(bytes)) {
-    bytes = Buffer.from(bytes);
-  } else if (typeof bytes === 'string') {
-    bytes = Buffer.from(bytes, 'utf8');
-  }
-
-  return _crypto.default.createHash('sha1').update(bytes).digest();
-}
-
-var _default = sha1;
-exports.default = _default;
-
-/***/ }),
-
-/***/ 8950:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = void 0;
-
-var _validate = _interopRequireDefault(__nccwpck_require__(6900));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * Convert array of 16 byte values to UUID string format of the form:
- * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
- */
-const byteToHex = [];
-
-for (let i = 0; i < 256; ++i) {
-  byteToHex.push((i + 0x100).toString(16).substr(1));
-}
-
-function stringify(arr, offset = 0) {
-  // Note: Be careful editing this code!  It's been tuned for performance
-  // and works in ways you may not expect. See https://github.com/uuidjs/uuid/pull/434
-  const uuid = (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + '-' + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + '-' + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + '-' + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + '-' + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase(); // Consistency check for valid UUID.  If this throws, it's likely due to one
-  // of the following:
-  // - One or more input array values don't map to a hex octet (leading to
-  // "undefined" in the uuid)
-  // - Invalid input values for the RFC `version` or `variant` fields
-
-  if (!(0, _validate.default)(uuid)) {
-    throw TypeError('Stringified UUID is invalid');
-  }
-
-  return uuid;
-}
-
-var _default = stringify;
-exports.default = _default;
-
-/***/ }),
-
-/***/ 8628:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = void 0;
-
-var _rng = _interopRequireDefault(__nccwpck_require__(807));
-
-var _stringify = _interopRequireDefault(__nccwpck_require__(8950));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-// **`v1()` - Generate time-based UUID**
-//
-// Inspired by https://github.com/LiosK/UUID.js
-// and http://docs.python.org/library/uuid.html
-let _nodeId;
-
-let _clockseq; // Previous uuid creation time
-
-
-let _lastMSecs = 0;
-let _lastNSecs = 0; // See https://github.com/uuidjs/uuid for API details
-
-function v1(options, buf, offset) {
-  let i = buf && offset || 0;
-  const b = buf || new Array(16);
-  options = options || {};
-  let node = options.node || _nodeId;
-  let clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq; // node and clockseq need to be initialized to random values if they're not
-  // specified.  We do this lazily to minimize issues related to insufficient
-  // system entropy.  See #189
-
-  if (node == null || clockseq == null) {
-    const seedBytes = options.random || (options.rng || _rng.default)();
-
-    if (node == null) {
-      // Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
-      node = _nodeId = [seedBytes[0] | 0x01, seedBytes[1], seedBytes[2], seedBytes[3], seedBytes[4], seedBytes[5]];
-    }
-
-    if (clockseq == null) {
-      // Per 4.2.2, randomize (14 bit) clockseq
-      clockseq = _clockseq = (seedBytes[6] << 8 | seedBytes[7]) & 0x3fff;
-    }
-  } // UUID timestamps are 100 nano-second units since the Gregorian epoch,
-  // (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
-  // time is handled internally as 'msecs' (integer milliseconds) and 'nsecs'
-  // (100-nanoseconds offset from msecs) since unix epoch, 1970-01-01 00:00.
-
-
-  let msecs = options.msecs !== undefined ? options.msecs : Date.now(); // Per 4.2.1.2, use count of uuid's generated during the current clock
-  // cycle to simulate higher resolution clock
-
-  let nsecs = options.nsecs !== undefined ? options.nsecs : _lastNSecs + 1; // Time since last uuid creation (in msecs)
-
-  const dt = msecs - _lastMSecs + (nsecs - _lastNSecs) / 10000; // Per 4.2.1.2, Bump clockseq on clock regression
-
-  if (dt < 0 && options.clockseq === undefined) {
-    clockseq = clockseq + 1 & 0x3fff;
-  } // Reset nsecs if clock regresses (new clockseq) or we've moved onto a new
-  // time interval
-
-
-  if ((dt < 0 || msecs > _lastMSecs) && options.nsecs === undefined) {
-    nsecs = 0;
-  } // Per 4.2.1.2 Throw error if too many uuids are requested
-
-
-  if (nsecs >= 10000) {
-    throw new Error("uuid.v1(): Can't create more than 10M uuids/sec");
-  }
-
-  _lastMSecs = msecs;
-  _lastNSecs = nsecs;
-  _clockseq = clockseq; // Per 4.1.4 - Convert from unix epoch to Gregorian epoch
-
-  msecs += 12219292800000; // `time_low`
-
-  const tl = ((msecs & 0xfffffff) * 10000 + nsecs) % 0x100000000;
-  b[i++] = tl >>> 24 & 0xff;
-  b[i++] = tl >>> 16 & 0xff;
-  b[i++] = tl >>> 8 & 0xff;
-  b[i++] = tl & 0xff; // `time_mid`
-
-  const tmh = msecs / 0x100000000 * 10000 & 0xfffffff;
-  b[i++] = tmh >>> 8 & 0xff;
-  b[i++] = tmh & 0xff; // `time_high_and_version`
-
-  b[i++] = tmh >>> 24 & 0xf | 0x10; // include version
-
-  b[i++] = tmh >>> 16 & 0xff; // `clock_seq_hi_and_reserved` (Per 4.2.2 - include variant)
-
-  b[i++] = clockseq >>> 8 | 0x80; // `clock_seq_low`
-
-  b[i++] = clockseq & 0xff; // `node`
-
-  for (let n = 0; n < 6; ++n) {
-    b[i + n] = node[n];
-  }
-
-  return buf || (0, _stringify.default)(b);
-}
-
-var _default = v1;
-exports.default = _default;
-
-/***/ }),
-
-/***/ 6409:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = void 0;
-
-var _v = _interopRequireDefault(__nccwpck_require__(5998));
-
-var _md = _interopRequireDefault(__nccwpck_require__(4569));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const v3 = (0, _v.default)('v3', 0x30, _md.default);
-var _default = v3;
-exports.default = _default;
-
-/***/ }),
-
-/***/ 5998:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = _default;
-exports.URL = exports.DNS = void 0;
-
-var _stringify = _interopRequireDefault(__nccwpck_require__(8950));
-
-var _parse = _interopRequireDefault(__nccwpck_require__(2746));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function stringToBytes(str) {
-  str = unescape(encodeURIComponent(str)); // UTF8 escape
-
-  const bytes = [];
-
-  for (let i = 0; i < str.length; ++i) {
-    bytes.push(str.charCodeAt(i));
-  }
-
-  return bytes;
-}
-
-const DNS = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
-exports.DNS = DNS;
-const URL = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
-exports.URL = URL;
-
-function _default(name, version, hashfunc) {
-  function generateUUID(value, namespace, buf, offset) {
-    if (typeof value === 'string') {
-      value = stringToBytes(value);
-    }
-
-    if (typeof namespace === 'string') {
-      namespace = (0, _parse.default)(namespace);
-    }
-
-    if (namespace.length !== 16) {
-      throw TypeError('Namespace must be array-like (16 iterable integer values, 0-255)');
-    } // Compute hash of namespace and value, Per 4.3
-    // Future: Use spread syntax when supported on all platforms, e.g. `bytes =
-    // hashfunc([...namespace, ... value])`
-
-
-    let bytes = new Uint8Array(16 + value.length);
-    bytes.set(namespace);
-    bytes.set(value, namespace.length);
-    bytes = hashfunc(bytes);
-    bytes[6] = bytes[6] & 0x0f | version;
-    bytes[8] = bytes[8] & 0x3f | 0x80;
-
-    if (buf) {
-      offset = offset || 0;
-
-      for (let i = 0; i < 16; ++i) {
-        buf[offset + i] = bytes[i];
-      }
-
-      return buf;
-    }
-
-    return (0, _stringify.default)(bytes);
-  } // Function#name is not settable on some platforms (#270)
-
-
-  try {
-    generateUUID.name = name; // eslint-disable-next-line no-empty
-  } catch (err) {} // For CommonJS default export support
-
-
-  generateUUID.DNS = DNS;
-  generateUUID.URL = URL;
-  return generateUUID;
-}
-
-/***/ }),
-
-/***/ 5122:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = void 0;
-
-var _rng = _interopRequireDefault(__nccwpck_require__(807));
-
-var _stringify = _interopRequireDefault(__nccwpck_require__(8950));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function v4(options, buf, offset) {
-  options = options || {};
-
-  const rnds = options.random || (options.rng || _rng.default)(); // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
-
-
-  rnds[6] = rnds[6] & 0x0f | 0x40;
-  rnds[8] = rnds[8] & 0x3f | 0x80; // Copy bytes to buffer, if provided
-
-  if (buf) {
-    offset = offset || 0;
-
-    for (let i = 0; i < 16; ++i) {
-      buf[offset + i] = rnds[i];
-    }
-
-    return buf;
-  }
-
-  return (0, _stringify.default)(rnds);
-}
-
-var _default = v4;
-exports.default = _default;
-
-/***/ }),
-
-/***/ 9120:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = void 0;
-
-var _v = _interopRequireDefault(__nccwpck_require__(5998));
-
-var _sha = _interopRequireDefault(__nccwpck_require__(5274));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const v5 = (0, _v.default)('v5', 0x50, _sha.default);
-var _default = v5;
-exports.default = _default;
-
-/***/ }),
-
-/***/ 6900:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = void 0;
-
-var _regex = _interopRequireDefault(__nccwpck_require__(814));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function validate(uuid) {
-  return typeof uuid === 'string' && _regex.default.test(uuid);
-}
-
-var _default = validate;
-exports.default = _default;
-
-/***/ }),
-
-/***/ 1595:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.default = void 0;
-
-var _validate = _interopRequireDefault(__nccwpck_require__(6900));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function version(uuid) {
-  if (!(0, _validate.default)(uuid)) {
-    throw TypeError('Invalid UUID');
-  }
-
-  return parseInt(uuid.substr(14, 1), 16);
-}
-
-var _default = version;
-exports.default = _default;
-
-/***/ }),
-
 /***/ 2940:
 /***/ ((module) => {
 
@@ -13186,14 +12529,6 @@ module.exports = require("assert");
 
 "use strict";
 module.exports = require("child_process");
-
-/***/ }),
-
-/***/ 6417:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("crypto");
 
 /***/ }),
 
@@ -13355,13 +12690,20 @@ module.exports = require("zlib");
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-/******/ 	
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(4822);
-/******/ 	module.exports = __webpack_exports__;
-/******/ 	
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+(() => {
+"use strict";
+var exports = __webpack_exports__;
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const code_analysis_1 = __nccwpck_require__(1153);
+const codeAnalyzer = new code_analysis_1.AshCodeAnalysis();
+codeAnalyzer.run();
+
+})();
+
+module.exports = __webpack_exports__;
 /******/ })()
 ;
 //# sourceMappingURL=index.js.map
