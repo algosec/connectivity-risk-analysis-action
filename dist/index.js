@@ -191,7 +191,7 @@ class Terraform {
             }
             catch (error) {
                 if (error instanceof Error)
-                    console.log(error.message); //setFailed(error.message)
+                    console.log(error === null || error === void 0 ? void 0 : error.message); //setFailed(error.message)
             }
         });
     }
