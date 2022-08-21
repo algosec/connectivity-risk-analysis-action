@@ -31,7 +31,7 @@ export class Main {
             const filesToAnalyze: FileAnalysis[] = await framework.check(foldersToRunCheck, vcs.workDir)
             if (filesToAnalyze){
                 const codeAnalysisResponses = await codeAnalyzer.analyze(filesToAnalyze)
-                if (codeAnalysisResponses){
+                if (codeAnalysisResponses?.length > 0){
                     await vcs.parseOutput(filesToAnalyze, codeAnalysisResponses)
                 }
             }

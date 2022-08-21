@@ -418,7 +418,7 @@ class Main {
                     const filesToAnalyze = yield framework.check(foldersToRunCheck, vcs.workDir);
                     if (filesToAnalyze) {
                         const codeAnalysisResponses = yield codeAnalyzer.analyze(filesToAnalyze);
-                        if (codeAnalysisResponses) {
+                        if ((codeAnalysisResponses === null || codeAnalysisResponses === void 0 ? void 0 : codeAnalysisResponses.length) > 0) {
                             yield vcs.parseOutput(filesToAnalyze, codeAnalysisResponses);
                         }
                     }
