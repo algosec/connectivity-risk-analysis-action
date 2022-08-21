@@ -252,13 +252,13 @@ async prepareRepo(){
   this.steps.gitCheckout = await this.checkout(this.actionUuid) //await exec('git' , ['checkout', this.actionUuid])
 }
    
-async checkForDiffByFileTypes() {
+async checkForDiffByFileTypes(fileTypes: string[]) {
   await this.prepareRepo()
   let diffFolders = []
   try {
       const diffs = await this.getDiff(this.octokit)
       const foldersSet = new Set(diffs
-        .filter(diff => this.fileTypes.some(fileType => diff?.filename?.endsWith(fileType)))
+        .filter(diff => fileTypes?.some(fileType => diff?.filename?.endsWith(fileType)))
         .map(diff => diff?.filename.split('/')[0]))
       diffFolders = [...foldersSet]
   } catch (error: unknown) {

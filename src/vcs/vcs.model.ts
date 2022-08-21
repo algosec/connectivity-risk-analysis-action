@@ -16,7 +16,7 @@ export interface IVersionControl {
     createComment(body: string)
     parseCodeAnalysis(analysis, VersionControl)
     getDiff(vcsObject)
-    checkForDiffByFileTypes()
+    checkForDiffByFileTypes(fileTypes: string[])
     parseOutput(filesToUpload, analysisResult)
     uploadAnalysisFile(actionUuid: string, body: any, jwt: string)
     getInputs()
@@ -60,7 +60,7 @@ export class GitLab implements IVersionControl {
         return ''
     }
 
-    checkForDiffByFileTypes(){
+    checkForDiffByFileTypes(fileTypes: string[]){
 
     }
 

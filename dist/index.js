@@ -413,7 +413,7 @@ class Main {
                 if (codeAnalyzer.debugMode) {
                     yield (0, child_process_1.exec)(`rimraf ${vcs.workDir}`);
                 }
-                const foldersToRunCheck = yield vcs.checkForDiffByFileTypes();
+                const foldersToRunCheck = yield vcs.checkForDiffByFileTypes(framework.fileTypes);
                 if (foldersToRunCheck) {
                     const filesToAnalyze = yield framework.check(foldersToRunCheck, vcs.workDir);
                     if (filesToAnalyze) {
@@ -671,14 +671,14 @@ ${CODE_BLOCK}\n
             this.steps.gitCheckout = yield this.checkout(this.actionUuid); //await exec('git' , ['checkout', this.actionUuid])
         });
     }
-    checkForDiffByFileTypes() {
+    checkForDiffByFileTypes(fileTypes) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.prepareRepo();
             let diffFolders = [];
             try {
                 const diffs = yield this.getDiff(this.octokit);
                 const foldersSet = new Set(diffs
-                    .filter(diff => this.fileTypes.some(fileType => { var _a; return (_a = diff === null || diff === void 0 ? void 0 : diff.filename) === null || _a === void 0 ? void 0 : _a.endsWith(fileType); }))
+                    .filter(diff => fileTypes === null || fileTypes === void 0 ? void 0 : fileTypes.some(fileType => { var _a; return (_a = diff === null || diff === void 0 ? void 0 : diff.filename) === null || _a === void 0 ? void 0 : _a.endsWith(fileType); }))
                     .map(diff => diff === null || diff === void 0 ? void 0 : diff.filename.split('/')[0]));
                 diffFolders = [...foldersSet];
             }
@@ -767,7 +767,7 @@ class GitLab {
     getRepoRemoteUrl() {
         return '';
     }
-    checkForDiffByFileTypes() {
+    checkForDiffByFileTypes(fileTypes) {
     }
     parseOutput(filesToUpload, analysisResult) { }
     uploadAnalysisFile(actionUuid, body, jwt) { }

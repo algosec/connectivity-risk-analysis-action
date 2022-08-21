@@ -26,7 +26,7 @@ export class Main {
           if (codeAnalyzer.debugMode) {
             await exec(`rimraf ${vcs.workDir}`)
           }
-          const foldersToRunCheck = await vcs.checkForDiffByFileTypes()
+          const foldersToRunCheck = await vcs.checkForDiffByFileTypes(framework.fileTypes)
           if (foldersToRunCheck) {
             const filesToAnalyze: FileAnalysis[] = await framework.check(foldersToRunCheck, vcs.workDir)
             if (filesToAnalyze){
