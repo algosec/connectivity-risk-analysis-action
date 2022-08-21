@@ -1,22 +1,19 @@
-import { exec, ExecResult } from "../common/exec";
+import { exec, ExecSteps } from "../common/exec";
 import { FrameworkKeys, IFramework } from "./framework.model";
 import { existsSync } from "fs";
 import getUuidByString from "uuid-by-string";
+import { IVersionControl } from "../vcs/vcs.model";
 
 export class Terraform implements IFramework {
     fileTypes = ['.tf']
     type: FrameworkKeys = 'terraform'
-    steps: {[name: string]: ExecResult}
-    constructor() {
+    steps: ExecSteps = {}
+    constructor(public vcs: IVersionControl) {
         this.steps = {}
     }
 
-    init(){
-        return this
-    }
-
     async terraform(options: any) {
-        const steps: {[name: string]: ExecResult} = {}
+        const steps: ExecSteps = {}
         try {
           
             process.chdir(`${options.workDir}/${options.runFolder}`)
@@ -44,7 +41,7 @@ export class Terraform implements IFramework {
         }
     }
 
-    async terraformSetVersion(steps){
+    async setVersion(steps){
         steps.setupVersion = await exec('curl', ['-L', 'https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh', '|', 'bash']);
         console.log('##### Algosec ##### tfswitch Installed successfully')
         if (process?.env?.TF_VERSION == "latest"  || process?.env?.TF_VERSION  == ""){
@@ -54,13 +51,14 @@ export class Terraform implements IFramework {
         }
         console.log('##### Algosec ##### tfswitch version: ' + process?.env?.TF_VERSION)
     }
+
     async check(foldersToRunCheck: any, workDir: string) {
         const res = []
         const asyncIterable = async (iterable, action) => {
             for (const [index, value] of iterable?.entries()) {
               const output = await action({runFolder: value, workDir})
               res.push({uuid: getUuidByString(value),folder:value, output})
-              console.log(`##### Algosec ##### Step 2.${index}- ${this.type} Result for folder ${value}: ${JSON.stringify(this)}`)
+              console.log(`##### Algosec ##### Step 2${iterable?.entries()?.length > 1 ? '.'+index+1 : ''} - ${this.type} Result for folder ${value}: ${JSON.stringify(this)}`)
             } 
           }
           try {

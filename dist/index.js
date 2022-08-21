@@ -25,29 +25,35 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AshCodeAnalysis = void 0;
-const exec_1 = __nccwpck_require__(898);
 __nccwpck_require__(4227);
-const vcs_service_1 = __nccwpck_require__(9701);
-const framework_service_1 = __nccwpck_require__(2162);
 const aws_1 = __nccwpck_require__(3895);
 // import { codeAnalysisMock, terraformSinglePlanFileMock } from "./mockData"
-const getUuid = __nccwpck_require__(7777);
 class AshCodeAnalysis {
-    constructor() {
-        var _a, _b, _c, _d, _f, _g, _h, _j;
+    constructor(vcs) {
+        this.vcs = vcs;
         this.steps = {};
-        this.debugMode = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.ALGOSEC_DEBUG;
-        this.apiUrl = (_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.API_URL;
-        this.tenantId = (_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.TENANT_ID;
-        this.clientId = (_d = process === null || process === void 0 ? void 0 : process.env) === null || _d === void 0 ? void 0 : _d.CF_CLIENT_ID;
-        this.clientSecret = (_f = process === null || process === void 0 ? void 0 : process.env) === null || _f === void 0 ? void 0 : _f.CF_CLIENT_SECRET;
-        this.loginAPI = (_g = process === null || process === void 0 ? void 0 : process.env) === null || _g === void 0 ? void 0 : _g.CF_LOGIN_API;
-        this.frameworkType = (_h = process === null || process === void 0 ? void 0 : process.env) === null || _h === void 0 ? void 0 : _h.FRAMEWORK_TYPE;
-        this.vcsType = (_j = process === null || process === void 0 ? void 0 : process.env) === null || _j === void 0 ? void 0 : _j.VCS_TYPE;
-        this.framework = new framework_service_1.FrameworkService().getInstanceByType(this.frameworkType);
-        this.vcs = new vcs_service_1.VersionControlService().getInstanceByType(this.vcsType);
-        this.actionUuid = getUuid(this.vcs.sha);
-        this.workDir = this.vcs.workspace + '_' + this.actionUuid;
+        this.init();
+    }
+    init() {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.setSecrets();
+            this.jwt = yield this.auth(this.tenantId, this.clientId, this.clientSecret, this.loginAPI);
+            if (!this.jwt || this.jwt == '') {
+                this.vcs.logger.exit('##### Algosec ##### Step 0 - failed to generate token');
+                return;
+            }
+            this.steps.auth = { exitCode: 0, stdout: this.jwt, stderr: '' };
+        });
+    }
+    setSecrets() {
+        var _a;
+        const inputs = this.vcs.getInputs();
+        this.debugMode = (inputs === null || inputs === void 0 ? void 0 : inputs.ALGOSEC_DEBUG) == 'true';
+        this.apiUrl = inputs === null || inputs === void 0 ? void 0 : inputs.CF_API_URL;
+        this.loginAPI = (_a = inputs === null || inputs === void 0 ? void 0 : inputs.CF_LOGIN_API) !== null && _a !== void 0 ? _a : '';
+        this.tenantId = inputs === null || inputs === void 0 ? void 0 : inputs.CF_TENANT_ID;
+        this.clientId = inputs === null || inputs === void 0 ? void 0 : inputs.CF_CLIENT_ID;
+        this.clientSecret = inputs === null || inputs === void 0 ? void 0 : inputs.CF_CLIENT_SECRET;
     }
     auth(tenantId, clientID, clientSecret, loginAPI) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -64,50 +70,17 @@ class AshCodeAnalysis {
                 const response_code = res.message.statusCode;
                 const data = JSON.parse(yield res.readBody());
                 if (200 <= response_code && response_code <= 300) {
-                    this.vcs.logger.info('Passed authentication vs CF\'s login. New token has been generated.');
+                    this.vcs.logger.info('##### Algosec ##### Step 0: passed authentication vs CF\'s login. new token has been generated.');
                     return data === null || data === void 0 ? void 0 : data.access_token;
                 }
                 else {
-                    this.vcs.logger.exit(`Failed to generate token. Error code ${response_code}, msg: ${JSON.stringify(data)}`);
+                    this.vcs.logger.exit(`##### Algosec ##### Step 0: failed to generate token. Error code ${response_code}, msg: ${JSON.stringify(data)}`);
                 }
             }
             catch (error) {
-                this.vcs.logger.exit(`Failed to generate token. Error msg: ${error.toString()}`);
+                this.vcs.logger.exit(`##### Algosec ##### Step 0: failed to generate token. Error msg: ${error.toString()}`);
             }
             return '';
-        });
-    }
-    prepareRepo() {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.steps.gitClone = yield (0, exec_1.exec)('git', ['clone', this.vcs.getRepoRemoteUrl(), this.workDir]);
-            process.chdir(this.workDir);
-            this.steps.gitFetch = yield (0, exec_1.exec)('git', ['fetch', 'origin', `pull/${this.vcs.pullRequest}/head:${this.actionUuid}`]);
-            this.steps.gitCheckout = yield (0, exec_1.exec)('git', ['checkout', this.actionUuid]);
-        });
-    }
-    checkForDiff(fileTypes) {
-        var _a, _b, _c;
-        return __awaiter(this, void 0, void 0, function* () {
-            let diffFolders;
-            try {
-                if (((_a = this === null || this === void 0 ? void 0 : this.vcs) === null || _a === void 0 ? void 0 : _a.octokit) && ((_c = (_b = this.vcs) === null || _b === void 0 ? void 0 : _b.payload) === null || _c === void 0 ? void 0 : _c.pull_request)) {
-                    const diffs = yield this.vcs.getDiff(this.vcs.octokit);
-                    const foldersSet = new Set(diffs
-                        .filter(diff => fileTypes.some(fileType => { var _a; return (_a = diff === null || diff === void 0 ? void 0 : diff.filename) === null || _a === void 0 ? void 0 : _a.endsWith(fileType); }))
-                        .map(diff => diff === null || diff === void 0 ? void 0 : diff.filename.split('/')[0]));
-                    diffFolders = [...foldersSet];
-                }
-            }
-            catch (error) {
-                if (error instanceof Error)
-                    this.vcs.logger.exit(error === null || error === void 0 ? void 0 : error.message);
-            }
-            if ((diffFolders === null || diffFolders === void 0 ? void 0 : diffFolders.length) == 0) {
-                this.vcs.logger.info('##### Algosec ##### No changes were found in terraform plans');
-                return;
-            }
-            this.vcs.logger.info('##### Algosec ##### Step 1 - Diffs Result: ' + JSON.stringify(diffFolders));
-            return diffFolders;
         });
     }
     triggerCodeAnalysis(filesToUpload) {
@@ -116,7 +89,7 @@ class AshCodeAnalysis {
             filesToUpload.forEach(file => fileUploadPromises.push(this.uploadFile(file)));
             const response = yield Promise.all(fileUploadPromises);
             if (response) {
-                this.vcs.logger.info('##### Algosec ##### Step 3 - File/s Uploaded Successfully');
+                this.vcs.logger.info('##### Algosec ##### Step 3 - file/s uploaded successfully');
             }
         });
     }
@@ -126,7 +99,7 @@ class AshCodeAnalysis {
             const aws = new aws_1.Aws();
             let res = false;
             if (file === null || file === void 0 ? void 0 : file.output) {
-                const ans = yield aws.uploadToS3(file === null || file === void 0 ? void 0 : file.uuid, JSON.stringify((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan), this.jwt);
+                const ans = yield this.vcs.uploadAnalysisFile(file === null || file === void 0 ? void 0 : file.uuid, JSON.stringify((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan), this.jwt);
                 if (ans) {
                     res = true;
                 }
@@ -134,9 +107,10 @@ class AshCodeAnalysis {
             return res;
         });
     }
-    getCodeAnalysis(filesToUpload) {
+    analyze(filesToUpload) {
         return __awaiter(this, void 0, void 0, function* () {
             let analysisResult;
+            yield this.triggerCodeAnalysis(filesToUpload);
             const codeAnalysisPromises = [];
             filesToUpload.forEach(file => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
             analysisResult = yield Promise.all(codeAnalysisPromises);
@@ -144,7 +118,7 @@ class AshCodeAnalysis {
                 this.vcs.logger.exit('##### Algosec ##### Code Analysis failed');
                 return;
             }
-            this.vcs.logger.info('##### Algosec ##### Step 4 - Code Analysis Result: ' + JSON.stringify(analysisResult));
+            this.vcs.logger.info('##### Algosec ##### Step 4 - code analysis result: ' + JSON.stringify(analysisResult));
             return analysisResult;
         });
     }
@@ -169,7 +143,7 @@ class AshCodeAnalysis {
     wait(ms = 1000) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise(resolve => {
-                this.vcs.logger.info(`waiting for response...`);
+                this.vcs.logger.info(`##### Algosec ##### Step 3 - waiting for response...`);
                 setTimeout(resolve, ms);
             });
         });
@@ -191,55 +165,6 @@ class AshCodeAnalysis {
             }
             else {
                 return { error: response.message.statusMessage };
-            }
-        });
-    }
-    parseOutput(filesToUpload, analysisResult) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const body = this.vcs.parseCodeAnalysis(filesToUpload, analysisResult);
-            if (body && body != '')
-                this.steps.comment = this.vcs.createComment(body);
-        });
-    }
-    run() {
-        var _a;
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                this.jwt = yield this.auth(this.tenantId, this.clientId, this.clientSecret, this.loginAPI);
-                if (!this.jwt || this.jwt == '') {
-                    this.vcs.logger.exit('##### Algosec ##### Step 0 Failed to generate token');
-                    return;
-                }
-                this.steps.auth = { code: 0, stdout: this.jwt, stderr: '' };
-                if (this.debugMode) {
-                    yield (0, exec_1.exec)('rimraf', [this.workDir]);
-                }
-                yield this.prepareRepo();
-                const foldersToRunCheck = yield this.checkForDiff(this.framework.fileTypes);
-                const filesToUpload = yield this.framework.check(foldersToRunCheck, this.workDir);
-                // const filesToUpload = terraformSinglePlanFileMock
-                yield this.triggerCodeAnalysis(filesToUpload);
-                // const codeAnalysisResponse = codeAnalysisMock as any
-                const codeAnalysisResponses = yield this.getCodeAnalysis(filesToUpload);
-                yield this.parseOutput(filesToUpload, codeAnalysisResponses);
-                if (codeAnalysisResponses.some(response => !(response === null || response === void 0 ? void 0 : response.success))) {
-                    let errors = '';
-                    Object.keys(this.steps).forEach(step => { var _a, _b; return errors += (_b = (_a = this === null || this === void 0 ? void 0 : this.steps[step]) === null || _a === void 0 ? void 0 : _a.stderr) !== null && _b !== void 0 ? _b : ''; });
-                    this.vcs.logger.exit('##### Algosec ##### The risks analysis process failed:\n' + errors);
-                }
-                else {
-                    this.vcs.logger.info('##### Algosec ##### Step 5 - Parsing Code Analysis');
-                    if (codeAnalysisResponses.some(response => { var _a; return !((_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_state); })) {
-                        this.vcs.logger.exit('##### Algosec ##### The risks analysis process completed successfully with risks, please check report');
-                    }
-                    else {
-                        this.vcs.logger.info('##### Algosec ##### Step 6 - The risks analysis process completed successfully without any risks');
-                        return;
-                    }
-                }
-            }
-            catch (_e) {
-                (_a = this.vcs.logger) === null || _a === void 0 ? void 0 : _a.error(_e);
             }
         });
     }
@@ -275,22 +200,20 @@ function exec(cmd, args) {
         const res = {
             stdout: '',
             stderr: '',
-            code: null,
+            exitCode: null,
         };
         try {
             const code = yield (0, exec_1.exec)(cmd, args, {
                 listeners: {
                     stdout(data) {
                         res.stdout += data.toString();
-                        // debug(`##### Algosec ##### stdout: ${res.stdout}`);
                     },
                     stderr(data) {
                         res.stderr += data.toString();
-                        // debug(`##### Algosec ##### stderr: ${res.stderr}`);
                     },
                 },
             });
-            res.code = code;
+            res.exitCode = code;
             return res;
         }
         catch (err) {
@@ -314,11 +237,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FrameworkFactory = exports.frameworkMap = exports.CloudFormation = void 0;
 const terraform_1 = __nccwpck_require__(7039);
 class CloudFormation {
-    constructor() {
+    constructor(vcs) {
+        this.vcs = vcs;
+        this.type = 'cloudformation';
         this.fileTypes = ['json', 'yaml'];
-    }
-    init() {
-        return 'CloudFormation';
     }
     check(foldersToRunCheck, workDir) {
     }
@@ -329,21 +251,11 @@ exports.frameworkMap = {
     cloudformation: CloudFormation
 };
 class FrameworkFactory {
-    static getInstance(frameworkKey) {
-        return new exports.frameworkMap[frameworkKey]();
+    static getInstance(frameworkKey, vcs) {
+        return new exports.frameworkMap[frameworkKey](vcs);
     }
 }
 exports.FrameworkFactory = FrameworkFactory;
-// const terraform = FrameworkFactory.getInstance("terraform");
-// const cloudformation = FrameworkFactory.getInstance("cloudformation");
-// console.log(
-//   "IaS framework type: ",
-//   new FrameworkService().getInstanceByType("cloudformation")
-// );
-// console.log(
-//     "IaS framework type: ",
-//     new FrameworkService().getInstanceByType("terraform")
-//   );
 
 
 /***/ }),
@@ -357,8 +269,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FrameworkService = void 0;
 const framework_model_1 = __nccwpck_require__(80);
 class FrameworkService {
-    getInstanceByType(type) {
-        return framework_model_1.FrameworkFactory.getInstance(type);
+    getInstanceByType(type, vcs) {
+        return framework_model_1.FrameworkFactory.getInstance(type, vcs);
     }
 }
 exports.FrameworkService = FrameworkService;
@@ -389,13 +301,12 @@ const exec_1 = __nccwpck_require__(898);
 const fs_1 = __nccwpck_require__(5747);
 const uuid_by_string_1 = __importDefault(__nccwpck_require__(7777));
 class Terraform {
-    constructor() {
+    constructor(vcs) {
+        this.vcs = vcs;
         this.fileTypes = ['.tf'];
         this.type = 'terraform';
         this.steps = {};
-    }
-    init() {
-        return this;
+        this.steps = {};
     }
     terraform(options) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -426,7 +337,7 @@ class Terraform {
             }
         });
     }
-    terraformSetVersion(steps) {
+    setVersion(steps) {
         var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function* () {
             steps.setupVersion = yield (0, exec_1.exec)('curl', ['-L', 'https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh', '|', 'bash']);
@@ -444,10 +355,11 @@ class Terraform {
         return __awaiter(this, void 0, void 0, function* () {
             const res = [];
             const asyncIterable = (iterable, action) => __awaiter(this, void 0, void 0, function* () {
+                var _a;
                 for (const [index, value] of iterable === null || iterable === void 0 ? void 0 : iterable.entries()) {
                     const output = yield action({ runFolder: value, workDir });
                     res.push({ uuid: (0, uuid_by_string_1.default)(value), folder: value, output });
-                    console.log(`##### Algosec ##### Step 2.${index}- ${this.type} Result for folder ${value}: ${JSON.stringify(this)}`);
+                    console.log(`##### Algosec ##### Step 2${((_a = iterable === null || iterable === void 0 ? void 0 : iterable.entries()) === null || _a === void 0 ? void 0 : _a.length) > 1 ? '.' + index + 1 : ''} - ${this.type} Result for folder ${value}: ${JSON.stringify(this)}`);
                 }
             });
             try {
@@ -465,7 +377,7 @@ exports.Terraform = Terraform;
 
 /***/ }),
 
-/***/ 3895:
+/***/ 3109:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -480,27 +392,60 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Aws = void 0;
-const core_1 = __nccwpck_require__(2186);
-const github_1 = __nccwpck_require__(5438);
-const http_client_1 = __nccwpck_require__(6255);
-class Aws {
-    uploadToS3(actionUuid, body, jwt) {
-        var _a;
+exports.Main = void 0;
+const child_process_1 = __nccwpck_require__(3129);
+const code_analysis_1 = __nccwpck_require__(1153);
+const framework_service_1 = __nccwpck_require__(2162);
+const vcs_service_1 = __nccwpck_require__(9701);
+class Main {
+    constructor() {
+        var _a, _b;
+        this.steps = {};
+        this.vcsType = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.VCS_TYPE;
+        this.frameworkType = (_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.FRAMEWORK_TYPE;
+    }
+    run() {
         return __awaiter(this, void 0, void 0, function* () {
-            const http = new http_client_1.HttpClient();
-            const getPresignedUrl = `${(_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.API_URL}/presignedurl?actionId=${actionUuid}&owner=${github_1.context.repo.owner}`;
-            const presignedUrlResponse = yield (yield http.get(getPresignedUrl, { 'Authorization': `Bearer ${jwt}` })).readBody();
-            const presignedUrl = JSON.parse(presignedUrlResponse).presignedUrl;
-            const response = yield (yield http.put(presignedUrl, body, { 'Content-Type': 'application/json' })).readBody();
-            if (response == '') {
-                return true;
+            try {
+                const vcs = new vcs_service_1.VersionControlService().getInstanceByType(this.vcsType);
+                const framework = new framework_service_1.FrameworkService().getInstanceByType(this.frameworkType, vcs);
+                const codeAnalyzer = new code_analysis_1.AshCodeAnalysis(vcs);
+                if (codeAnalyzer.debugMode) {
+                    yield (0, child_process_1.exec)(`rimraf ${vcs.workDir}`);
+                }
+                const foldersToRunCheck = yield vcs.checkForDiffByFileTypes();
+                if (foldersToRunCheck) {
+                    const filesToAnalyze = yield framework.check(foldersToRunCheck, vcs.workDir);
+                    if (filesToAnalyze) {
+                        const codeAnalysisResponses = yield codeAnalyzer.analyze(filesToAnalyze);
+                        if (codeAnalysisResponses) {
+                            yield vcs.parseOutput(filesToAnalyze, codeAnalysisResponses);
+                        }
+                    }
+                }
+                // const foldersToRunCheck = ['tf-test']
+                // const filesToAnalyze = terraformSinglePlanFileMock
+                // const codeAnalysisResponse = codeAnalysisMock as any
             }
-            else {
-                (0, core_1.setFailed)(response);
+            catch (_e) {
+                console.log(_e);
             }
         });
     }
+}
+exports.Main = Main;
+
+
+/***/ }),
+
+/***/ 3895:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Aws = void 0;
+class Aws {
 }
 exports.Aws = Aws;
 
@@ -526,24 +471,27 @@ exports.Github = void 0;
 const github_1 = __nccwpck_require__(5438);
 const core_1 = __nccwpck_require__(2186);
 const http_client_1 = __nccwpck_require__(6255);
+const exec_1 = __nccwpck_require__(1514);
+const getUuid = __nccwpck_require__(7777);
 // DEBUG
+// import {githubEventPayloadMock } from "../mockData"
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 class Github {
     constructor() {
         var _a, _b, _c, _d;
+        this.steps = {};
         this.http = new http_client_1.HttpClient();
         this.logger = { info: core_1.info, error: core_1.error, debug: core_1.debug, exit: core_1.setFailed };
         this.workspace = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.GITHUB_WORKSPACE;
-        this.token = (_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.GH_TOKEN;
+        this.token = (_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.GITHUB_TOKEN;
         this.sha = (_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.GITHUB_SHA;
         this._context = github_1.context;
         this.octokit = (0, github_1.getOctokit)(this.token);
         this.payload = (_d = this._context) === null || _d === void 0 ? void 0 : _d.payload;
         this.repo = this._context.repo;
         this.pullRequest = this._context.payload.pull_request.number.toString();
-    }
-    init() {
-        return this;
+        this.workDir = this.workspace + '_ALGOSEC_CODE_ANALYSIS';
+        this.actionUuid = getUuid(this.sha);
     }
     getDiff(octokit) {
         var _a, _b, _c, _d, _e, _f;
@@ -560,8 +508,14 @@ class Github {
         });
     }
     createComment(body) {
+        var _a, _b, _c, _d, _e;
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.octokit.rest.issues.createComment(Object.assign(Object.assign({}, this._context.repo), { issue_number: this._context.issue.number, body }));
+            const result = yield this.octokit.rest.issues.createComment(Object.assign(Object.assign({}, this._context.repo), { issue_number: this._context.issue.number, body }));
+            return {
+                exitCode: ((_a = result === null || result === void 0 ? void 0 : result.data) === null || _a === void 0 ? void 0 : _a.body) ? 0 : 1,
+                stdout: ((_b = result === null || result === void 0 ? void 0 : result.data) === null || _b === void 0 ? void 0 : _b.body) ? (_c = result === null || result === void 0 ? void 0 : result.data) === null || _c === void 0 ? void 0 : _c.body : null,
+                stderr: ((_d = result === null || result === void 0 ? void 0 : result.data) === null || _d === void 0 ? void 0 : _d.body) ? null : (_e = result === null || result === void 0 ? void 0 : result.data) === null || _e === void 0 ? void 0 : _e.body,
+            };
         });
     }
     convertToMarkdown(analysis, terraform) {
@@ -643,45 +597,143 @@ ${CODE_BLOCK}\n
             '' : this.convertToMarkdown(folderAnalysis === null || folderAnalysis === void 0 ? void 0 : folderAnalysis.additions, filesToUpload.find(file => { var _a; return (_a = folderAnalysis === null || folderAnalysis === void 0 ? void 0 : folderAnalysis.proceeded_file) === null || _a === void 0 ? void 0 : _a.includes(file.uuid); }))));
         return commentBodyArray.join('<br><br><br>');
     }
-    // getCurrentRepoRemoteUrl(token: string): string {
-    //   const { repo, owner } = this._context.repo;
-    //   const serverName = this.getServerName(this._context.payload.repository?.html_url);
-    //   return this.getRepoRemoteUrl(token, `${serverName}/${owner}/${repo}`);
-    // }
     getRepoRemoteUrl() {
-        // return `https://x-access-token:${token}@${repoUrl}.git`;
         return `https://${this.repo.owner}:${this.token}@github.com/${this.repo.owner}/${this.repo.repo}.git`;
     }
-    getServerName(repositoryUrl) {
-        const urlObj = repositoryUrl ? new URL(repositoryUrl) : new URL(Github.DEFAULT_GITHUB_URL);
-        return repositoryUrl ? urlObj.hostname : Github.DEFAULT_GITHUB_URL.replace('https://', '');
-    }
-    clone(token, context, baseDirectory, additionalGitOptions = [], ...options) {
+    fetch(additionalGitOptions = []) {
         return __awaiter(this, void 0, void 0, function* () {
-            (0, core_1.debug)(`Executing 'git clone' to directory '${baseDirectory}' with token and options '${options.join(' ')}'`);
+            (0, core_1.debug)(`Executing 'git fetch' for branch '${additionalGitOptions}' with token and options `);
+            const args = ['fetch', ...additionalGitOptions];
+            return this.cmd(args);
+        });
+    }
+    clone(baseDirectory) {
+        return __awaiter(this, void 0, void 0, function* () {
+            (0, core_1.debug)(`Executing 'git clone' to directory '${baseDirectory}' with token and options `);
             const remote = this.getRepoRemoteUrl();
             let args = ['clone', remote, baseDirectory];
-            if (options.length > 0) {
-                args = args.concat(options);
-            }
-            // return this.cmd(additionalGitOptions, context, ...args);
-            return Promise.resolve('');
+            return this.cmd(args);
         });
     }
     checkout(ghRef, additionalGitOptions = [], ...options) {
         return __awaiter(this, void 0, void 0, function* () {
             (0, core_1.debug)(`Executing 'git checkout' to ref '${ghRef}' with token and options '${options.join(' ')}'`);
             let args = ['checkout', ghRef];
-            if (options.length > 0) {
-                args = args.concat(options);
-            }
-            // return this.cmd(additionalGitOptions, context, ...args);
-            return Promise.resolve('');
+            // if (options.length > 0) {
+            //     args = args.concat(options);
+            // }
+            return this.cmd(args);
         });
     }
-    getServerUrl(repositoryUrl) {
-        const urlObj = repositoryUrl ? new URL(repositoryUrl) : new URL(Github.DEFAULT_GITHUB_URL);
-        return repositoryUrl ? urlObj.origin : Github.DEFAULT_GITHUB_URL;
+    cmd(additionalGitOptions, ...args) {
+        return __awaiter(this, void 0, void 0, function* () {
+            (0, core_1.debug)(`Executing Git: ${args.join(' ')}`);
+            const res = yield this.capture('git', additionalGitOptions);
+            if (res.exitCode !== 0) {
+                throw new Error(`Command 'git ${args.join(' ')}' failed: ${JSON.stringify(res)}`);
+            }
+            return res;
+        });
+    }
+    capture(cmd, args) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const res = {
+                stdout: '',
+                stderr: '',
+                exitCode: null
+            };
+            try {
+                const code = yield (0, exec_1.exec)(cmd, args, {
+                    listeners: {
+                        stdout(data) {
+                            res.stdout += data.toString();
+                        },
+                        stderr(data) {
+                            res.stderr += data.toString();
+                        },
+                    },
+                });
+                res.exitCode = code;
+                return res;
+            }
+            catch (err) {
+                const msg = `Command '${cmd}' failed with args '${args.join(' ')}': ${res.stderr}: ${err}`;
+                (0, core_1.debug)(`@actions/exec.exec() threw an error: ${msg}`);
+                throw new Error(msg);
+            }
+        });
+    }
+    prepareRepo() {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.steps.gitClone = yield this.clone(this.workDir); //await exec('git' , ['clone', this.getRepoRemoteUrl(), this.workDir])
+            process.chdir(this.workDir);
+            this.steps.gitFetch = yield this.fetch(['origin', `pull/${this.pullRequest}/head:${this.actionUuid}`]); //await exec('git' , ['fetch', 'origin', `pull/${this.pullRequest}/head:${this.actionUuid}`])
+            this.steps.gitCheckout = yield this.checkout(this.actionUuid); //await exec('git' , ['checkout', this.actionUuid])
+        });
+    }
+    checkForDiffByFileTypes() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.prepareRepo();
+            let diffFolders = [];
+            try {
+                const diffs = yield this.getDiff(this.octokit);
+                const foldersSet = new Set(diffs
+                    .filter(diff => this.fileTypes.some(fileType => { var _a; return (_a = diff === null || diff === void 0 ? void 0 : diff.filename) === null || _a === void 0 ? void 0 : _a.endsWith(fileType); }))
+                    .map(diff => diff === null || diff === void 0 ? void 0 : diff.filename.split('/')[0]));
+                diffFolders = [...foldersSet];
+            }
+            catch (error) {
+                if (error instanceof Error)
+                    this.logger.exit(error === null || error === void 0 ? void 0 : error.message);
+            }
+            if ((diffFolders === null || diffFolders === void 0 ? void 0 : diffFolders.length) == 0) {
+                this.logger.info('##### Algosec ##### No changes were found in terraform plans');
+                return;
+            }
+            this.logger.info('##### Algosec ##### Step 1 - diffs result: ' + JSON.stringify(diffFolders));
+            return diffFolders;
+        });
+    }
+    parseOutput(filesToUpload, analysisResults) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const body = this.parseCodeAnalysis(filesToUpload, analysisResults);
+            if (body && body != '')
+                this.steps.comment = yield this.createComment(body);
+            if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some(response => !(response === null || response === void 0 ? void 0 : response.success))) {
+                let errors = '';
+                Object.keys(this.steps).forEach(step => { var _a, _b; return errors += (_b = (_a = this === null || this === void 0 ? void 0 : this.steps[step]) === null || _a === void 0 ? void 0 : _a.stderr) !== null && _b !== void 0 ? _b : ''; });
+                this.logger.exit('##### Algosec ##### The risks analysis process failed:\n' + errors);
+            }
+            else {
+                this.logger.info('##### Algosec ##### Step 5 - parsing Code Analysis');
+                if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some(response => { var _a; return !((_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_state); })) {
+                    this.logger.exit('##### Algosec ##### The risks analysis process completed successfully with risks, please check report');
+                }
+                else {
+                    this.logger.info('##### Algosec ##### Step 6 - the risks analysis process completed successfully without any risks');
+                    return;
+                }
+            }
+        });
+    }
+    getInputs() {
+        return process.env;
+    }
+    uploadAnalysisFile(actionUuid, body, jwt) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            const http = new http_client_1.HttpClient();
+            const getPresignedUrl = `${(_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.CF_API_URL}/presignedurl?actionId=${actionUuid}&owner=${github_1.context.repo.owner}`;
+            const presignedUrlResponse = yield (yield http.get(getPresignedUrl, { 'Authorization': `Bearer ${jwt}` })).readBody();
+            const presignedUrl = JSON.parse(presignedUrlResponse).presignedUrl;
+            const response = yield (yield http.put(presignedUrl, body, { 'Content-Type': 'application/json' })).readBody();
+            if (response == '') {
+                return true;
+            }
+            else {
+                (0, core_1.setFailed)(response);
+            }
+        });
     }
 }
 exports.Github = Github;
@@ -705,9 +757,7 @@ class GitLab {
         this.token = (_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.GITLAB_TOKEN;
         this.sha = (_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.GITLAB_SHA;
     }
-    init() {
-        return 'GitLab';
-    }
+    getInputs() { }
     getDiff(client) {
     }
     createComment(options) {
@@ -717,6 +767,10 @@ class GitLab {
     getRepoRemoteUrl() {
         return '';
     }
+    checkForDiffByFileTypes() {
+    }
+    parseOutput(filesToUpload, analysisResult) { }
+    uploadAnalysisFile(actionUuid, body, jwt) { }
 }
 exports.GitLab = GitLab;
 exports.versionControlMap = {
@@ -12697,8 +12751,8 @@ var __webpack_exports__ = {};
 var exports = __webpack_exports__;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const code_analysis_1 = __nccwpck_require__(1153);
-const codeAnalyzer = new code_analysis_1.AshCodeAnalysis();
+const main_1 = __nccwpck_require__(3109);
+const codeAnalyzer = new main_1.Main();
 codeAnalyzer.run();
 
 })();

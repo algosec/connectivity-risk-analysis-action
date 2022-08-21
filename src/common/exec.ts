@@ -1,14 +1,18 @@
-import { exec as actionsExec } from '@actions/exec'
-import * as core from '@actions/core';
+import { exec as actionsExec, ExecOutput } from '@actions/exec'
 import { debug } from '@actions/core';
 
-
+export interface FileAnalysis {
+    file: any
+    uuid: string
+    output: any
+}
+export interface ExecSteps { [name: string]: ExecOutput } 
 export class Exec {
-    //  async capture(cmd: string, args: string[]): Promise<ExecResult> {
-    //     const res: ExecResult = {
+    //  async capture(cmd: string, args: string[]): Promise<ExecOutput> {
+    //     const res: ExecOutput = {
     //         stdout: '',
     //         stderr: '',
-    //         code: null,
+    //         exitCode: null,
     //     };
     
     //     try {
@@ -22,7 +26,7 @@ export class Exec {
     //                 },
     //             },
     //         });
-    //         res.code = code;
+    //         res.exitCode = code;
     //         return res;
     //     } catch (err) {
     //         const msg = `Command '${cmd}' failed with args '${args.join(' ')}': ${res.stderr}: ${err}`;
@@ -35,20 +39,13 @@ export class Exec {
 
 }
 
-export interface ExecResult {
-    stdout: string;
-    stderr: string;
-    code: number | null;
-}
 
 
-
-
-export async function exec(cmd: string, args: string[]): Promise<ExecResult> {
-    const res: ExecResult = {
+export async function exec(cmd: string, args: string[]): Promise<ExecOutput> {
+    const res: ExecOutput = {
         stdout: '',
         stderr: '',
-        code: null,
+        exitCode: null,
     };
   
     try {
@@ -56,16 +53,14 @@ export async function exec(cmd: string, args: string[]): Promise<ExecResult> {
             listeners: {
                 stdout(data) {
                     res.stdout += data.toString();
-                    // debug(`##### Algosec ##### stdout: ${res.stdout}`);
                 },
                 stderr(data) {
                     res.stderr += data.toString();
-                    // debug(`##### Algosec ##### stderr: ${res.stderr}`);
                 },
             },
         });
         
-        res.code = code;
+        res.exitCode = code;
         return res;
     } catch (err) {
         const msg = `Command '${cmd}' failed with args '${args.join(' ')}': ${res.stderr}: ${err}`;

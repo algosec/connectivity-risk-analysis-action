@@ -2,19 +2,24 @@ import { Github } from "./github";
 
 export interface IVersionControl {
     pullRequest: any;
-    getRepoRemoteUrl(): string;
     payload: any;
     repo: any;
     logger: any;
     http: any;
     workspace: string
+    workDir: string
     token: string
     sha: string
     octokit?: any
+    fileTypes: string[]
+    getRepoRemoteUrl(): string;
     createComment(body: string)
     parseCodeAnalysis(analysis, VersionControl)
-    init(): any
     getDiff(vcsObject)
+    checkForDiffByFileTypes()
+    parseOutput(filesToUpload, analysisResult)
+    uploadAnalysisFile(actionUuid: string, body: any, jwt: string)
+    getInputs()
    
 }
 
@@ -27,15 +32,17 @@ export class GitLab implements IVersionControl {
     workspace: string
     token: string
     sha: string
+    workDir: string
+    fileTypes: string[]
 
     constructor(){
         this.workspace = process?.env?.GITLAB_WORKSPACE
         this.token =  process?.env?.GITLAB_TOKEN 
         this.sha =  process?.env?.GITLAB_SHA 
     }
-    init(): string {
-        return 'GitLab'
-    }
+
+    getInputs(){}
+
 
     getDiff(client){
 
@@ -52,6 +59,15 @@ export class GitLab implements IVersionControl {
     getRepoRemoteUrl(){
         return ''
     }
+
+    checkForDiffByFileTypes(){
+
+    }
+
+    parseOutput(filesToUpload, analysisResult){}
+
+    uploadAnalysisFile(actionUuid: string, body: any, jwt: string){}
+
 }
 
 export const versionControlMap = {

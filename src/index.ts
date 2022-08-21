@@ -1,6 +1,6 @@
-import { AshCodeAnalysis } from './code-analysis'
+import { Main } from './main'
 
 
 
-const codeAnalyzer = new AshCodeAnalysis()
+const codeAnalyzer = new Main()
 codeAnalyzer.run()

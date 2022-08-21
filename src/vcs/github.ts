@@ -2,12 +2,14 @@ import { GitHub } from "@actions/github/lib/utils"
 import {context, getOctokit} from '@actions/github'
 import {info, error, debug, setFailed as exit} from '@actions/core'
 import {HttpClient} from '@actions/http-client'
-import { IVersionControl } from "./vcs.model"
+import {IVersionControl } from "./vcs.model"
 import {WebhookPayload} from '@actions/github/lib/interfaces'
-// import { githubEventPayloadMock } from "../mockData"
+import {exec, ExecOutput} from "@actions/exec"
+import {ExecSteps} from "../common/exec"
 export type GithubContext = typeof context
-
+const getUuid = require('uuid-by-string')
 // DEBUG
+// import {githubEventPayloadMock } from "../mockData"
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 
 export class Github implements IVersionControl {
@@ -22,22 +24,26 @@ export class Github implements IVersionControl {
   repo: any
   payload: WebhookPayload
   pullRequest: string
+  steps: ExecSteps = {}
+  workDir: string
+  actionUuid: string
+  fileTypes: string[]
+  
 
   constructor(){
     this.http = new HttpClient()
     this.logger = {info, error, debug, exit}
     this.workspace = process?.env?.GITHUB_WORKSPACE
-    this.token =  process?.env?.GH_TOKEN 
+    this.token =  process?.env?.GITHUB_TOKEN 
     this.sha =  process?.env?.GITHUB_SHA 
     this._context = context
     this.octokit = getOctokit(this.token)
     this.payload = this._context?.payload
     this.repo = this._context.repo
     this.pullRequest = this._context.payload.pull_request.number.toString()
-  }
+    this.workDir = this.workspace + '_ALGOSEC_CODE_ANALYSIS'
+    this.actionUuid = getUuid(this.sha)
 
-  init(){
-    return this
   }
 
 
@@ -58,11 +64,17 @@ export class Github implements IVersionControl {
   }
 
   async createComment(body){
-    await this.octokit.rest.issues.createComment({
+    const result = await this.octokit.rest.issues.createComment({
       ...this._context.repo,
       issue_number: this._context.issue.number,
       body
     });
+
+      return {
+        exitCode: result?.data?.body ? 0 : 1, 
+        stdout: result?.data?.body ? result?.data?.body : null,
+        stderr: result?.data?.body ? null : result?.data?.body,
+      } as ExecOutput
   }
 
   convertToMarkdown(analysis, terraform) {
@@ -155,63 +167,149 @@ ${CODE_BLOCK}\n
     return commentBodyArray.join('<br><br><br>')
   }
 
-  // getCurrentRepoRemoteUrl(token: string): string {
-  //   const { repo, owner } = this._context.repo;
-  //   const serverName = this.getServerName(this._context.payload.repository?.html_url);
-  //   return this.getRepoRemoteUrl(token, `${serverName}/${owner}/${repo}`);
-  // }
-
   getRepoRemoteUrl(): string {
-    // return `https://x-access-token:${token}@${repoUrl}.git`;
     return `https://${this.repo.owner}:${this.token}@github.com/${this.repo.owner}/${this.repo.repo}.git`
   }
 
-  getServerName(repositoryUrl: string | undefined): string {
-    const urlObj = repositoryUrl ? new URL(repositoryUrl) : new URL(Github.DEFAULT_GITHUB_URL);
-    return repositoryUrl ? urlObj.hostname : Github.DEFAULT_GITHUB_URL.replace('https://', '');
+
+  async fetch(
+    additionalGitOptions: string[] = [],
+): Promise<ExecOutput> {
+    debug(`Executing 'git fetch' for branch '${additionalGitOptions}' with token and options `);
+    const args = ['fetch', ...additionalGitOptions]
+ 
+    return this.cmd(args);
 }
 
-  
   async clone(
-    token: string,
-    context: GithubContext,
-    baseDirectory: string,
-    additionalGitOptions: string[] = [],
-    ...options: string[]
-): Promise<string> {
-    debug(`Executing 'git clone' to directory '${baseDirectory}' with token and options '${options.join(' ')}'`);
+    baseDirectory: string
+): Promise<ExecOutput> {
+    debug(`Executing 'git clone' to directory '${baseDirectory}' with token and options `);
 
     const remote = this.getRepoRemoteUrl();
     let args = ['clone', remote, baseDirectory];
-    if (options.length > 0) {
-        args = args.concat(options);
-    }
+    
 
-    // return this.cmd(additionalGitOptions, context, ...args);
-    return Promise.resolve('')
-    }
-  
-    async checkout(
+    return this.cmd(args);
+}
+ async  checkout(
     ghRef: string,
     additionalGitOptions: string[] = [],
     ...options: string[]
-): Promise<string> {
+): Promise<ExecOutput> {
     debug(`Executing 'git checkout' to ref '${ghRef}' with token and options '${options.join(' ')}'`);
 
     let args = ['checkout', ghRef];
-    if (options.length > 0) {
-        args = args.concat(options);
-    }
+    // if (options.length > 0) {
+    //     args = args.concat(options);
+    // }
 
-    // return this.cmd(additionalGitOptions, context, ...args);
-    return Promise.resolve('')
+    return this.cmd(args);
+}
+
+ async cmd(additionalGitOptions: string[], ...args: string[]): Promise<ExecOutput> {
+  debug(`Executing Git: ${args.join(' ')}`);
+
+  const res = await this.capture('git', additionalGitOptions);
+  if (res.exitCode !== 0) {
+      throw new Error(`Command 'git ${args.join(' ')}' failed: ${JSON.stringify(res)}`);
+  }
+  return res;
+}
+
+async capture(cmd: string, args: string[]): Promise<ExecOutput> {
+  const res: ExecOutput = {
+      stdout: '',
+      stderr: '',
+      exitCode: null
+  };
+
+  try {
+      const code = await exec(cmd, args, {
+          listeners: {
+              stdout(data) {
+                  res.stdout += data.toString();
+              },
+              stderr(data) {
+                  res.stderr += data.toString();
+              },
+          },
+      });
+      res.exitCode = code;
+      return res;
+  } catch (err) {
+      const msg = `Command '${cmd}' failed with args '${args.join(' ')}': ${res.stderr}: ${err}`;
+      debug(`@actions/exec.exec() threw an error: ${msg}`);
+      throw new Error(msg);
+  }
+}
+
+
+async prepareRepo(){
+  this.steps.gitClone = await this.clone(this.workDir) //await exec('git' , ['clone', this.getRepoRemoteUrl(), this.workDir])
+  process.chdir(this.workDir)
+  this.steps.gitFetch = await this.fetch(['origin', `pull/${this.pullRequest}/head:${this.actionUuid}`]) //await exec('git' , ['fetch', 'origin', `pull/${this.pullRequest}/head:${this.actionUuid}`])
+  this.steps.gitCheckout = await this.checkout(this.actionUuid) //await exec('git' , ['checkout', this.actionUuid])
+}
+   
+async checkForDiffByFileTypes() {
+  await this.prepareRepo()
+  let diffFolders = []
+  try {
+      const diffs = await this.getDiff(this.octokit)
+      const foldersSet = new Set(diffs
+        .filter(diff => this.fileTypes.some(fileType => diff?.filename?.endsWith(fileType)))
+        .map(diff => diff?.filename.split('/')[0]))
+      diffFolders = [...foldersSet]
+  } catch (error: unknown) {
+    if (error instanceof Error) this.logger.exit(error?.message)
+  }
+  if (diffFolders?.length == 0) {
+    this.logger.info('##### Algosec ##### No changes were found in terraform plans')
+      return
     }
+    this.logger.info('##### Algosec ##### Step 1 - diffs result: ' + JSON.stringify(diffFolders))
+  return diffFolders
+}
+
+async parseOutput(filesToUpload, analysisResults){
+  const body = this.parseCodeAnalysis(filesToUpload, analysisResults)
+  if (body && body != '') this.steps.comment = await this.createComment(body)
+  if (analysisResults?.some(response => !response?.success)) {
+    let errors = ''
+    Object.keys(this.steps).forEach(step => errors += this?.steps[step]?.stderr ?? '')
+    this.logger.exit('##### Algosec ##### The risks analysis process failed:\n' + errors)
+  } else {
+    this.logger.info('##### Algosec ##### Step 5 - parsing Code Analysis')
+    if (analysisResults?.some(response => !response?.additions?.analysis_state)) {
+      this.logger.exit('##### Algosec ##### The risks analysis process completed successfully with risks, please check report')
+    } else {
+      this.logger.info('##### Algosec ##### Step 6 - the risks analysis process completed successfully without any risks')
+      return
+    }
+  }
+}
+
+getInputs() {
+  return process.env
+}
+
+async uploadAnalysisFile(actionUuid: string, body: any, jwt: string): Promise<any> {
+  const http = new HttpClient()
+  const getPresignedUrl = `${process?.env?.CF_API_URL}/presignedurl?actionId=${actionUuid}&owner=${context.repo.owner}`
+  const presignedUrlResponse = await (await http.get(getPresignedUrl, {'Authorization': `Bearer ${jwt}`})).readBody()
+  const presignedUrl = JSON.parse(presignedUrlResponse).presignedUrl
+  const response = await (await http.put(presignedUrl, body, {'Content-Type':'application/json'})).readBody()
+  if (response == ''){
+    return true
+  } else {
+    exit(response)
+  }
+
+}
+
+
   
-    getServerUrl(repositoryUrl: string | undefined): string {
-    const urlObj = repositoryUrl ? new URL(repositoryUrl) : new URL(Github.DEFAULT_GITHUB_URL);
-    return repositoryUrl ? urlObj.origin : Github.DEFAULT_GITHUB_URL;
-    }
-
 
 
 }
