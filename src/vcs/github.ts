@@ -277,8 +277,8 @@ async parseOutput(filesToUpload, analysisResults){
   if (body && body != '') this.steps.comment = await this.createComment(body)
   if (analysisResults?.some(response => !response?.success)) {
     let errors = ''
-    Object.keys(this.steps).forEach(step => errors += this?.steps[step]?.stderr ?? '')
-    this.logger.exit('##### Algosec ##### The risks analysis process failed:\n' + errors)
+    // Object.keys(this.steps).forEach(step => errors += this?.steps[step]?.stderr ?? '')
+    this.logger.exit('##### Algosec ##### The risks analysis process failed.\n' + errors)
   } else {
     this.logger.info('##### Algosec ##### Step 5 - parsing Code Analysis')
     if (analysisResults?.some(response => !response?.additions?.analysis_state)) {
