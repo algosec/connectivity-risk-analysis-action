@@ -26,8 +26,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AshCodeAnalysis = void 0;
 __nccwpck_require__(4227);
-const aws_1 = __nccwpck_require__(3895);
-// import { codeAnalysisMock, terraformSinglePlanFileMock } from "./mockData"
 class AshCodeAnalysis {
     constructor(vcs) {
         this.vcs = vcs;
@@ -94,12 +92,10 @@ class AshCodeAnalysis {
         });
     }
     uploadFile(file) {
-        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            const aws = new aws_1.Aws();
             let res = false;
             if (file === null || file === void 0 ? void 0 : file.output) {
-                const ans = yield this.vcs.uploadAnalysisFile(file === null || file === void 0 ? void 0 : file.uuid, JSON.stringify((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan), this.jwt);
+                const ans = yield this.vcs.uploadAnalysisFile(file, this.jwt);
                 if (ans) {
                     res = true;
                 }
@@ -129,6 +125,7 @@ class AshCodeAnalysis {
                 yield this.wait(3000);
                 analysisResult = yield this.checkCodeAnalysisResponse(file);
                 if (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.additions) {
+                    analysisResult.folder = file === null || file === void 0 ? void 0 : file.folder;
                     this.vcs.logger.info('##### Algosec ##### Response: ' + JSON.stringify(analysisResult));
                     break;
                 }
@@ -157,7 +154,8 @@ class AshCodeAnalysis {
                 const body = yield response.readBody();
                 const message = body && body != '' ? JSON.parse(body) : null;
                 if (message === null || message === void 0 ? void 0 : message.message_found) {
-                    return (message === null || message === void 0 ? void 0 : message.result) ? JSON.parse(message === null || message === void 0 ? void 0 : message.result) : null;
+                    const result = (message === null || message === void 0 ? void 0 : message.result) ? JSON.parse(message === null || message === void 0 ? void 0 : message.result) : null;
+                    return result;
                 }
                 else {
                     return null;
@@ -189,12 +187,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.exec = exports.Exec = void 0;
+exports.exec = void 0;
 const exec_1 = __nccwpck_require__(1514);
 const core_1 = __nccwpck_require__(2186);
-class Exec {
-}
-exports.Exec = Exec;
 function exec(cmd, args) {
     return __awaiter(this, void 0, void 0, function* () {
         const res = {
@@ -358,8 +353,13 @@ class Terraform {
                 var _a;
                 for (const [index, value] of iterable === null || iterable === void 0 ? void 0 : iterable.entries()) {
                     const output = yield action({ runFolder: value, workDir });
-                    res.push({ uuid: (0, uuid_by_string_1.default)(value), folder: value, output });
-                    console.log(`##### Algosec ##### Step 2${((_a = iterable === null || iterable === void 0 ? void 0 : iterable.entries()) === null || _a === void 0 ? void 0 : _a.length) > 1 ? '.' + index + 1 : ''} - ${this.type} Result for folder ${value}: ${JSON.stringify(this)}`);
+                    const file = {
+                        uuid: (0, uuid_by_string_1.default)(value),
+                        folder: value,
+                        output
+                    };
+                    res.push(file);
+                    console.log(`##### Algosec ##### Step 2${((_a = iterable === null || iterable === void 0 ? void 0 : iterable.entries()) === null || _a === void 0 ? void 0 : _a.length) > 1 ? '.' + index + 1 : ''} - ${this.type} Result for folder ${file.folder}: ${JSON.stringify(file)}`);
                 }
             });
             try {
@@ -368,6 +368,7 @@ class Terraform {
             catch (error) {
                 console.log('Framework check failed ' + error);
             }
+            console.log(`Files To Analyze ${JSON.stringify(res)}`);
             return res;
         });
     }
@@ -397,6 +398,7 @@ const child_process_1 = __nccwpck_require__(3129);
 const code_analysis_1 = __nccwpck_require__(1153);
 const framework_service_1 = __nccwpck_require__(2162);
 const vcs_service_1 = __nccwpck_require__(9701);
+// import { codeAnalysisMock as codeAnalysisResponses, terraformPlanFileMock as filesToAnalyze} from "./mockData"
 class Main {
     constructor() {
         var _a, _b;
@@ -423,9 +425,6 @@ class Main {
                         }
                     }
                 }
-                // const foldersToRunCheck = ['tf-test']
-                // const filesToAnalyze = terraformSinglePlanFileMock
-                // const codeAnalysisResponse = codeAnalysisMock as any
             }
             catch (_e) {
                 console.log(_e);
@@ -434,20 +433,6 @@ class Main {
     }
 }
 exports.Main = Main;
-
-
-/***/ }),
-
-/***/ 3895:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Aws = void 0;
-class Aws {
-}
-exports.Aws = Aws;
 
 
 /***/ }),
@@ -473,7 +458,7 @@ const core_1 = __nccwpck_require__(2186);
 const http_client_1 = __nccwpck_require__(6255);
 const exec_1 = __nccwpck_require__(1514);
 const getUuid = __nccwpck_require__(7777);
-// DEBUG
+// DEBUG LOCALLY
 // import {githubEventPayloadMock } from "../mockData"
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 class Github {
@@ -518,14 +503,17 @@ class Github {
             };
         });
     }
-    convertToMarkdown(analysis, terraform) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
-        const CODE_BLOCK = '```';
+    buildAnalysisBody(analysis, file) {
+        const analysisBody = `<details>\n${this.buildReportResult(analysis, file)}\n${this.buildFrameworkResult(file)}\n</details>`;
+        return analysisBody;
+    }
+    buildReportResult(analysis, file) {
+        var _a, _b;
         let risksList = '';
-        let risksTableContents = '';
+        const CODE_BLOCK = '```';
         (_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.forEach(risk => {
             risksList +=
-                `<details open="true">\n
+                `<details>\n
 <summary><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${risk.riskSeverity}.png" />  ${risk.riskId} | ${risk.riskTitle}</summary> \n
 ### **Description:**\n${risk.riskDescription}\n
 ### **Recommendation:**\n${risk.riskRecommendation.toString()}\n
@@ -534,20 +522,66 @@ ${CODE_BLOCK}\n
 ${JSON.stringify(risk.items, null, "\t")}\n
 ${CODE_BLOCK}\n
 </details>\n`;
+        });
+        const codeAnalysisContent = `<summary>Risks Report | ${file.folder}</summary>\n
+${risksList}\n
+<details>
+<summary>Logs</summary>
+<br>Output<br>
+
+${CODE_BLOCK}\n
+${JSON.stringify(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, null, "\t")}\n
+${CODE_BLOCK}\n
+</details>\n`;
+        return ((_b = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0 ? codeAnalysisContent : '\n### No Risks Found\n';
+    }
+    buildFrameworkResult(file) {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        const CODE_BLOCK = '```';
+        const frameworkIcon = (((_b = (_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.log) === null || _b === void 0 ? void 0 : _b.stderr) == '') ? 'V' : 'X';
+        const frameworkContent = `\n<img height="50" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/Terraform${frameworkIcon}.svg" />\n
+<details>
+<summary>Terraform Log</summary>
+<br>Output<br>
+
+${CODE_BLOCK}\n
+${(_d = (_c = file === null || file === void 0 ? void 0 : file.output) === null || _c === void 0 ? void 0 : _c.log) === null || _d === void 0 ? void 0 : _d.stdout}\n
+${CODE_BLOCK}\n
+Errors\n
+${CODE_BLOCK}\n
+${(_g = (_f = (_e = file === null || file === void 0 ? void 0 : file.output) === null || _e === void 0 ? void 0 : _e.log) === null || _f === void 0 ? void 0 : _f.stderr) !== null && _g !== void 0 ? _g : (_j = (_h = file === null || file === void 0 ? void 0 : file.output) === null || _h === void 0 ? void 0 : _h.initLog) === null || _j === void 0 ? void 0 : _j.stderr}\n
+${CODE_BLOCK}\n
+</details> <!-- End Format Logs -->\n`;
+        return frameworkContent;
+    }
+    buildSummaryTable(filesToUpload, results) {
+        const tableBody = '';
+        let risksTableContents = '';
+        const riskArrays = results
+            .filter(result => { var _a, _b; return ((_b = (_a = result === null || result === void 0 ? void 0 : result.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })
+            .map(result => {
+            var _a;
+            const folder = filesToUpload.find(file => { var _a; return (_a = result === null || result === void 0 ? void 0 : result.proceeded_file) === null || _a === void 0 ? void 0 : _a.includes(file.uuid); }).folder;
+            return (_a = result === null || result === void 0 ? void 0 : result.additions) === null || _a === void 0 ? void 0 : _a.analysis_result.map(risk => { return Object.assign({ folder }, risk); });
+        });
+        const mergedRisks = [].concat.apply([], riskArrays).sort((a, b) => a.riskSeverity.localeCompare(b.riskSeverity));
+        mergedRisks.forEach(risk => {
             risksTableContents +=
                 `<tr>\n
-<td>${risk.riskId}</td>\n
 <td><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${risk.riskSeverity}.png" /> ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
+<td>AWS</td>\n
+<td>${risk.folder}</td>\n
+<td>${risk.riskId}</td>\n
 <td>${risk.riskTitle}</td>\n
 </tr>\n`;
         });
-        const analysisIcon = (analysis === null || analysis === void 0 ? void 0 : analysis.analysis_state) ? 'V' : 'X';
-        const header = `<img height="50" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/RiskAnalysis${analysisIcon}.svg" /> \n`;
         const risksTable = `<table>\n
 <thead>\n
 <tr>\n
-<th align="left" scope="col">Risk ID</th>\n
 <th align="left" scope="col">Severity</th>\n
+<th align="left" scope="col">Vendor</th>\n
+<th align="left" scope="col">Folder</th>\n
+<th align="left" scope="col">Risk ID</th>\n
 <th align="left" scope="col">Summary</th>\n
 </tr>\n
 </thead>\n
@@ -555,47 +589,20 @@ ${CODE_BLOCK}\n
 ${risksTableContents}                 
 </tbody>
 </table>\n`;
-        const terraformIcon = (((_b = terraform === null || terraform === void 0 ? void 0 : terraform.log) === null || _b === void 0 ? void 0 : _b.stderr) == '') ? 'V' : 'X';
-        const terraformContent = `\n<img height="50" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/Terraform${terraformIcon}.svg" />\n
-<details>
-<summary>Terraform Log</summary>
-<br>Output<br>
-&nbsp;
-
-${CODE_BLOCK}\n
-${(_c = terraform === null || terraform === void 0 ? void 0 : terraform.log) === null || _c === void 0 ? void 0 : _c.stdout}\n
-${CODE_BLOCK}\n
-Errors\n
-${CODE_BLOCK}\n
-${(_e = (_d = terraform === null || terraform === void 0 ? void 0 : terraform.log) === null || _d === void 0 ? void 0 : _d.stderr) !== null && _e !== void 0 ? _e : (_f = terraform === null || terraform === void 0 ? void 0 : terraform.initLog) === null || _f === void 0 ? void 0 : _f.stderr}\n
-${CODE_BLOCK}\n
-</details> <!-- End Format Logs -->\n`;
-        const codeAnalysisContent = `<summary>Report</summary>\n
-${risksList}\n
-<details>
-<summary>Logs</summary>
-<br>Output<br>
-&nbsp;
-
-${CODE_BLOCK}\n
-${JSON.stringify(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, null, "\t")}\n
-${CODE_BLOCK}\n
-</details>\n`;
-        const markdownOutput = header +
-            (((_g = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _g === void 0 ? void 0 : _g.length) > 0 ? risksTable : '') +
-            `<details open="true">\n` +
-            (((_h = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _h === void 0 ? void 0 : _h.length) > 0 ? codeAnalysisContent : '\n### No Risks Found\n') +
-            terraformContent +
-            `</details><br>
-\n
-*Pusher: @${(_j = this._context) === null || _j === void 0 ? void 0 : _j.actor}, Action: \`${(_k = this._context) === null || _k === void 0 ? void 0 : _k.eventName}\`, Working Directory: \'${this.workspace}\', Workflow: \'${(_l = this._context) === null || _l === void 0 ? void 0 : _l.workflow}\'*`;
-        return markdownOutput;
+        return results.some(result => { var _a, _b; return ((_b = (_a = result === null || result === void 0 ? void 0 : result.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; }) ? risksTable : '';
     }
-    parseCodeAnalysis(filesToUpload, analysisResult) {
+    parseCodeAnalysis(filesToUpload, analysisResults) {
+        var _a, _b, _c;
         const commentBodyArray = [];
-        analysisResult.forEach(folderAnalysis => commentBodyArray.push((!(folderAnalysis === null || folderAnalysis === void 0 ? void 0 : folderAnalysis.additions)) ?
-            '' : this.convertToMarkdown(folderAnalysis === null || folderAnalysis === void 0 ? void 0 : folderAnalysis.additions, filesToUpload.find(file => { var _a; return (_a = folderAnalysis === null || folderAnalysis === void 0 ? void 0 : folderAnalysis.proceeded_file) === null || _a === void 0 ? void 0 : _a.includes(file.uuid); }))));
-        return commentBodyArray.join('<br><br><br>');
+        const header = `<img height="50" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/RiskAnalysisV.svg" /> \n`;
+        const footer = `<br>
+\n
+*Pusher: @${(_a = this._context) === null || _a === void 0 ? void 0 : _a.actor}, Action: \`${(_b = this._context) === null || _b === void 0 ? void 0 : _b.eventName}\`, Working Directory: \'${this.workspace}\', Workflow: \'${(_c = this._context) === null || _c === void 0 ? void 0 : _c.workflow}\'*`;
+        const summaryTable = this.buildSummaryTable(filesToUpload, analysisResults);
+        analysisResults.forEach(folderAnalysis => commentBodyArray.push((!(folderAnalysis === null || folderAnalysis === void 0 ? void 0 : folderAnalysis.additions)) ?
+            '' : this.buildAnalysisBody(folderAnalysis === null || folderAnalysis === void 0 ? void 0 : folderAnalysis.additions, filesToUpload.find(file => { var _a; return (_a = folderAnalysis === null || folderAnalysis === void 0 ? void 0 : folderAnalysis.proceeded_file) === null || _a === void 0 ? void 0 : _a.includes(file.uuid); }))));
+        const analysisByFolder = commentBodyArray.join('\n--------------------------------------------------------------------------------------------------------------------------------------------');
+        return header + summaryTable + analysisByFolder + footer;
     }
     getRepoRemoteUrl() {
         return `https://${this.repo.owner}:${this.token}@github.com/${this.repo.owner}/${this.repo.repo}.git`;
@@ -719,11 +726,12 @@ ${CODE_BLOCK}\n
     getInputs() {
         return process.env;
     }
-    uploadAnalysisFile(actionUuid, body, jwt) {
-        var _a;
+    uploadAnalysisFile(file, jwt) {
+        var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function* () {
             const http = new http_client_1.HttpClient();
-            const getPresignedUrl = `${(_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.CF_API_URL}/presignedurl?actionId=${actionUuid}&owner=${github_1.context.repo.owner}`;
+            const body = JSON.stringify((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan);
+            const getPresignedUrl = `${(_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.CF_API_URL}/presignedurl?actionId=${file === null || file === void 0 ? void 0 : file.uuid}&owner=${(_c = github_1.context === null || github_1.context === void 0 ? void 0 : github_1.context.repo) === null || _c === void 0 ? void 0 : _c.owner}&folder=${file === null || file === void 0 ? void 0 : file.folder}`;
             const presignedUrlResponse = yield (yield http.get(getPresignedUrl, { 'Authorization': `Bearer ${jwt}` })).readBody();
             const presignedUrl = JSON.parse(presignedUrlResponse).presignedUrl;
             const response = yield (yield http.put(presignedUrl, body, { 'Content-Type': 'application/json' })).readBody();
@@ -770,7 +778,7 @@ class GitLab {
     checkForDiffByFileTypes(fileTypes) {
     }
     parseOutput(filesToUpload, analysisResult) { }
-    uploadAnalysisFile(actionUuid, body, jwt) { }
+    uploadAnalysisFile(file, jwt) { }
 }
 exports.GitLab = GitLab;
 exports.versionControlMap = {

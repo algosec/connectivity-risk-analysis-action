@@ -1,13 +1,7 @@
 
 import 'dotenv/config'
 import {IVersionControl} from './vcs/vcs.model'
-import {Aws} from './providers/aws'
-import { ExecSteps } from './common/exec'
-
-// import { codeAnalysisMock, terraformSinglePlanFileMock } from "./mockData"
-
-
-
+import { ExecSteps, AnalysisFile } from './common/exec'
 
 
 export class AshCodeAnalysis{
@@ -86,11 +80,10 @@ export class AshCodeAnalysis{
       }
   }
 
-  async uploadFile(file: {uuid: string, output: any}) {
-    const aws = new Aws()
+  async uploadFile(file: AnalysisFile) {
     let res = false;
     if (file?.output){
-      const ans = await this.vcs.uploadAnalysisFile(file?.uuid, JSON.stringify(file?.output?.plan), this.jwt)
+      const ans = await this.vcs.uploadAnalysisFile(file, this.jwt)
       if (ans){
         res = true;
       }
@@ -98,7 +91,6 @@ export class AshCodeAnalysis{
     return res
   }
   
-
   async analyze(filesToUpload){
     let analysisResult
     await this.triggerCodeAnalysis(filesToUpload)
@@ -114,13 +106,14 @@ export class AshCodeAnalysis{
 
   }
 
-  async pollCodeAnalysisResponse(file) {
+  async pollCodeAnalysisResponse(file: AnalysisFile) {
 
     let analysisResult = await this.checkCodeAnalysisResponse(file)
     for (let i = 0; i < 50 ; i++) {
       await this.wait(3000);
       analysisResult = await this.checkCodeAnalysisResponse(file)
       if (analysisResult?.additions) {
+        analysisResult.folder = file?.folder
         this.vcs.logger.info('##### Algosec ##### Response: ' + JSON.stringify(analysisResult))
         break;
       } else if (analysisResult?.error) {
@@ -145,7 +138,8 @@ export class AshCodeAnalysis{
         const body = await response.readBody()
         const message = body && body != '' ? JSON.parse(body) : null
         if (message?.message_found) {
-          return message?.result ? JSON.parse(message?.result) : null
+          const result = message?.result ? JSON.parse(message?.result) : null
+          return result
         } else {
           return null
         }

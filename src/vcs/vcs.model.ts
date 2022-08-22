@@ -1,3 +1,4 @@
+import { AnalysisFile } from "../common/exec";
 import { Github } from "./github";
 
 export interface IVersionControl {
@@ -18,7 +19,7 @@ export interface IVersionControl {
     getDiff(vcsObject)
     checkForDiffByFileTypes(fileTypes: string[])
     parseOutput(filesToUpload, analysisResult)
-    uploadAnalysisFile(actionUuid: string, body: any, jwt: string)
+    uploadAnalysisFile(file: AnalysisFile,  jwt: string)
     getInputs()
    
 }
@@ -66,7 +67,7 @@ export class GitLab implements IVersionControl {
 
     parseOutput(filesToUpload, analysisResult){}
 
-    uploadAnalysisFile(actionUuid: string, body: any, jwt: string){}
+    uploadAnalysisFile(file: AnalysisFile, jwt: string){}
 
 }
 

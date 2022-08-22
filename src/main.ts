@@ -1,12 +1,12 @@
 
 import { exec } from 'child_process'
 import {AshCodeAnalysis} from './code-analysis'
-import { ExecSteps, FileAnalysis } from './common/exec'
+import { ExecSteps, AnalysisFile } from './common/exec'
 import { FrameworkKeys, IFramework } from './iaas-tools/framework.model'
 import { FrameworkService } from './iaas-tools/framework.service'
 import { IVersionControl, VersionControlKeys } from './vcs/vcs.model'
 import { VersionControlService } from './vcs/vcs.service'
-
+// import { codeAnalysisMock as codeAnalysisResponses, terraformPlanFileMock as filesToAnalyze} from "./mockData"
 
 export class Main {
     steps: ExecSteps = {}
@@ -28,7 +28,7 @@ export class Main {
           }
           const foldersToRunCheck = await vcs.checkForDiffByFileTypes(framework.fileTypes)
           if (foldersToRunCheck) {
-            const filesToAnalyze: FileAnalysis[] = await framework.check(foldersToRunCheck, vcs.workDir)
+            const filesToAnalyze: AnalysisFile[] = await framework.check(foldersToRunCheck, vcs.workDir)
             if (filesToAnalyze){
                 const codeAnalysisResponses = await codeAnalyzer.analyze(filesToAnalyze)
                 if (codeAnalysisResponses?.length > 0){
@@ -36,11 +36,6 @@ export class Main {
                 }
             }
           }
-          
-          // const foldersToRunCheck = ['tf-test']
-          // const filesToAnalyze = terraformSinglePlanFileMock
-          // const codeAnalysisResponse = codeAnalysisMock as any
-          
         } catch (_e) {
             console.log(_e)
         }

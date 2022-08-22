@@ -5,10 +5,10 @@ import {HttpClient} from '@actions/http-client'
 import {IVersionControl } from "./vcs.model"
 import {WebhookPayload} from '@actions/github/lib/interfaces'
 import {exec, ExecOutput} from "@actions/exec"
-import {ExecSteps} from "../common/exec"
+import {ExecSteps, AnalysisFile} from "../common/exec"
 export type GithubContext = typeof context
 const getUuid = require('uuid-by-string')
-// DEBUG
+// DEBUG LOCALLY
 // import {githubEventPayloadMock } from "../mockData"
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 
@@ -77,15 +77,17 @@ export class Github implements IVersionControl {
       } as ExecOutput
   }
 
-  convertToMarkdown(analysis, terraform) {
-    
-    const CODE_BLOCK = '```';
+  buildAnalysisBody(analysis, file: AnalysisFile) {
+    const analysisBody = `<details>\n${this.buildReportResult(analysis, file)}\n${this.buildFrameworkResult(file)}\n</details>`
+    return analysisBody
+  }
 
+  buildReportResult(analysis, file){
     let risksList = '' 
-    let risksTableContents = ''
+    const CODE_BLOCK = '```';
     analysis?.analysis_result?.forEach(risk => {
     risksList +=
-    `<details open="true">\n
+`<details>\n
 <summary><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${risk.riskSeverity}.png" />  ${risk.riskId} | ${risk.riskTitle}</summary> \n
 ### **Description:**\n${risk.riskDescription}\n
 ### **Recommendation:**\n${risk.riskRecommendation.toString()}\n
@@ -94,23 +96,71 @@ ${CODE_BLOCK}\n
 ${JSON.stringify(risk.items, null, "\t")}\n
 ${CODE_BLOCK}\n
 </details>\n`
+})
+    const codeAnalysisContent = 
+`<summary>Risks Report | ${file.folder}</summary>\n
+${risksList}\n
+<details>
+<summary>Logs</summary>
+<br>Output<br>
 
-risksTableContents +=   
+${CODE_BLOCK}\n
+${JSON.stringify(analysis?.analysis_result, null, "\t")}\n
+${CODE_BLOCK}\n
+</details>\n`
+    return analysis?.analysis_result?.length > 0 ? codeAnalysisContent : '\n### No Risks Found\n'
+  }
+
+  buildFrameworkResult(file){
+    const CODE_BLOCK = '```';
+    const frameworkIcon = (file?.output?.log?.stderr == '' ) ? 'V' : 'X'
+    const frameworkContent = `\n<img height="50" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/Terraform${frameworkIcon}.svg" />\n
+<details>
+<summary>Terraform Log</summary>
+<br>Output<br>
+
+${CODE_BLOCK}\n
+${file?.output?.log?.stdout}\n
+${CODE_BLOCK}\n
+Errors\n
+${CODE_BLOCK}\n
+${file?.output?.log?.stderr ?? file?.output?.initLog?.stderr}\n
+${CODE_BLOCK}\n
+</details> <!-- End Format Logs -->\n`
+    return frameworkContent
+  }
+
+  buildSummaryTable(filesToUpload, results){
+    const tableBody = ''
+    let risksTableContents = ''
+    const riskArrays = results
+        .filter(result => result?.additions?.analysis_result?.length > 0)
+        .map(result => {
+          const folder = filesToUpload.find(file => result?.proceeded_file?.includes(file.uuid)).folder
+          return result?.additions?.analysis_result.map(risk => { return {folder, ...risk}})
+        })
+
+
+    
+    const mergedRisks = [].concat.apply([], riskArrays).sort((a,b) => a.riskSeverity.localeCompare(b.riskSeverity));   
+    mergedRisks.forEach(risk => {
+        risksTableContents +=   
 `<tr>\n
-<td>${risk.riskId}</td>\n
 <td><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${risk.riskSeverity}.png" /> ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
+<td>AWS</td>\n
+<td>${risk.folder}</td>\n
+<td>${risk.riskId}</td>\n
 <td>${risk.riskTitle}</td>\n
 </tr>\n`
+})
 
-
-    })
-    const analysisIcon = analysis?.analysis_state ? 'V' : 'X'
-    const header = `<img height="50" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/RiskAnalysis${analysisIcon}.svg" /> \n`
     const risksTable = `<table>\n
 <thead>\n
 <tr>\n
-<th align="left" scope="col">Risk ID</th>\n
 <th align="left" scope="col">Severity</th>\n
+<th align="left" scope="col">Vendor</th>\n
+<th align="left" scope="col">Folder</th>\n
+<th align="left" scope="col">Risk ID</th>\n
 <th align="left" scope="col">Summary</th>\n
 </tr>\n
 </thead>\n
@@ -118,53 +168,23 @@ risksTableContents +=
 ${risksTableContents}                 
 </tbody>
 </table>\n`
-    const terraformIcon = (terraform?.log?.stderr == '' ) ? 'V' : 'X'
-    const terraformContent = `\n<img height="50" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/Terraform${terraformIcon}.svg" />\n
-<details>
-<summary>Terraform Log</summary>
-<br>Output<br>
-&nbsp;
-
-${CODE_BLOCK}\n
-${terraform?.log?.stdout}\n
-${CODE_BLOCK}\n
-Errors\n
-${CODE_BLOCK}\n
-${terraform?.log?.stderr ?? terraform?.initLog?.stderr}\n
-${CODE_BLOCK}\n
-</details> <!-- End Format Logs -->\n`
-    const codeAnalysisContent = `<summary>Report</summary>\n
-${risksList}\n
-<details>
-<summary>Logs</summary>
-<br>Output<br>
-&nbsp;
-
-${CODE_BLOCK}\n
-${JSON.stringify(analysis?.analysis_result, null, "\t")}\n
-${CODE_BLOCK}\n
-</details>\n`
-
-  const markdownOutput = 
-    header +
-    (analysis?.analysis_result?.length > 0 ? risksTable : '') + 
-   `<details open="true">\n` +
-    (analysis?.analysis_result?.length > 0 ? codeAnalysisContent : '\n### No Risks Found\n') +
-    terraformContent +
-    `</details><br>
-\n
-*Pusher: @${this._context?.actor}, Action: \`${this._context?.eventName}\`, Working Directory: \'${this.workspace}\', Workflow: \'${this._context?.workflow }\'*`
-  
-
-  return markdownOutput
+    return results.some(result => result?.additions?.analysis_result?.length > 0) ? risksTable : ''
   }
 
-  parseCodeAnalysis(filesToUpload, analysisResult) {
+  parseCodeAnalysis(filesToUpload, analysisResults) {
     const commentBodyArray = []
-    analysisResult.forEach(folderAnalysis => 
+    const header = `<img height="50" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/RiskAnalysisV.svg" /> \n`
+    const footer = `<br>
+\n
+*Pusher: @${this._context?.actor}, Action: \`${this._context?.eventName}\`, Working Directory: \'${this.workspace}\', Workflow: \'${this._context?.workflow }\'*` 
+    const summaryTable = this.buildSummaryTable(filesToUpload, analysisResults)
+    
+
+    analysisResults.forEach(folderAnalysis => 
       commentBodyArray.push((!folderAnalysis?.additions) ? 
-      '' : this.convertToMarkdown(folderAnalysis?.additions, filesToUpload.find(file => folderAnalysis?.proceeded_file?.includes(file.uuid)))))
-    return commentBodyArray.join('<br><br><br>')
+      '' : this.buildAnalysisBody(folderAnalysis?.additions, filesToUpload.find(file => folderAnalysis?.proceeded_file?.includes(file.uuid)))))
+    const analysisByFolder = commentBodyArray.join('\n--------------------------------------------------------------------------------------------------------------------------------------------')
+    return header + summaryTable + analysisByFolder + footer
   }
 
   getRepoRemoteUrl(): string {
@@ -294,9 +314,10 @@ getInputs() {
   return process.env
 }
 
-async uploadAnalysisFile(actionUuid: string, body: any, jwt: string): Promise<any> {
+async uploadAnalysisFile(file: AnalysisFile, jwt: string): Promise<any> {
   const http = new HttpClient()
-  const getPresignedUrl = `${process?.env?.CF_API_URL}/presignedurl?actionId=${actionUuid}&owner=${context.repo.owner}`
+  const body = JSON.stringify(file?.output?.plan)
+  const getPresignedUrl = `${process?.env?.CF_API_URL}/presignedurl?actionId=${file?.uuid}&owner=${context?.repo?.owner}&folder=${file?.folder}`
   const presignedUrlResponse = await (await http.get(getPresignedUrl, {'Authorization': `Bearer ${jwt}`})).readBody()
   const presignedUrl = JSON.parse(presignedUrlResponse).presignedUrl
   const response = await (await http.put(presignedUrl, body, {'Content-Type':'application/json'})).readBody()

@@ -1,4 +1,4 @@
-import { exec, ExecSteps } from "../common/exec";
+import { exec, ExecSteps, AnalysisFile } from "../common/exec";
 import { FrameworkKeys, IFramework } from "./framework.model";
 import { existsSync } from "fs";
 import getUuidByString from "uuid-by-string";
@@ -52,13 +52,18 @@ export class Terraform implements IFramework {
         console.log('##### Algosec ##### tfswitch version: ' + process?.env?.TF_VERSION)
     }
 
-    async check(foldersToRunCheck: any, workDir: string) {
+    async check(foldersToRunCheck: string[], workDir: string): Promise<AnalysisFile[]> {
         const res = []
         const asyncIterable = async (iterable, action) => {
             for (const [index, value] of iterable?.entries()) {
               const output = await action({runFolder: value, workDir})
-              res.push({uuid: getUuidByString(value),folder:value, output})
-              console.log(`##### Algosec ##### Step 2${iterable?.entries()?.length > 1 ? '.'+index+1 : ''} - ${this.type} Result for folder ${value}: ${JSON.stringify(this)}`)
+              const file: AnalysisFile = {
+                uuid: getUuidByString(value),
+                folder:value, 
+                output
+              }
+              res.push(file)
+              console.log(`##### Algosec ##### Step 2${iterable?.entries()?.length > 1 ? '.'+index+1 : ''} - ${this.type} Result for folder ${file.folder}: ${JSON.stringify(file)}`)
             } 
           }
           try {
@@ -67,6 +72,7 @@ export class Terraform implements IFramework {
           } catch (error) {
             console.log('Framework check failed '+error)
           }
+          console.log(`Files To Analyze ${JSON.stringify(res)}`)
           return res
     }
     
