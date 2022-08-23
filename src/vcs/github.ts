@@ -9,6 +9,7 @@ import {ExecSteps, AnalysisFile} from "../common/exec"
 import {severityOrder} from "../common/risk.model"
 
 export type GithubContext = typeof context
+type RunMode = 'fail' | 'continue_on_error'
 const getUuid = require('uuid-by-string')
 // DEBUG LOCALLY
 // import {githubEventPayloadMock } from "../mockData"
@@ -30,9 +31,12 @@ export class Github implements IVersionControl {
   workDir: string
   actionUuid: string
   fileTypes: string[]
+  runMode: RunMode
   
+        
 
   constructor(){
+    this.runMode = process?.env?.MODE as RunMode ?? 'fail'
     this.http = new HttpClient()
     this.logger = {info, error, debug, exit}
     this.workspace = process?.env?.GITHUB_WORKSPACE
@@ -333,7 +337,9 @@ async parseOutput(filesToUpload, analysisResults){
   } else {
     this.logger.info('##### Algosec ##### Step 5 - parsing Code Analysis')
     if (analysisResults?.some(response => response?.additions?.analysis_result?.length > 0)) {
-      this.logger.exit('##### Algosec ##### The risks analysis process completed successfully with risks, please check report')
+      if (this.runMode == 'fail') this.logger.exit('##### Algosec ##### The risks analysis process completed successfully with risks, please check report')
+      else this.logger.info('##### Algosec ##### The risks analysis process completed successfully with risks, please check report')
+      return
     } else {
       this.logger.info('##### Algosec ##### Step 6 - the risks analysis process completed successfully without any risks')
       return

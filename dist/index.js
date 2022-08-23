@@ -486,16 +486,17 @@ const getUuid = __nccwpck_require__(7777);
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 class Github {
     constructor() {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e, _f;
         this.steps = {};
+        this.runMode = (_b = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.MODE) !== null && _b !== void 0 ? _b : 'fail';
         this.http = new http_client_1.HttpClient();
         this.logger = { info: core_1.info, error: core_1.error, debug: core_1.debug, exit: core_1.setFailed };
-        this.workspace = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.GITHUB_WORKSPACE;
-        this.token = (_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.GITHUB_TOKEN;
-        this.sha = (_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.GITHUB_SHA;
+        this.workspace = (_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.GITHUB_WORKSPACE;
+        this.token = (_d = process === null || process === void 0 ? void 0 : process.env) === null || _d === void 0 ? void 0 : _d.GITHUB_TOKEN;
+        this.sha = (_e = process === null || process === void 0 ? void 0 : process.env) === null || _e === void 0 ? void 0 : _e.GITHUB_SHA;
         this._context = github_1.context;
         this.octokit = (0, github_1.getOctokit)(this.token);
-        this.payload = (_d = this._context) === null || _d === void 0 ? void 0 : _d.payload;
+        this.payload = (_f = this._context) === null || _f === void 0 ? void 0 : _f.payload;
         this.repo = this._context.repo;
         this.pullRequest = this._context.payload.pull_request.number.toString();
         this.workDir = this.workspace + '_ALGOSEC_CODE_ANALYSIS';
@@ -766,7 +767,11 @@ ${risksTableContents}
             else {
                 this.logger.info('##### Algosec ##### Step 5 - parsing Code Analysis');
                 if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some(response => { var _a, _b; return ((_b = (_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })) {
-                    this.logger.exit('##### Algosec ##### The risks analysis process completed successfully with risks, please check report');
+                    if (this.runMode == 'fail')
+                        this.logger.exit('##### Algosec ##### The risks analysis process completed successfully with risks, please check report');
+                    else
+                        this.logger.info('##### Algosec ##### The risks analysis process completed successfully with risks, please check report');
+                    return;
                 }
                 else {
                     this.logger.info('##### Algosec ##### Step 6 - the risks analysis process completed successfully without any risks');
