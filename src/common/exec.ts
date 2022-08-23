@@ -36,3 +36,6 @@ export async function exec(cmd: string, args: string[]): Promise<ExecOutput> {
         throw new Error(msg);
     }
 }
+
+
+export const count = (array, property, value) => array.filter((obj) => obj[property] === value).length;

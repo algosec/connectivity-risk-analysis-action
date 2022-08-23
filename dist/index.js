@@ -187,7 +187,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.exec = void 0;
+exports.count = exports.exec = void 0;
 const exec_1 = __nccwpck_require__(1514);
 const core_1 = __nccwpck_require__(2186);
 function exec(cmd, args) {
@@ -219,6 +219,8 @@ function exec(cmd, args) {
     });
 }
 exports.exec = exec;
+const count = (array, property, value) => array.filter((obj) => obj[property] === value).length;
+exports.count = count;
 
 
 /***/ }),
@@ -479,10 +481,11 @@ const github_1 = __nccwpck_require__(5438);
 const core_1 = __nccwpck_require__(2186);
 const http_client_1 = __nccwpck_require__(6255);
 const exec_1 = __nccwpck_require__(1514);
+const exec_2 = __nccwpck_require__(898);
 const risk_model_1 = __nccwpck_require__(7801);
 const getUuid = __nccwpck_require__(7777);
 // DEBUG LOCALLY
-// import {githubEventPayloadMock } from "../mockData"
+// import {githubEventPayloadMock } from "../mockData.many-risks"
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 class Github {
     constructor() {
@@ -538,7 +541,8 @@ class Github {
         analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result.sort((a, b) => parseInt(risk_model_1.severityOrder[a.riskSeverity]) - parseInt(risk_model_1.severityOrder[b.riskSeverity])).forEach(risk => {
             risksList +=
                 `<details>\n
-<summary><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${risk.riskSeverity}.svg" />  ${risk.riskId} | ${risk.riskTitle}</summary> \n
+<summary><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${risk.riskSeverity}.svg" />  ${risk.riskId}</summary> \n
+### **Title:**\n${risk.riskTitle}\n
 ### **Description:**\n${risk.riskDescription}\n
 ### **Recommendation:**\n${risk.riskRecommendation.toString()}\n
 ### **Details:**\n
@@ -547,7 +551,13 @@ ${JSON.stringify(risk.items, null, "\t")}\n
 ${CODE_BLOCK}\n
 </details>\n`;
         });
-        const codeAnalysisContent = `<summary>Risks Report | ${file.folder}</summary>\n
+        const codeAnalysisContent = `<summary>Risks Report | 
+<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/critical.svg" /> Critical - ${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'critical')}
+<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/high.svg" /> High - ${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'high')}
+<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/medium.svg" /> Medium - ${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'medium')}
+<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/low.svg" /> Low - ${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'low')}
+| Folder: ${file.folder}
+</summary>\n
 ${risksList}\n
 <details>
 <summary>Logs</summary>
@@ -560,21 +570,22 @@ ${CODE_BLOCK}\n
         return ((_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.length) > 0 ? codeAnalysisContent : '\n### No Risks Found\n';
     }
     buildFrameworkResult(file) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
         const CODE_BLOCK = '```';
         const frameworkIcon = (((_b = (_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.log) === null || _b === void 0 ? void 0 : _b.stderr) == '') ? 'V' : 'X';
+        const errors = `Errors\n
+${CODE_BLOCK}\n
+${(_e = (_d = (_c = file === null || file === void 0 ? void 0 : file.output) === null || _c === void 0 ? void 0 : _c.log) === null || _d === void 0 ? void 0 : _d.stderr) !== null && _e !== void 0 ? _e : (_g = (_f = file === null || file === void 0 ? void 0 : file.output) === null || _f === void 0 ? void 0 : _f.initLog) === null || _g === void 0 ? void 0 : _g.stderr}\n
+${CODE_BLOCK}\n`;
+        const output = `Output\n
+${CODE_BLOCK}\n
+${(_j = (_h = file === null || file === void 0 ? void 0 : file.output) === null || _h === void 0 ? void 0 : _h.log) === null || _j === void 0 ? void 0 : _j.stdout}\n
+${CODE_BLOCK}\n`;
         const frameworkContent = `\n<img height="50" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/Terraform${frameworkIcon}.svg" />\n
 <details>
 <summary>Terraform Log</summary>
-<br>Output<br>
-
-${CODE_BLOCK}\n
-${(_d = (_c = file === null || file === void 0 ? void 0 : file.output) === null || _c === void 0 ? void 0 : _c.log) === null || _d === void 0 ? void 0 : _d.stdout}\n
-${CODE_BLOCK}\n
-Errors\n
-${CODE_BLOCK}\n
-${(_g = (_f = (_e = file === null || file === void 0 ? void 0 : file.output) === null || _e === void 0 ? void 0 : _e.log) === null || _f === void 0 ? void 0 : _f.stderr) !== null && _g !== void 0 ? _g : (_j = (_h = file === null || file === void 0 ? void 0 : file.output) === null || _h === void 0 ? void 0 : _h.initLog) === null || _j === void 0 ? void 0 : _j.stderr}\n
-${CODE_BLOCK}\n
+<br>${((_l = (_k = file === null || file === void 0 ? void 0 : file.output) === null || _k === void 0 ? void 0 : _k.log) === null || _l === void 0 ? void 0 : _l.stdout) ? output : ''}<br>
+<br>${((_o = (_m = file === null || file === void 0 ? void 0 : file.output) === null || _m === void 0 ? void 0 : _m.log) === null || _o === void 0 ? void 0 : _o.stderr) ? errors : ''}<br>
 </details> <!-- End Format Logs -->\n`;
         return frameworkContent;
     }
@@ -592,7 +603,7 @@ ${CODE_BLOCK}\n
         }
         return result;
     }
-    buildSummaryTable(filesToUpload, results) {
+    buildSummary(filesToUpload, results) {
         let risksTableContents = '';
         const riskArrays = results
             .filter(result => { var _a, _b; return ((_b = (_a = result === null || result === void 0 ? void 0 : result.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })
@@ -622,12 +633,19 @@ ${CODE_BLOCK}\n
             risksTableContents +=
                 `<tr>\n
 <td>${risk.riskId}</td>\n
-<td><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${risk.riskSeverity}.png" /> ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
+<td><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${risk.riskSeverity}.svg" /> ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
 <td>${(_a = risk === null || risk === void 0 ? void 0 : risk.vendor) !== null && _a !== void 0 ? _a : 'AWS'}</td>\n
 <td>${Array.isArray(risk.folder) ? risk.folder.join(', ') : risk.folder}</td>\n
 <td>${risk.riskTitle}</td>\n
 </tr>\n`;
         });
+        const risksSummary = `
+\n
+<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/critical.svg" /> Critical - ${(0, exec_2.count)(mergedRisks, 'riskSeverity', 'critical')}
+<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/high.svg" /> High - ${(0, exec_2.count)(mergedRisks, 'riskSeverity', 'high')}
+<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/medium.svg" /> Medium - ${(0, exec_2.count)(mergedRisks, 'riskSeverity', 'medium')}
+<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/low.svg" /> Low - ${(0, exec_2.count)(mergedRisks, 'riskSeverity', 'low')}
+\n`;
         const risksTable = `<table>\n
 <thead>\n
 <tr>\n
@@ -642,7 +660,7 @@ ${CODE_BLOCK}\n
 ${risksTableContents}                 
 </tbody>
 </table>\n`;
-        return results.some(result => { var _a, _b; return ((_b = (_a = result === null || result === void 0 ? void 0 : result.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; }) ? risksTable : '';
+        return results.some(result => { var _a, _b; return ((_b = (_a = result === null || result === void 0 ? void 0 : result.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; }) ? risksSummary + risksTable : '';
     }
     parseCodeAnalysis(filesToUpload, analysisResults) {
         var _a, _b, _c;
@@ -651,11 +669,11 @@ ${risksTableContents}
         const footer = `<br>
 \n
 *Pusher: @${(_a = this._context) === null || _a === void 0 ? void 0 : _a.actor}, Action: \`${(_b = this._context) === null || _b === void 0 ? void 0 : _b.eventName}\`, Working Directory: \'${this.workspace}\', Workflow: \'${(_c = this._context) === null || _c === void 0 ? void 0 : _c.workflow}\'*`;
-        const summaryTable = this.buildSummaryTable(filesToUpload, analysisResults);
+        const summary = this.buildSummary(filesToUpload, analysisResults);
         analysisResults.forEach(folderAnalysis => commentBodyArray.push((!(folderAnalysis === null || folderAnalysis === void 0 ? void 0 : folderAnalysis.additions)) ?
             '' : this.buildAnalysisBody(folderAnalysis === null || folderAnalysis === void 0 ? void 0 : folderAnalysis.additions, filesToUpload.find(file => { var _a; return (_a = folderAnalysis === null || folderAnalysis === void 0 ? void 0 : folderAnalysis.proceeded_file) === null || _a === void 0 ? void 0 : _a.includes(file.uuid); }))));
         const analysisByFolder = (commentBodyArray === null || commentBodyArray === void 0 ? void 0 : commentBodyArray.length) > 0 ? commentBodyArray.join(`\n\n---\n\n`) : '\n\n<h4>No risks were found.</h4>\n\n';
-        return header + summaryTable + analysisByFolder + footer;
+        return header + summary + analysisByFolder + footer;
     }
     getRepoRemoteUrl() {
         return `https://${this.repo.owner}:${this.token}@github.com/${this.repo.owner}/${this.repo.repo}.git`;

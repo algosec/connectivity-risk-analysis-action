@@ -5,14 +5,14 @@ import {HttpClient} from '@actions/http-client'
 import {IVersionControl } from "./vcs.model"
 import {WebhookPayload} from '@actions/github/lib/interfaces'
 import {exec, ExecOutput} from "@actions/exec"
-import {ExecSteps, AnalysisFile} from "../common/exec"
+import {ExecSteps, AnalysisFile, count} from "../common/exec"
 import {severityOrder} from "../common/risk.model"
 
 export type GithubContext = typeof context
 type RunMode = 'fail' | 'continue_on_error'
 const getUuid = require('uuid-by-string')
 // DEBUG LOCALLY
-// import {githubEventPayloadMock } from "../mockData"
+// import {githubEventPayloadMock } from "../mockData.many-risks"
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 
 export class Github implements IVersionControl {
@@ -96,7 +96,8 @@ export class Github implements IVersionControl {
                     .forEach(risk => {
       risksList +=
 `<details>\n
-<summary><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${risk.riskSeverity}.svg" />  ${risk.riskId} | ${risk.riskTitle}</summary> \n
+<summary><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${risk.riskSeverity}.svg" />  ${risk.riskId}</summary> \n
+### **Title:**\n${risk.riskTitle}\n
 ### **Description:**\n${risk.riskDescription}\n
 ### **Recommendation:**\n${risk.riskRecommendation.toString()}\n
 ### **Details:**\n
@@ -106,7 +107,13 @@ ${CODE_BLOCK}\n
 </details>\n`
 })
     const codeAnalysisContent = 
-`<summary>Risks Report | ${file.folder}</summary>\n
+`<summary>Risks Report | 
+<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/critical.svg" /> Critical - ${count(analysis?.analysis_result, 'riskSeverity', 'critical')}
+<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/high.svg" /> High - ${count(analysis?.analysis_result, 'riskSeverity', 'high')}
+<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/medium.svg" /> Medium - ${count(analysis?.analysis_result, 'riskSeverity', 'medium')}
+<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/low.svg" /> Low - ${count(analysis?.analysis_result, 'riskSeverity', 'low')}
+| Folder: ${file.folder}
+</summary>\n
 ${risksList}\n
 <details>
 <summary>Logs</summary>
@@ -122,18 +129,19 @@ ${CODE_BLOCK}\n
   buildFrameworkResult(file){
     const CODE_BLOCK = '```';
     const frameworkIcon = (file?.output?.log?.stderr == '' ) ? 'V' : 'X'
+    const errors = `Errors\n
+${CODE_BLOCK}\n
+${file?.output?.log?.stderr ?? file?.output?.initLog?.stderr}\n
+${CODE_BLOCK}\n`
+    const output = `Output\n
+${CODE_BLOCK}\n
+${file?.output?.log?.stdout}\n
+${CODE_BLOCK}\n`
     const frameworkContent = `\n<img height="50" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/Terraform${frameworkIcon}.svg" />\n
 <details>
 <summary>Terraform Log</summary>
-<br>Output<br>
-
-${CODE_BLOCK}\n
-${file?.output?.log?.stdout}\n
-${CODE_BLOCK}\n
-Errors\n
-${CODE_BLOCK}\n
-${file?.output?.log?.stderr ?? file?.output?.initLog?.stderr}\n
-${CODE_BLOCK}\n
+<br>${file?.output?.log?.stdout ? output : ''}<br>
+<br>${file?.output?.log?.stderr ? errors : ''}<br>
 </details> <!-- End Format Logs -->\n`
     return frameworkContent
   }
@@ -153,7 +161,7 @@ ${CODE_BLOCK}\n
     return result;
 }
 
-  buildSummaryTable(filesToUpload, results){
+  buildSummary(filesToUpload, results){
     let risksTableContents = ''
     const riskArrays = results
         .filter(result => result?.additions?.analysis_result?.length > 0)
@@ -163,7 +171,7 @@ ${CODE_BLOCK}\n
         })
 
 
-
+   
     const mergedRisks = [].concat.apply([], riskArrays).sort((a,b) => parseInt(severityOrder[a.riskSeverity]) - parseInt(severityOrder[b.riskSeverity]));   
     const groupedRisksById = mergedRisks.reduce((accumulator: any, item: any) => {
       if (accumulator[item.riskId]) {
@@ -182,13 +190,19 @@ ${CODE_BLOCK}\n
         risksTableContents +=   
 `<tr>\n
 <td>${risk.riskId}</td>\n
-<td><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${risk.riskSeverity}.png" /> ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
+<td><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${risk.riskSeverity}.svg" /> ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
 <td>${risk?.vendor ?? 'AWS'}</td>\n
 <td>${Array.isArray(risk.folder) ? risk.folder.join(', ') : risk.folder}</td>\n
 <td>${risk.riskTitle}</td>\n
 </tr>\n`
 })
-
+    const risksSummary = `
+\n
+<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/critical.svg" /> Critical - ${count(mergedRisks, 'riskSeverity', 'critical')}
+<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/high.svg" /> High - ${count(mergedRisks, 'riskSeverity', 'high')}
+<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/medium.svg" /> Medium - ${count(mergedRisks, 'riskSeverity', 'medium')}
+<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/low.svg" /> Low - ${count(mergedRisks, 'riskSeverity', 'low')}
+\n`
     const risksTable = `<table>\n
 <thead>\n
 <tr>\n
@@ -203,7 +217,7 @@ ${CODE_BLOCK}\n
 ${risksTableContents}                 
 </tbody>
 </table>\n`
-    return results.some(result => result?.additions?.analysis_result?.length > 0) ? risksTable : ''
+    return results.some(result => result?.additions?.analysis_result?.length > 0) ? risksSummary + risksTable : ''
   }
 
   parseCodeAnalysis(filesToUpload, analysisResults) {
@@ -212,14 +226,14 @@ ${risksTableContents}
     const footer = `<br>
 \n
 *Pusher: @${this._context?.actor}, Action: \`${this._context?.eventName}\`, Working Directory: \'${this.workspace}\', Workflow: \'${this._context?.workflow }\'*` 
-    const summaryTable = this.buildSummaryTable(filesToUpload, analysisResults)
+    const summary = this.buildSummary(filesToUpload, analysisResults)
     
 
     analysisResults.forEach(folderAnalysis => 
       commentBodyArray.push((!folderAnalysis?.additions) ? 
       '' : this.buildAnalysisBody(folderAnalysis?.additions, filesToUpload.find(file => folderAnalysis?.proceeded_file?.includes(file.uuid)))))
     const analysisByFolder = commentBodyArray?.length > 0 ? commentBodyArray.join(`\n\n---\n\n`)   : '\n\n<h4>No risks were found.</h4>\n\n'
-    return header + summaryTable + analysisByFolder + footer
+    return header + summary + analysisByFolder + footer
   }
 
   getRepoRemoteUrl(): string {
