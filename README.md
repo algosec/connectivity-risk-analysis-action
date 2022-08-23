@@ -34,7 +34,6 @@ jobs:
             CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
             CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
             
-            
             # Add your provider's keys to environment variables as secrets or use an external action to preconfigure
             
             # AWS Environment Variables/ External Action https://github.com/marketplace/actions/configure-aws-credentials-action-for-github-actions
