@@ -1,5 +1,5 @@
 <p align="left">
-  <a href="https://www.algosec.com"><img height="30" alt="Algosec" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/critical.png"></a>
+  <a href="https://www.algosec.com"><img height="30" alt="Algosec" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/algosec_logo.png"></a>
 </p>
 
 # Run Code Analysis
