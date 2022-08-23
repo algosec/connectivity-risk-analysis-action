@@ -15,10 +15,8 @@ jobs:
      name: 'Algosec Risk Analysis'
      runs-on: ubuntu-latest
      steps:
-        - name: debug
-          uses: hmarr/debug-action@v2
         - name: Algosec Risk Analysis Action
-          uses: algosec/risk-analysis-action@v0.0.2
+          uses: algosec/risk-analysis-action@v0.0.1
           env:
             # Fail or Continue on error after action finish
             MODE: continue_on_error
