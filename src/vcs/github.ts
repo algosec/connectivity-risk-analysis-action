@@ -305,7 +305,7 @@ async parseOutput(filesToUpload, analysisResults){
     this.logger.exit('##### Algosec ##### The risks analysis process failed.\n' + errors)
   } else {
     this.logger.info('##### Algosec ##### Step 5 - parsing Code Analysis')
-    if (analysisResults?.some(response => !response?.additions?.analysis_state)) {
+    if (analysisResults?.some(response => response?.additions?.analysis_result?.length > 0)) {
       this.logger.exit('##### Algosec ##### The risks analysis process completed successfully with risks, please check report')
     } else {
       this.logger.info('##### Algosec ##### Step 6 - the risks analysis process completed successfully without any risks')
