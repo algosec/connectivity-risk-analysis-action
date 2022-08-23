@@ -133,27 +133,54 @@ ${CODE_BLOCK}\n
 </details> <!-- End Format Logs -->\n`
     return frameworkContent
   }
+  groupBy(collection, property) {
+    var i = 0, val, index,
+        values = [], result = [];
+    for (; i < collection.length; i++) {
+        val = collection[i][property];
+        index = values.indexOf(val);
+        if (index > -1)
+            result[index].push(collection[i]);
+        else {
+            values.push(val);
+            result.push([collection[i]]);
+        }
+    }
+    return result;
+}
 
   buildSummaryTable(filesToUpload, results){
-    const tableBody = ''
     let risksTableContents = ''
     const riskArrays = results
         .filter(result => result?.additions?.analysis_result?.length > 0)
         .map(result => {
           const folder = filesToUpload.find(file => result?.proceeded_file?.includes(file.uuid)).folder
-          return result?.additions?.analysis_result.map(risk => { return {folder, ...risk}})
+          return result?.additions?.analysis_result.map(risk => { return {folder, riskId: risk.riskId, riskTitle: risk.riskTitle, riskSeverity: risk.riskSeverity}})
         })
 
 
 
     const mergedRisks = [].concat.apply([], riskArrays).sort((a,b) => parseInt(severityOrder[a.riskSeverity]) - parseInt(severityOrder[b.riskSeverity]));   
-    mergedRisks.forEach(risk => {
+    const groupedRisksById = mergedRisks.reduce((accumulator: any, item: any) => {
+      if (accumulator[item.riskId]) {
+        const group = accumulator[item.riskId];
+        if (Array.isArray(group.folder)) {
+          group.folder.push(item.folder);
+        } else {
+          group.folder = [group.folder, item.folder];
+        }
+      } else {
+        accumulator[item.riskId] = item;
+      }
+      return accumulator; 
+    }, {});
+    Object.values(groupedRisksById).forEach((risk: any)=> {
         risksTableContents +=   
 `<tr>\n
-<td><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${risk.riskSeverity}.png" /> ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
-<td>AWS</td>\n
-<td>${risk.folder}</td>\n
 <td>${risk.riskId}</td>\n
+<td><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${risk.riskSeverity}.png" /> ${risk.riskSeverity.charAt(0).toUpperCase() + risk.riskSeverity.slice(1)}</td>\n
+<td>${risk?.vendor ?? 'AWS'}</td>\n
+<td>${Array.isArray(risk.folder) ? risk.folder.join(', ') : risk.folder}</td>\n
 <td>${risk.riskTitle}</td>\n
 </tr>\n`
 })
@@ -161,10 +188,10 @@ ${CODE_BLOCK}\n
     const risksTable = `<table>\n
 <thead>\n
 <tr>\n
+<th align="left" scope="col">Risk ID</th>\n
 <th align="left" scope="col">Severity</th>\n
 <th align="left" scope="col">Vendor</th>\n
-<th align="left" scope="col">Folder</th>\n
-<th align="left" scope="col">Risk ID</th>\n
+<th align="left" scope="col">Source</th>\n
 <th align="left" scope="col">Summary</th>\n
 </tr>\n
 </thead>\n
@@ -187,8 +214,8 @@ ${risksTableContents}
     analysisResults.forEach(folderAnalysis => 
       commentBodyArray.push((!folderAnalysis?.additions) ? 
       '' : this.buildAnalysisBody(folderAnalysis?.additions, filesToUpload.find(file => folderAnalysis?.proceeded_file?.includes(file.uuid)))))
-    const analysisByFolder = commentBodyArray.join(`\n\n---\n\n`)
-    return header + summaryTable + `\n\n---\n\n` + analysisByFolder + footer
+    const analysisByFolder = commentBodyArray?.length > 0 ? commentBodyArray.join(`\n\n---\n\n`)   : '\n\n<h4>No risks were found.</h4>\n\n'
+    return header + summaryTable + analysisByFolder + footer
   }
 
   getRepoRemoteUrl(): string {
