@@ -223,6 +223,25 @@ exports.exec = exec;
 
 /***/ }),
 
+/***/ 7801:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.severityOrder = exports.RiskSeverity = void 0;
+var RiskSeverity;
+(function (RiskSeverity) {
+    RiskSeverity[RiskSeverity["critical"] = 0] = "critical";
+    RiskSeverity[RiskSeverity["high"] = 1] = "high";
+    RiskSeverity[RiskSeverity["medium"] = 2] = "medium";
+    RiskSeverity[RiskSeverity["low"] = 3] = "low";
+})(RiskSeverity = exports.RiskSeverity || (exports.RiskSeverity = {}));
+exports.severityOrder = RiskSeverity;
+
+
+/***/ }),
+
 /***/ 80:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -457,6 +476,7 @@ const github_1 = __nccwpck_require__(5438);
 const core_1 = __nccwpck_require__(2186);
 const http_client_1 = __nccwpck_require__(6255);
 const exec_1 = __nccwpck_require__(1514);
+const risk_model_1 = __nccwpck_require__(7801);
 const getUuid = __nccwpck_require__(7777);
 // DEBUG LOCALLY
 // import {githubEventPayloadMock } from "../mockData"
@@ -508,13 +528,13 @@ class Github {
         return analysisBody;
     }
     buildReportResult(analysis, file) {
-        var _a, _b;
+        var _a;
         let risksList = '';
         const CODE_BLOCK = '```';
-        (_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.forEach(risk => {
+        analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result.sort((a, b) => parseInt(risk_model_1.severityOrder[a.riskSeverity]) - parseInt(risk_model_1.severityOrder[b.riskSeverity])).forEach(risk => {
             risksList +=
                 `<details>\n
-<summary><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${risk.riskSeverity}.png" />  ${risk.riskId} | ${risk.riskTitle}</summary> \n
+<summary><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${risk.riskSeverity}.svg" />  ${risk.riskId} | ${risk.riskTitle}</summary> \n
 ### **Description:**\n${risk.riskDescription}\n
 ### **Recommendation:**\n${risk.riskRecommendation.toString()}\n
 ### **Details:**\n
@@ -533,7 +553,7 @@ ${CODE_BLOCK}\n
 ${JSON.stringify(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, null, "\t")}\n
 ${CODE_BLOCK}\n
 </details>\n`;
-        return ((_b = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0 ? codeAnalysisContent : '\n### No Risks Found\n';
+        return ((_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.length) > 0 ? codeAnalysisContent : '\n### No Risks Found\n';
     }
     buildFrameworkResult(file) {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j;
@@ -564,7 +584,7 @@ ${CODE_BLOCK}\n
             const folder = filesToUpload.find(file => { var _a; return (_a = result === null || result === void 0 ? void 0 : result.proceeded_file) === null || _a === void 0 ? void 0 : _a.includes(file.uuid); }).folder;
             return (_a = result === null || result === void 0 ? void 0 : result.additions) === null || _a === void 0 ? void 0 : _a.analysis_result.map(risk => { return Object.assign({ folder }, risk); });
         });
-        const mergedRisks = [].concat.apply([], riskArrays).sort((a, b) => a.riskSeverity.localeCompare(b.riskSeverity));
+        const mergedRisks = [].concat.apply([], riskArrays).sort((a, b) => parseInt(risk_model_1.severityOrder[a.riskSeverity]) - parseInt(risk_model_1.severityOrder[b.riskSeverity]));
         mergedRisks.forEach(risk => {
             risksTableContents +=
                 `<tr>\n
@@ -601,8 +621,8 @@ ${risksTableContents}
         const summaryTable = this.buildSummaryTable(filesToUpload, analysisResults);
         analysisResults.forEach(folderAnalysis => commentBodyArray.push((!(folderAnalysis === null || folderAnalysis === void 0 ? void 0 : folderAnalysis.additions)) ?
             '' : this.buildAnalysisBody(folderAnalysis === null || folderAnalysis === void 0 ? void 0 : folderAnalysis.additions, filesToUpload.find(file => { var _a; return (_a = folderAnalysis === null || folderAnalysis === void 0 ? void 0 : folderAnalysis.proceeded_file) === null || _a === void 0 ? void 0 : _a.includes(file.uuid); }))));
-        const analysisByFolder = commentBodyArray.join('\n--------------------------------------------------------------------------------------------------------------------------------------------');
-        return header + summaryTable + analysisByFolder + footer;
+        const analysisByFolder = commentBodyArray.join(`\n\n---\n\n`);
+        return header + summaryTable + `\n\n---\n\n` + analysisByFolder + footer;
     }
     getRepoRemoteUrl() {
         return `https://${this.repo.owner}:${this.token}@github.com/${this.repo.owner}/${this.repo.repo}.git`;

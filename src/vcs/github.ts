@@ -6,6 +6,8 @@ import {IVersionControl } from "./vcs.model"
 import {WebhookPayload} from '@actions/github/lib/interfaces'
 import {exec, ExecOutput} from "@actions/exec"
 import {ExecSteps, AnalysisFile} from "../common/exec"
+import {severityOrder} from "../common/risk.model"
+
 export type GithubContext = typeof context
 const getUuid = require('uuid-by-string')
 // DEBUG LOCALLY
@@ -85,10 +87,12 @@ export class Github implements IVersionControl {
   buildReportResult(analysis, file){
     let risksList = '' 
     const CODE_BLOCK = '```';
-    analysis?.analysis_result?.forEach(risk => {
-    risksList +=
+    analysis?.analysis_result
+                    .sort((a,b) => parseInt(severityOrder[a.riskSeverity]) - parseInt(severityOrder[b.riskSeverity]))
+                    .forEach(risk => {
+      risksList +=
 `<details>\n
-<summary><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${risk.riskSeverity}.png" />  ${risk.riskId} | ${risk.riskTitle}</summary> \n
+<summary><img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${risk.riskSeverity}.svg" />  ${risk.riskId} | ${risk.riskTitle}</summary> \n
 ### **Description:**\n${risk.riskDescription}\n
 ### **Recommendation:**\n${risk.riskRecommendation.toString()}\n
 ### **Details:**\n
@@ -141,8 +145,8 @@ ${CODE_BLOCK}\n
         })
 
 
-    
-    const mergedRisks = [].concat.apply([], riskArrays).sort((a,b) => a.riskSeverity.localeCompare(b.riskSeverity));   
+
+    const mergedRisks = [].concat.apply([], riskArrays).sort((a,b) => parseInt(severityOrder[a.riskSeverity]) - parseInt(severityOrder[b.riskSeverity]));   
     mergedRisks.forEach(risk => {
         risksTableContents +=   
 `<tr>\n
@@ -183,8 +187,8 @@ ${risksTableContents}
     analysisResults.forEach(folderAnalysis => 
       commentBodyArray.push((!folderAnalysis?.additions) ? 
       '' : this.buildAnalysisBody(folderAnalysis?.additions, filesToUpload.find(file => folderAnalysis?.proceeded_file?.includes(file.uuid)))))
-    const analysisByFolder = commentBodyArray.join('\n--------------------------------------------------------------------------------------------------------------------------------------------')
-    return header + summaryTable + analysisByFolder + footer
+    const analysisByFolder = commentBodyArray.join(`\n\n---\n\n`)
+    return header + summaryTable + `\n\n---\n\n` + analysisByFolder + footer
   }
 
   getRepoRemoteUrl(): string {
