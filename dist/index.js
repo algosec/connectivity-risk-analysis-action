@@ -108,7 +108,7 @@ class AshCodeAnalysis {
             let analysisResult;
             yield this.triggerCodeAnalysis(filesToUpload);
             const codeAnalysisPromises = [];
-            filesToUpload.filter(file => file === null || file === void 0 ? void 0 : file.output).forEach(file => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
+            filesToUpload.filter(file => { var _a; return (_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan; }).forEach(file => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
             analysisResult = yield Promise.all(codeAnalysisPromises);
             if (!analysisResult || (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error)) {
                 this.vcs.logger.exit('##### Algosec ##### Code Analysis failed');

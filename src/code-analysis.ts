@@ -95,7 +95,7 @@ export class AshCodeAnalysis{
     let analysisResult
     await this.triggerCodeAnalysis(filesToUpload)
     const codeAnalysisPromises = []
-    filesToUpload.filter(file => file?.output).forEach(file => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)))
+    filesToUpload.filter(file => file?.output?.plan).forEach(file => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)))
     analysisResult = await Promise.all(codeAnalysisPromises)
     if (!analysisResult || analysisResult?.error){
       this.vcs.logger.exit('##### Algosec ##### Code Analysis failed')
@@ -147,9 +147,6 @@ export class AshCodeAnalysis{
           return  {error: response.message.statusMessage}
       }
   }
-
-
-
 
 
 }
