@@ -341,7 +341,7 @@ ${risksTableContents}
 
 parseCodeAnalysis(filesToUpload, analysisResults) {
   const commentBodyArray = []
-  const header = `<img height="50" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/RiskAnalysisV.svg" /> \n`
+  const header = `<img height="50" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/header.svg" /> \n`
   const footer = `<br>
 \n
 *Pusher: @${this._context?.actor}, Action: \`${this._context?.eventName}\`, Working Directory: \'${this.workspace}\', Workflow: \'${this._context?.workflow }\'*` 
