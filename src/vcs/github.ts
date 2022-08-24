@@ -234,10 +234,9 @@ buildCommentAnalysisBody(analysis, file: AnalysisFile) {
   let analysisBody = ''
 
   if (!analysis?.analysis_result){
-    analysisBody = `<details>\n<summary><h3><b>${file.folder}</b> (Finished with errors)</h3></summary>\n${this.buildCommentFrameworkResult(file)}\n</details>`
+    analysisBody = `<details>\n<summary><img height="40" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/failure.png" />&nbsp;<h3><b>${file.folder}</b> (Finished with errors)</h3></summary>\n${this.buildCommentFrameworkResult(file)}\n</details>`
   } else if (analysis?.analysis_result?.length == 0){
-    analysisBody = `<details>\n<summary><h3><b>${file.folder}</b> (No risks were found)</h3></summary>\n${this.buildCommentFrameworkResult(file)}\n</details>`
-
+    analysisBody = `<details>\n<summary><img height="40" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/success.png" />&nbsp;<h3><b>${file.folder}</b> (No risks were found)</h3></summary>\n${this.buildCommentFrameworkResult(file)}\n</details>`
   } else {
     analysisBody = `<details>\n${this.buildCommentReportResult(analysis, file)}\n${this.buildCommentFrameworkResult(file)}\n</details>`
   }
@@ -263,7 +262,7 @@ ${CODE_BLOCK}\n
 </details>\n`
 })
   const severityCount = `<div  align="right">${count(analysis?.analysis_result, 'riskSeverity', 'critical') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/critical.svg" />&nbsp;' + count(analysis?.analysis_result, 'riskSeverity', 'critical') + '&nbsp;Critical' : '' }${count(analysis?.analysis_result, 'riskSeverity', 'high') > 0 ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/high.svg" />&nbsp;' + count(analysis?.analysis_result, 'riskSeverity', 'high') + '&nbsp;High' : '' }${count(analysis?.analysis_result, 'riskSeverity', 'medium') > 0 ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/medium.svg" />&nbsp;' + count(analysis?.analysis_result, 'riskSeverity', 'medium') + '&nbsp;Medium' : ''}${count(analysis?.analysis_result, 'riskSeverity', 'low') > 0 ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/low.svg" />&nbsp;' + count(analysis?.analysis_result, 'riskSeverity', 'low') + '&nbsp;Low' : ''}</div>`
-  const codeAnalysisContent = `<summary><h3><b>${file.folder + (analysis?.analysis_result?.length == 0 ? '- No Risks Found' : '')}</b></h3>${analysis?.analysis_result?.length > 0 ? severityCount : ''}</summary>\n${risksList}\n`
+  const codeAnalysisContent = `<summary><img height="40" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/warning.png" />&nbsp;<h3><b>${file.folder + (analysis?.analysis_result?.length == 0 ? '- No Risks Found' : '')}</b></h3>${analysis?.analysis_result?.length > 0 ? severityCount : ''}</summary>\n${risksList}\n`
   return codeAnalysisContent
 }
 
@@ -279,7 +278,7 @@ ${CODE_BLOCK}\n
 ${file?.output?.log?.stdout}\n
 ${CODE_BLOCK}\n`
   const frameworkContent = `\n<details>
-<summary>&nbsp;&nbsp;&nbsp;<img height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${frameworkIcon}.png" /> Terraform Log</summary>
+<summary>Terraform Log</summary>
 ${file?.output?.log?.stdout ? '<br>'+output+'<br>' : ''}
 ${file?.output?.log?.stderr ? '<br>'+errors+'<br>' : ''}
 </details> <!-- End Format Logs -->\n`
@@ -347,7 +346,10 @@ parseCodeAnalysis(filesToUpload, analysisResults) {
   const header = `<img height="50" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/header.svg" /> \n`
   const footer = `<br>
 \n
-*Pusher: @${this._context?.actor}, Action: \`${this._context?.eventName}\`, Working Directory: \'${this.workspace}\', Workflow: \'${this._context?.workflow }\'*` 
+Pusher: @${this._context?.actor}
+Action: \`${this._context?.eventName}\`
+Working Directory: \'${this.workspace}\'
+Workflow: \'${this._context?.workflow }\'` 
   const summary = this.buildCommentSummary(filesToUpload, analysisResults)
   
   const bodyHeading = `\n**Detailed Risks Report**
@@ -358,7 +360,7 @@ filesToUpload.forEach(file => {
     commentBodyArray.push(this.buildCommentAnalysisBody(fileAnalysis?.additions, file))
   })
 
-  const analysisByFolder = commentBodyArray?.length > 0 ? bodyHeading + commentBodyArray.join(`\n`)   : '\n\n<h4>No risks were found.</h4>\n\n'
+  const analysisByFolder = commentBodyArray?.length > 0 ? bodyHeading + commentBodyArray.join(`\n---\n`)   : '\n\n<h4>No risks were found.</h4>\n\n'
 
   return header + summary + analysisByFolder + footer
 }
