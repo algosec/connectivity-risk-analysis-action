@@ -186,7 +186,7 @@ async checkForDiffByFileTypes(fileTypes: string[]) {
     this.logger.info('##### Algosec ##### No changes were found in terraform plans')
       return
     }
-    this.logger.info('##### Algosec ##### Step 1 - diffs result: ' + JSON.stringify(diffFolders))
+    this.logger.info('##### Algosec ##### Step 2 - diffs result: ' + JSON.stringify(diffFolders))
   return diffFolders
 }
 
@@ -233,8 +233,11 @@ async parseOutput(filesToUpload, analysisResults){
 buildCommentAnalysisBody(analysis, file: AnalysisFile) {
   let analysisBody = ''
 
-  if (!analysis?.analysis_result?.length){
-    analysisBody = `<details>\n<summary><h3><b>${file.folder}</b> - finished with errors</h3></summary>\n${this.buildCommentFrameworkResult(file)}\n</details>`
+  if (!analysis?.analysis_result){
+    analysisBody = `<details>\n<summary><h3><b>${file.folder}</b> (Finished with errors)</h3></summary>\n${this.buildCommentFrameworkResult(file)}\n</details>`
+  } else if (analysis?.analysis_result?.length == 0){
+    analysisBody = `<details>\n<summary><h3><b>${file.folder}</b> (No risks were found)</h3></summary>\n${this.buildCommentFrameworkResult(file)}\n</details>`
+
   } else {
     analysisBody = `<details>\n${this.buildCommentReportResult(analysis, file)}\n${this.buildCommentFrameworkResult(file)}\n</details>`
   }
@@ -259,7 +262,7 @@ ${JSON.stringify(risk.items, null, "\t")}\n
 ${CODE_BLOCK}\n
 </details>\n`
 })
-  const severityCount = `<div  align="right">${count(analysis?.analysis_result, 'riskSeverity', 'critical') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/critical.svg" />&nbsp;' + count(analysis?.analysis_result, 'riskSeverity', 'critical') + '&nbsp;Critical&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' : '' }${count(analysis?.analysis_result, 'riskSeverity', 'high') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/high.svg" />&nbsp;' + count(analysis?.analysis_result, 'riskSeverity', 'high') + '&nbsp;High&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' : '' }${count(analysis?.analysis_result, 'riskSeverity', 'medium') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/medium.svg" />&nbsp;' + count(analysis?.analysis_result, 'riskSeverity', 'medium') + '&nbsp;Medium&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' : ''}${count(analysis?.analysis_result, 'riskSeverity', 'low') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/low.svg" />&nbsp;' + count(analysis?.analysis_result, 'riskSeverity', 'low') + '&nbsp;Low' : ''}</div>`
+  const severityCount = `<div  align="right">${count(analysis?.analysis_result, 'riskSeverity', 'critical') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/critical.svg" />&nbsp;' + count(analysis?.analysis_result, 'riskSeverity', 'critical') + '&nbsp;Critical' : '' }${count(analysis?.analysis_result, 'riskSeverity', 'high') > 0 ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/high.svg" />&nbsp;' + count(analysis?.analysis_result, 'riskSeverity', 'high') + '&nbsp;High' : '' }${count(analysis?.analysis_result, 'riskSeverity', 'medium') > 0 ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/medium.svg" />&nbsp;' + count(analysis?.analysis_result, 'riskSeverity', 'medium') + '&nbsp;Medium' : ''}${count(analysis?.analysis_result, 'riskSeverity', 'low') > 0 ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/low.svg" />&nbsp;' + count(analysis?.analysis_result, 'riskSeverity', 'low') + '&nbsp;Low' : ''}</div>`
   const codeAnalysisContent = `<summary><h3><b>${file.folder + (analysis?.analysis_result?.length == 0 ? '- No Risks Found' : '')}</b></h3>${analysis?.analysis_result?.length > 0 ? severityCount : ''}</summary>\n${risksList}\n`
   return codeAnalysisContent
 }
@@ -320,7 +323,7 @@ buildCommentSummary(filesToUpload, results){
 })
   const risksSummary = `
 \n
-<div align="right">${count(mergedRisks, 'riskSeverity', 'critical') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/critical.svg" />&nbsp;' + count(mergedRisks, 'riskSeverity', 'critical') + '&nbsp;Critical&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' : '' }${count(mergedRisks, 'riskSeverity', 'high') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/high.svg" />&nbsp;' + count(mergedRisks, 'riskSeverity', 'high') + '&nbsp;High&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' : '' }${count(mergedRisks, 'riskSeverity', 'medium') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/medium.svg" />&nbsp;' + count(mergedRisks, 'riskSeverity', 'medium') + '&nbsp;Medium&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' : '' }${count(mergedRisks, 'riskSeverity', 'low') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/low.svg" />&nbsp;' + count(mergedRisks, 'riskSeverity', 'low') + '&nbsp;Low' : '' }</div><br>
+<div align="right">${count(mergedRisks, 'riskSeverity', 'critical') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/critical.svg" />&nbsp;' + count(mergedRisks, 'riskSeverity', 'critical') + '&nbsp;Critical' : '' }${count(mergedRisks, 'riskSeverity', 'high') > 0 ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/high.svg" />&nbsp;' + count(mergedRisks, 'riskSeverity', 'high') + '&nbsp;High' : '' }${count(mergedRisks, 'riskSeverity', 'medium') > 0 ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/medium.svg" />&nbsp;' + count(mergedRisks, 'riskSeverity', 'medium') + '&nbsp;Medium' : '' }${count(mergedRisks, 'riskSeverity', 'low') > 0 ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/low.svg" />&nbsp;' + count(mergedRisks, 'riskSeverity', 'low') + '&nbsp;Low' : '' }</div><br>
 \n`
   const risksTable = `<table>\n
 <thead>\n

@@ -66,7 +66,7 @@ export class Terraform implements IFramework {
                 output
               }
               res.push(file)
-              console.log(`##### Algosec ##### Step 2${iterable?.entries()?.length > 1 ? '.'+index+1 : ''} - ${this.type} Result for folder ${file.folder}: ${JSON.stringify(file)}`)
+              console.log(`##### Algosec ##### Step 3${iterable?.entries()?.length > 1 ? '.'+index+1 : ''} - ${this.type} Result for folder ${file.folder}: ${JSON.stringify(file)}`)
             } 
           }
           try {
