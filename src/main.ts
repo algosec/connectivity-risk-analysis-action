@@ -9,7 +9,7 @@ import { VersionControlService } from './vcs/vcs.service'
 // import { 
 //     codeAnalysisMock as codeAnalysisResponses, 
 //     terraformPlanFileMock as filesToAnalyze
-// } from "./mockData"
+// } from "../test/mockData.folder-error"
 
 export class Main {
     steps: ExecSteps = {}
@@ -30,14 +30,14 @@ export class Main {
           if (codeAnalyzer.debugMode) {
             await exec(`rimraf ${vcs.workDir}`)
           }
-          const foldersToRunCheck = await vcs.checkForDiffByFileTypes(framework.fileTypes)
-          if (foldersToRunCheck) {
-            const filesToAnalyze: AnalysisFile[] = await framework.check(foldersToRunCheck, vcs.workDir)
-            if (filesToAnalyze){
-                const codeAnalysisResponses = await codeAnalyzer.analyze(filesToAnalyze)
-                if (codeAnalysisResponses?.length > 0){
-                    await vcs.parseOutput(filesToAnalyze, codeAnalysisResponses)
-                }
+            const foldersToRunCheck = await vcs.checkForDiffByFileTypes(framework.fileTypes)
+            if (foldersToRunCheck) {
+              const filesToAnalyze: AnalysisFile[] = await framework.check(foldersToRunCheck, vcs.workDir)
+                if (filesToAnalyze){
+                    const codeAnalysisResponses = await codeAnalyzer.analyze(filesToAnalyze)
+                    if (codeAnalysisResponses?.length > 0){
+                        await vcs.parseOutput(filesToAnalyze, codeAnalysisResponses)
+                    }
                 }
             }
         } catch (_e) {

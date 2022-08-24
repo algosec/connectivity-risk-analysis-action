@@ -108,7 +108,7 @@ class AshCodeAnalysis {
             let analysisResult;
             yield this.triggerCodeAnalysis(filesToUpload);
             const codeAnalysisPromises = [];
-            filesToUpload.forEach(file => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
+            filesToUpload.filter(file => file === null || file === void 0 ? void 0 : file.output).forEach(file => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
             analysisResult = yield Promise.all(codeAnalysisPromises);
             if (!analysisResult || (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error)) {
                 this.vcs.logger.exit('##### Algosec ##### Code Analysis failed');
@@ -348,8 +348,10 @@ class Terraform {
                 return { plan: jsonPlan, log: steps.plan, initLog };
             }
             catch (error) {
-                if (error instanceof Error)
+                if (error instanceof Error) {
                     console.log(error === null || error === void 0 ? void 0 : error.message); //setFailed(error?.message)
+                    return { log: { stderr: error === null || error === void 0 ? void 0 : error.message } };
+                }
             }
         });
     }
@@ -422,7 +424,7 @@ const vcs_service_1 = __nccwpck_require__(9701);
 // import { 
 //     codeAnalysisMock as codeAnalysisResponses, 
 //     terraformPlanFileMock as filesToAnalyze
-// } from "./mockData"
+// } from "../test/mockData.folder-error"
 class Main {
     constructor() {
         var _a, _b;
@@ -486,7 +488,7 @@ const exec_2 = __nccwpck_require__(898);
 const risk_model_1 = __nccwpck_require__(7801);
 const getUuid = __nccwpck_require__(7777);
 // DEBUG LOCALLY
-// import {githubEventPayloadMock } from "../mockData"
+// import {githubEventPayloadMock } from "../../test/mockData.folder-error"
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 class Github {
     constructor() {
@@ -675,11 +677,18 @@ class Github {
         });
     }
     buildCommentAnalysisBody(analysis, file) {
-        const analysisBody = `<details>\n${this.buildCommentReportResult(analysis, file)}\n${this.buildCommentFrameworkResult(file)}\n</details>`;
+        var _a;
+        let analysisBody = '';
+        if (!((_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.length)) {
+            analysisBody = `<details>\n<summary><h3><b>${file.folder}</b> - finished with errors</h3></summary>\n${this.buildCommentFrameworkResult(file)}\n</details>`;
+        }
+        else {
+            analysisBody = `<details>\n${this.buildCommentReportResult(analysis, file)}\n${this.buildCommentFrameworkResult(file)}\n</details>`;
+        }
         return analysisBody;
     }
     buildCommentReportResult(analysis, file) {
-        var _a;
+        var _a, _b;
         let risksList = '';
         const CODE_BLOCK = '```';
         analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result.sort((a, b) => parseInt(risk_model_1.severityOrder[a.riskSeverity]) - parseInt(risk_model_1.severityOrder[b.riskSeverity])).forEach(risk => {
@@ -695,11 +704,9 @@ ${JSON.stringify(risk.items, null, "\t")}\n
 ${CODE_BLOCK}\n
 </details>\n`;
         });
-        const codeAnalysisContent = `<summary><h3><b>${file.folder}</b></h3>
-<div  align="right">${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'critical') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/critical.svg" />&nbsp;' + (0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'critical') + '&nbsp;Critical&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' : ''}${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'high') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/high.svg" />&nbsp;' + (0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'high') + '&nbsp;High&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' : ''}${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'medium') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/medium.svg" />&nbsp;' + (0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'medium') + '&nbsp;Medium&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' : ''}${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'low') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/low.svg" />&nbsp;' + (0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'low') + '&nbsp;Low' : ''}</div>
-</summary>\n
-${risksList}\n`;
-        return ((_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.length) > 0 ? codeAnalysisContent : '\n### No Risks Found\n';
+        const severityCount = `<div  align="right">${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'critical') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/critical.svg" />&nbsp;' + (0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'critical') + '&nbsp;Critical&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' : ''}${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'high') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/high.svg" />&nbsp;' + (0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'high') + '&nbsp;High&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' : ''}${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'medium') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/medium.svg" />&nbsp;' + (0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'medium') + '&nbsp;Medium&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' : ''}${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'low') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/low.svg" />&nbsp;' + (0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'low') + '&nbsp;Low' : ''}</div>`;
+        const codeAnalysisContent = `<summary><h3><b>${file.folder + (((_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.length) == 0 ? '- No Risks Found' : '')}</b></h3>${((_b = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0 ? severityCount : ''}</summary>\n${risksList}\n`;
+        return codeAnalysisContent;
     }
     buildCommentFrameworkResult(file) {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
@@ -715,8 +722,8 @@ ${(_j = (_h = file === null || file === void 0 ? void 0 : file.output) === null 
 ${CODE_BLOCK}\n`;
         const frameworkContent = `\n<details>
 <summary>&nbsp;&nbsp;&nbsp;<img height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/${frameworkIcon}.png" /> Terraform Log</summary>
-<br>${((_l = (_k = file === null || file === void 0 ? void 0 : file.output) === null || _k === void 0 ? void 0 : _k.log) === null || _l === void 0 ? void 0 : _l.stdout) ? output : ''}<br>
-<br>${((_o = (_m = file === null || file === void 0 ? void 0 : file.output) === null || _m === void 0 ? void 0 : _m.log) === null || _o === void 0 ? void 0 : _o.stderr) ? errors : ''}<br>
+${((_l = (_k = file === null || file === void 0 ? void 0 : file.output) === null || _k === void 0 ? void 0 : _k.log) === null || _l === void 0 ? void 0 : _l.stdout) ? '<br>' + output + '<br>' : ''}
+${((_o = (_m = file === null || file === void 0 ? void 0 : file.output) === null || _m === void 0 ? void 0 : _m.log) === null || _o === void 0 ? void 0 : _o.stderr) ? '<br>' + errors + '<br>' : ''}
 </details> <!-- End Format Logs -->\n`;
         return frameworkContent;
     }
@@ -786,8 +793,10 @@ ${risksTableContents}
         const summary = this.buildCommentSummary(filesToUpload, analysisResults);
         const bodyHeading = `\n**Detailed Risks Report**
 ---\n`;
-        analysisResults.forEach(folderAnalysis => commentBodyArray.push((!(folderAnalysis === null || folderAnalysis === void 0 ? void 0 : folderAnalysis.additions)) ?
-            '' : this.buildCommentAnalysisBody(folderAnalysis === null || folderAnalysis === void 0 ? void 0 : folderAnalysis.additions, filesToUpload.find(file => { var _a; return (_a = folderAnalysis === null || folderAnalysis === void 0 ? void 0 : folderAnalysis.proceeded_file) === null || _a === void 0 ? void 0 : _a.includes(file.uuid); }))));
+        filesToUpload.forEach(file => {
+            const fileAnalysis = analysisResults.find(_fileAnalysis => { var _a; return (_a = _fileAnalysis === null || _fileAnalysis === void 0 ? void 0 : _fileAnalysis.proceeded_file) === null || _a === void 0 ? void 0 : _a.includes(file.uuid); });
+            commentBodyArray.push(this.buildCommentAnalysisBody(fileAnalysis === null || fileAnalysis === void 0 ? void 0 : fileAnalysis.additions, file));
+        });
         const analysisByFolder = (commentBodyArray === null || commentBodyArray === void 0 ? void 0 : commentBodyArray.length) > 0 ? bodyHeading + commentBodyArray.join(`\n`) : '\n\n<h4>No risks were found.</h4>\n\n';
         return header + summary + analysisByFolder + footer;
     }

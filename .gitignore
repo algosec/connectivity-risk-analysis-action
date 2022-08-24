@@ -103,5 +103,6 @@ __tests__/runner/*
 test-repo/
 .history/
 
-src/mockData.ts
-src/mockData.many-risks.ts
+test/mockData.ts
+test/mockData.many-risks.ts
+test/mockData.folder-error.ts

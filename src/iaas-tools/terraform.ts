@@ -37,7 +37,10 @@ export class Terraform implements IFramework {
             process.chdir(options.workDir)
             return {plan: jsonPlan, log: steps.plan, initLog};
         } catch (error: any) {
-          if (error instanceof Error) console.log(error?.message) //setFailed(error?.message)
+          if (error instanceof Error) {
+            console.log(error?.message) //setFailed(error?.message)
+            return {log: {stderr: error?.message}}
+          }
         }
     }
 
