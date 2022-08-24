@@ -17,7 +17,6 @@ export class AshCodeAnalysis{
  
   
   constructor(public vcs: IVersionControl){
-    this.init()
    
   }
 
@@ -29,6 +28,7 @@ export class AshCodeAnalysis{
       return
     }
     this.steps.auth = { exitCode: 0,  stdout: this.jwt , stderr: ''}
+    return this
   }
 
   setSecrets(){

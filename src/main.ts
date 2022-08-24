@@ -26,6 +26,7 @@ export class Main {
           const vcs: IVersionControl =  new VersionControlService().getInstanceByType(this.vcsType)
           const framework: IFramework =  new FrameworkService().getInstanceByType(this.frameworkType, vcs)
           const codeAnalyzer = new AshCodeAnalysis(vcs)
+          await codeAnalyzer.init()
           if (codeAnalyzer.debugMode) {
             await exec(`rimraf ${vcs.workDir}`)
           }
@@ -37,8 +38,8 @@ export class Main {
                 if (codeAnalysisResponses?.length > 0){
                     await vcs.parseOutput(filesToAnalyze, codeAnalysisResponses)
                 }
+                }
             }
-          }
         } catch (_e) {
             console.log(_e)
         }
