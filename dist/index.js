@@ -680,10 +680,10 @@ class Github {
         var _a;
         let analysisBody = '';
         if (!(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result)) {
-            analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/failure.png" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n</details>`;
+            analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/failure.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n</details>`;
         }
         else if (((_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.length) == 0) {
-            analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/success.png" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n</details>`;
+            analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/success.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n</details>`;
         }
         else {
             analysisBody = `<details>\n${this.buildCommentReportResult(analysis, file)}\n${this.buildCommentFrameworkResult(file)}\n</details>`;
@@ -708,25 +708,24 @@ ${CODE_BLOCK}\n
 </details>\n`;
         });
         const severityCount = `<div  align="right">${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'critical') > 0 ? '<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/critical.svg" />&nbsp;' + (0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'critical') + '&nbsp;Critical' : ''}${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'high') > 0 ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/high.svg" />&nbsp;' + (0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'high') + '&nbsp;High' : ''}${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'medium') > 0 ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/medium.svg" />&nbsp;' + (0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'medium') + '&nbsp;Medium' : ''}${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'low') > 0 ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/low.svg" />&nbsp;' + (0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, 'riskSeverity', 'low') + '&nbsp;Low' : ''}</div>`;
-        const codeAnalysisContent = `<summary><sub><sub><sub><img height="20" width="20" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/warning.png" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder + (((_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.length) == 0 ? '- No Risks Found' : '')}</b></h3>${((_b = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0 ? severityCount : ''}</summary>\n${risksList}\n`;
+        const codeAnalysisContent = `<summary><sub><sub><sub><img height="20" width="20" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/warning.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder + (((_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.length) == 0 ? '- No Risks Found' : '')}</b></h3>${((_b = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0 ? severityCount : ''}</summary>\n${risksList}\n`;
         return codeAnalysisContent;
     }
     buildCommentFrameworkResult(file) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
         const CODE_BLOCK = '```';
-        const frameworkIcon = (((_b = (_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.log) === null || _b === void 0 ? void 0 : _b.stderr) == '') ? 'success' : 'failure';
         const errors = `Errors\n
 ${CODE_BLOCK}\n
-${(_e = (_d = (_c = file === null || file === void 0 ? void 0 : file.output) === null || _c === void 0 ? void 0 : _c.log) === null || _d === void 0 ? void 0 : _d.stderr) !== null && _e !== void 0 ? _e : (_g = (_f = file === null || file === void 0 ? void 0 : file.output) === null || _f === void 0 ? void 0 : _f.initLog) === null || _g === void 0 ? void 0 : _g.stderr}\n
+${(_c = (_b = (_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.log) === null || _b === void 0 ? void 0 : _b.stderr) !== null && _c !== void 0 ? _c : (_e = (_d = file === null || file === void 0 ? void 0 : file.output) === null || _d === void 0 ? void 0 : _d.initLog) === null || _e === void 0 ? void 0 : _e.stderr}\n
 ${CODE_BLOCK}\n`;
         const output = `Output\n
 ${CODE_BLOCK}\n
-${(_j = (_h = file === null || file === void 0 ? void 0 : file.output) === null || _h === void 0 ? void 0 : _h.log) === null || _j === void 0 ? void 0 : _j.stdout}\n
+${(_g = (_f = file === null || file === void 0 ? void 0 : file.output) === null || _f === void 0 ? void 0 : _f.log) === null || _g === void 0 ? void 0 : _g.stdout}\n
 ${CODE_BLOCK}\n`;
         const frameworkContent = `\n<details>
 <summary>Terraform Log</summary>
-${((_l = (_k = file === null || file === void 0 ? void 0 : file.output) === null || _k === void 0 ? void 0 : _k.log) === null || _l === void 0 ? void 0 : _l.stdout) ? '<br>' + output + '<br>' : ''}
-${((_o = (_m = file === null || file === void 0 ? void 0 : file.output) === null || _m === void 0 ? void 0 : _m.log) === null || _o === void 0 ? void 0 : _o.stderr) ? '<br>' + errors + '<br>' : ''}
+${((_j = (_h = file === null || file === void 0 ? void 0 : file.output) === null || _h === void 0 ? void 0 : _h.log) === null || _j === void 0 ? void 0 : _j.stdout) ? '<br>' + output + '<br>' : ''}
+${((_l = (_k = file === null || file === void 0 ? void 0 : file.output) === null || _k === void 0 ? void 0 : _k.log) === null || _l === void 0 ? void 0 : _l.stderr) ? '<br>' + errors + '<br>' : ''}
 </details> <!-- End Format Logs -->\n`;
         return frameworkContent;
     }
