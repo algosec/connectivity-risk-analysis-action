@@ -2,100 +2,101 @@ import { AnalysisFile } from "../common/exec";
 import { Github } from "./github";
 
 export interface IVersionControl {
-    pullRequest: any;
-    payload: any;
-    repo: any;
-    logger: any;
-    http: any;
-    workspace: string
-    workDir: string
-    token: string
-    sha: string
-    octokit?: any
-    fileTypes: string[]
-    getRepoRemoteUrl(): string;
-    createComment(body: string)
-    parseCodeAnalysis(analysis, VersionControl)
-    getDiff(vcsObject)
-    checkForDiffByFileTypes(fileTypes: string[])
-    parseOutput(filesToUpload, analysisResult)
-    uploadAnalysisFile(file: AnalysisFile,  jwt: string)
-    getInputs()
-   
+  pullRequest: any;
+  payload: any;
+  repo: any;
+  logger: any;
+  http: any;
+  workspace: string;
+  workDir: string;
+  token: string;
+  sha: string;
+  octokit?: any;
+  fileTypes: string[];
+  getRepoRemoteUrl: () => string;
+  createComment: (body: string) => any;
+  parseCodeAnalysis: (analysis, VersionControl) => any;
+  getDiff: (vcsObject) => any;
+  checkForDiffByFileTypes: (fileTypes: string[]) => any;
+  parseOutput: (filesToUpload: AnalysisFile[], analysisResult) => any;
+  uploadAnalysisFile: (file: AnalysisFile, jwt: string) => any;
+  getInputs: () => any;
 }
 
 export class GitLab implements IVersionControl {
-    pullRequest: any;
-    payload: any;
-    repo: any;
-    logger: any;
-    http: any;
-    workspace: string
-    token: string
-    sha: string
-    workDir: string
-    fileTypes: string[]
+  pullRequest: any;
+  payload: any;
+  repo: any;
+  logger: Logger;
+  http: any;
+  workspace: string;
+  token: string;
+  sha: string;
+  workDir: string;
+  fileTypes: string[];
 
-    constructor(){
-        this.workspace = process?.env?.GITLAB_WORKSPACE
-        this.token =  process?.env?.GITLAB_TOKEN 
-        this.sha =  process?.env?.GITLAB_SHA 
-    }
+  constructor() {
+    this.workspace = process?.env?.GITLAB_WORKSPACE ?? "";
+    this.token = process?.env?.GITLAB_TOKEN ?? "";
+    this.sha = process?.env?.GITLAB_SHA ?? "";
+  }
 
-    getInputs(){}
+  getInputs(): void {}
 
+  getDiff(client): void {}
 
-    getDiff(client){
+  createComment(options): void {}
 
-    }
+  parseCodeAnalysis(analysis: any, VersionControl: any): void {}
 
-    createComment(options){
+  getRepoRemoteUrl(): string {
+    return "";
+  }
 
-    }
+  checkForDiffByFileTypes(fileTypes: string[]): void {}
 
-    parseCodeAnalysis(analysis, VersionControl){
+  parseOutput(filesToUpload, analysisResult): void {}
 
-    }
-
-    getRepoRemoteUrl(){
-        return ''
-    }
-
-    checkForDiffByFileTypes(fileTypes: string[]){
-
-    }
-
-    parseOutput(filesToUpload, analysisResult){}
-
-    uploadAnalysisFile(file: AnalysisFile, jwt: string){}
-
+  uploadAnalysisFile(file: AnalysisFile, jwt: string): any {}
 }
 
 export const versionControlMap = {
-    github: Github,
-    gitlab: GitLab
-}
+  github: Github,
+  gitlab: GitLab,
+};
 export type VersionControlMap = typeof versionControlMap;
 
 export type VersionControlKeys = keyof VersionControlMap;
 
-type VersionControlTuples<T> = T extends VersionControlKeys ? [T, InstanceType<VersionControlMap[T]>] : never;
+type VersionControlTuples<T> = T extends VersionControlKeys
+  ? [T, InstanceType<VersionControlMap[T]>]
+  : never;
 
-export type VersionControlSingleKeys<K> = [K] extends (K extends VersionControlKeys ? [K] : never) ? K : never;
+export type VersionControlSingleKeys<K> = [K] extends (
+  K extends VersionControlKeys ? [K] : never
+)
+  ? K
+  : never;
 
-type VersionControlClassType<A extends VersionControlKeys> = Extract<VersionControlTuples<VersionControlKeys>, [A, any]>[1];
-
-
-
-
+type VersionControlClassType<A extends VersionControlKeys> = Extract<
+  VersionControlTuples<VersionControlKeys>,
+  [A, any]
+>[1];
 
 export class VersionControlFactory {
-    static getInstance<K extends VersionControlKeys>(versionControlKey: VersionControlSingleKeys<K>): VersionControlClassType<K> {
-        return new versionControlMap[versionControlKey]()
-    }
+  static getInstance<K extends VersionControlKeys>(
+    versionControlKey: VersionControlSingleKeys<K>
+  ): VersionControlClassType<K> {
+    return new versionControlMap[versionControlKey]();
+  }
 }
 
-
+export interface Logger {
+  info: Function;
+  error: Function;
+  debug: Function;
+  exit: Function;
+}
 
 // const terraform = VersionControlFactory.getInstance("terraform");
 // const cloudformation = VersionControlFactory.getInstance("cloudformation");

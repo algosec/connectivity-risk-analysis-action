@@ -1,6 +1,4 @@
-import { Main } from './main'
+import { Main } from "./main";
 
-
-
-const codeAnalyzer = new Main()
-codeAnalyzer.run()
+const codeAnalyzer = new Main();
+codeAnalyzer.run();
