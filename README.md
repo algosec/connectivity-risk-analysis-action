@@ -1,8 +1,8 @@
 <p align="left">
-  <a href="https://www.algosec.com"><img height="30" alt="Algosec" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/algosec_logo.png"></a>
+  <a href="https://www.algosec.com"><img height="50" alt="Algosec" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/algosec_logo.png"></a>
 </p>
 
-# Run Code Analysis
+# Algosec IAC Connectivity Risk Analysis 
 
 ```yaml
 name: 'Your Repo CI/CD Yaml Workflow'
@@ -12,13 +12,13 @@ on:
       - 'main'
 jobs:
   algosec-risk-analysis:
-     name: 'Algosec Risk Analysis'
+     name: 'Algosec IAC Connectivity Risk Analysis'
      runs-on: ubuntu-latest
      steps:
-        - name: Algosec Risk Analysis Action
-          uses: algosec/risk-analysis-action@v0.0.1
+        - name: Risk Analysis
+          uses: algosec/risk-analysis-action@v0.0.2
           env:
-            # Fail or Continue on error after action finish
+            # Fail or Continue on error after action finish (fail or continue_on_error)
             MODE: continue_on_error
             # IaS Framework type (terraform, cloudformation, etc...)
             FRAMEWORK: terraform
