@@ -873,8 +873,8 @@ ${risksTableContents}
         var _a, _b, _c;
         const commentBodyArray = [];
         const header = `<img height="50" src="${this.assetsUrl}/header.svg" /> \n`;
-        const footer = `<br>
-\n
+        const footer = `\n\n---\n\n
+<br>
 Pusher: @${(_a = this._context) === null || _a === void 0 ? void 0 : _a.actor}
 Action: \`${(_b = this._context) === null || _b === void 0 ? void 0 : _b.eventName}\`
 Working Directory: ${this.workspace}

@@ -484,8 +484,8 @@ ${risksTableContents}
   ): string {
     const commentBodyArray: any[] = [];
     const header = `<img height="50" src="${this.assetsUrl}/header.svg" /> \n`;
-    const footer = `<br>
-\n
+    const footer = `\n\n---\n\n
+<br>
 Pusher: @${this._context?.actor}
 Action: \`${this._context?.eventName}\`
 Working Directory: ${this.workspace}
