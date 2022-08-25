@@ -2,7 +2,7 @@
   <a href="https://www.algosec.com"><img height="30" alt="Algosec" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/algosec_logo.png"></a>
 </p>
 
-# Run Code Analysis
+# Algosec IAC Connectivity Risk Analysis 
 
 ```yaml
 name: 'Your Repo CI/CD Yaml Workflow'
