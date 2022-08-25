@@ -15,7 +15,7 @@ jobs:
      name: 'Algosec Risk Analysis'
      runs-on: ubuntu-latest
      steps:
-        - name: Algosec Risk Analysis Action
+        - name: Algosec IAC Connectivity Risk Analysis
           uses: algosec/risk-analysis-action@v0.0.2
           env:
             # Fail or Continue on error after action finish (fail or continue_on_error)
