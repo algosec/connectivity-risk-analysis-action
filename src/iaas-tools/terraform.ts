@@ -81,7 +81,7 @@ export class Terraform implements IFramework {
       "|",
       "bash",
     ]);
-    console.log("##### Algosec ##### tfswitch Installed successfully");
+    console.log("##### IAC Connectivity Risk Analysis ##### tfswitch Installed successfully");
     if (
       process?.env?.TF_VERSION == "latest" ||
       process?.env?.TF_VERSION == ""
@@ -91,7 +91,7 @@ export class Terraform implements IFramework {
       steps.switchVersion = await exec("tfswitch", []);
     }
     console.log(
-      "##### Algosec ##### tfswitch version: " + process?.env?.TF_VERSION
+      "##### IAC Connectivity Risk Analysis ##### tfswitch version: " + process?.env?.TF_VERSION
     );
   }
 
@@ -110,7 +110,7 @@ export class Terraform implements IFramework {
         };
         res.push(file);
         console.log(
-          `##### Algosec ##### Step 3${
+          `##### IAC Connectivity Risk Analysis ##### Step 3${
             iterable?.entries()?.length > 1 ? "." + index + 1 : ""
           } - ${this.type} Result for folder ${file.folder}: ${JSON.stringify(
             file

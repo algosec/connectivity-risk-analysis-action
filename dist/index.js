@@ -36,7 +36,7 @@ class AshCodeAnalysis {
             this.setSecrets();
             this.jwt = yield this.auth(this.tenantId, this.clientId, this.clientSecret, this.loginAPI);
             if (!this.jwt || this.jwt == "") {
-                this.vcs.logger.exit("##### Algosec ##### Step 0 - failed to generate token");
+                this.vcs.logger.exit("##### IAC Connectivity Risk Analysis ##### Not Authenticated");
                 return;
             }
             this.steps.auth = { exitCode: 0, stdout: this.jwt, stderr: "" };
@@ -67,15 +67,15 @@ class AshCodeAnalysis {
                 const response_code = res.message.statusCode;
                 const data = JSON.parse(yield res.readBody());
                 if (response_code >= 200 && response_code <= 300) {
-                    this.vcs.logger.info("##### Algosec ##### Step 0: passed authentication vs CF's login. new token has been generated.");
+                    this.vcs.logger.info("##### IAC Connectivity Risk Analysis ##### Step 1: passed authentication vs CF's login. new token has been generated.");
                     return data === null || data === void 0 ? void 0 : data.access_token;
                 }
                 else {
-                    this.vcs.logger.exit(`##### Algosec ##### Step 0: failed to generate token. Error code ${response_code}, msg: ${JSON.stringify(data)}`);
+                    this.vcs.logger.exit(`##### IAC Connectivity Risk Analysis ##### Failed to generate token. Error code ${response_code}, msg: ${JSON.stringify(data)}`);
                 }
             }
             catch (error) {
-                this.vcs.logger.exit(`##### Algosec ##### Step 0: failed to generate token. Error msg: ${error.toString()}`);
+                this.vcs.logger.exit(`##### IAC Connectivity Risk Analysis ##### Failed to generate token. Error msg: ${error.toString()}`);
             }
             return "";
         });
@@ -86,7 +86,7 @@ class AshCodeAnalysis {
             filesToUpload.forEach((file) => fileUploadPromises.push(this.uploadFile(file)));
             const response = yield Promise.all(fileUploadPromises);
             if (response) {
-                this.vcs.logger.info("##### Algosec ##### Step 3 - file/s uploaded successfully");
+                this.vcs.logger.info("##### IAC Connectivity Risk Analysis ##### Step 4 - file/s uploaded successfully");
             }
         });
     }
@@ -117,27 +117,28 @@ class AshCodeAnalysis {
                 .forEach((file) => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
             analysisResult = yield Promise.all(codeAnalysisPromises);
             if (!analysisResult || (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error)) {
-                this.vcs.logger.exit("##### Algosec ##### Code Analysis failed");
+                this.vcs.logger.exit("##### IAC Connectivity Risk Analysis ##### Code Analysis failed");
                 return [];
             }
-            this.vcs.logger.info("##### Algosec ##### Step 4 - code analysis result: " +
+            this.vcs.logger.info("##### IAC Connectivity Risk Analysis ##### code analysis result: " +
                 JSON.stringify(analysisResult));
             return analysisResult;
         });
     }
     pollCodeAnalysisResponse(file) {
         return __awaiter(this, void 0, void 0, function* () {
+            this.vcs.logger.info("##### IAC Connectivity Risk Analysis ##### Step 5 - waiting for response...");
             let analysisResult = yield this.checkCodeAnalysisResponse(file);
             for (let i = 0; i < 50; i++) {
                 yield this.wait(3000);
                 analysisResult = yield this.checkCodeAnalysisResponse(file);
                 if (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.additions) {
                     analysisResult.folder = file === null || file === void 0 ? void 0 : file.folder;
-                    this.vcs.logger.info("##### Algosec ##### Response: " + JSON.stringify(analysisResult));
+                    this.vcs.logger.info("##### IAC Connectivity Risk Analysis ##### Response: " + JSON.stringify(analysisResult));
                     break;
                 }
                 else if (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error) {
-                    this.vcs.logger.exit("##### Algosec ##### Poll Request failed: " + (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error));
+                    this.vcs.logger.exit("##### IAC Connectivity Risk Analysis ##### Poll Request failed: " + (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error));
                     break;
                 }
             }
@@ -147,7 +148,6 @@ class AshCodeAnalysis {
     wait(ms = 1000) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield new Promise((resolve) => {
-                this.vcs.logger.info("##### Algosec ##### Step 3 - waiting for response...");
                 setTimeout(resolve, ms);
             });
         });
@@ -227,7 +227,7 @@ function exec(cmd, args) {
         }
         catch (err) {
             const msg = `Command '${cmd}' failed with args '${args.join(" ")}': ${res.stderr}: ${err}`;
-            (0, core_1.debug)(`##### Algosec ##### @actions/exec.exec() threw an error: ${msg}`);
+            (0, core_1.debug)(`##### IAC Connectivity Risk Analysis ##### @actions/exec.exec() threw an error: ${msg}`);
             throw new Error(msg);
         }
     });
@@ -390,7 +390,7 @@ class Terraform {
                 "|",
                 "bash",
             ]);
-            console.log("##### Algosec ##### tfswitch Installed successfully");
+            console.log("##### IAC Connectivity Risk Analysis ##### tfswitch Installed successfully");
             if (((_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.TF_VERSION) == "latest" ||
                 ((_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.TF_VERSION) == "") {
                 steps.switchVersion = yield (0, exec_1.exec)("tfswitch", ["--latest"]);
@@ -398,7 +398,7 @@ class Terraform {
             else {
                 steps.switchVersion = yield (0, exec_1.exec)("tfswitch", []);
             }
-            console.log("##### Algosec ##### tfswitch version: " + ((_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.TF_VERSION));
+            console.log("##### IAC Connectivity Risk Analysis ##### tfswitch version: " + ((_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.TF_VERSION));
         });
     }
     check(foldersToRunCheck, workDir) {
@@ -414,7 +414,7 @@ class Terraform {
                         output,
                     };
                     res.push(file);
-                    console.log(`##### Algosec ##### Step 3${((_a = iterable === null || iterable === void 0 ? void 0 : iterable.entries()) === null || _a === void 0 ? void 0 : _a.length) > 1 ? "." + index + 1 : ""} - ${this.type} Result for folder ${file.folder}: ${JSON.stringify(file)}`);
+                    console.log(`##### IAC Connectivity Risk Analysis ##### Step 3${((_a = iterable === null || iterable === void 0 ? void 0 : iterable.entries()) === null || _a === void 0 ? void 0 : _a.length) > 1 ? "." + index + 1 : ""} - ${this.type} Result for folder ${file.folder}: ${JSON.stringify(file)}`);
                 }
             });
             try {
@@ -663,10 +663,10 @@ class Github {
                     this.logger.exit(error === null || error === void 0 ? void 0 : error.message);
             }
             if ((diffFolders === null || diffFolders === void 0 ? void 0 : diffFolders.length) == 0) {
-                this.logger.info("##### Algosec ##### No changes were found in terraform plans");
+                this.logger.info("##### IAC Connectivity Risk Analysis ##### No changes were found in terraform plans");
                 return [];
             }
-            this.logger.info("##### Algosec ##### Step 2 - diffs result: " +
+            this.logger.info("##### IAC Connectivity Risk Analysis ##### Step 2 - diffs result: " +
                 JSON.stringify(diffFolders));
             return diffFolders;
         });
@@ -700,18 +700,18 @@ class Github {
             if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => !(response === null || response === void 0 ? void 0 : response.success))) {
                 const errors = "";
                 // Object.keys(this.steps).forEach(step => errors += this?.steps[step]?.stderr ?? '')
-                this.logger.exit("##### Algosec ##### The risks analysis process failed.\n" + errors);
+                this.logger.exit("##### IAC Connectivity Risk Analysis ##### The risks analysis process failed.\n" + errors);
             }
             else {
-                this.logger.info("##### Algosec ##### Step 5 - parsing Code Analysis");
+                this.logger.info("##### IAC Connectivity Risk Analysis ##### Step 6 - parsing Code Analysis");
                 if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => { var _a, _b; return ((_b = (_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })) {
                     if (this.runMode == "fail")
-                        this.logger.exit("##### Algosec ##### The risks analysis process completed successfully with risks, please check report");
+                        this.logger.exit("##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report");
                     else
-                        this.logger.info("##### Algosec ##### The risks analysis process completed successfully with risks, please check report");
+                        this.logger.info("##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report");
                 }
                 else {
-                    this.logger.info("##### Algosec ##### Step 6 - the risks analysis process completed successfully without any risks");
+                    this.logger.info("##### IAC Connectivity Risk Analysis ##### Analysis process completed successfully without any risks");
                 }
             }
         });

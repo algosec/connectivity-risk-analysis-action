@@ -26,7 +26,7 @@ export class AshCodeAnalysis {
     );
     if (!this.jwt || this.jwt == "") {
       this.vcs.logger.exit(
-        "##### Algosec ##### Step 0 - failed to generate token"
+        "##### IAC Connectivity Risk Analysis ##### Not Authenticated"
       );
       return;
     }
@@ -69,19 +69,19 @@ export class AshCodeAnalysis {
       const data = JSON.parse(await res.readBody());
       if (response_code >= 200 && response_code <= 300) {
         this.vcs.logger.info(
-          "##### Algosec ##### Step 0: passed authentication vs CF's login. new token has been generated."
+          "##### IAC Connectivity Risk Analysis ##### Step 1: passed authentication vs CF's login. new token has been generated."
         );
         return data?.access_token;
       } else {
         this.vcs.logger.exit(
-          `##### Algosec ##### Step 0: failed to generate token. Error code ${response_code}, msg: ${JSON.stringify(
+          `##### IAC Connectivity Risk Analysis ##### Failed to generate token. Error code ${response_code}, msg: ${JSON.stringify(
             data
           )}`
         );
       }
     } catch (error: any) {
       this.vcs.logger.exit(
-        `##### Algosec ##### Step 0: failed to generate token. Error msg: ${error.toString()}`
+        `##### IAC Connectivity Risk Analysis ##### Failed to generate token. Error msg: ${error.toString()}`
       );
     }
     return "";
@@ -96,7 +96,7 @@ export class AshCodeAnalysis {
 
     if (response) {
       this.vcs.logger.info(
-        "##### Algosec ##### Step 3 - file/s uploaded successfully"
+        "##### IAC Connectivity Risk Analysis ##### Step 4 - file/s uploaded successfully"
       );
     }
   }
@@ -127,11 +127,11 @@ export class AshCodeAnalysis {
       );
     analysisResult = await Promise.all(codeAnalysisPromises);
     if (!analysisResult || analysisResult?.error) {
-      this.vcs.logger.exit("##### Algosec ##### Code Analysis failed");
+      this.vcs.logger.exit("##### IAC Connectivity Risk Analysis ##### Code Analysis failed");
       return []
     }
     this.vcs.logger.info(
-      "##### Algosec ##### Step 4 - code analysis result: " +
+      "##### IAC Connectivity Risk Analysis ##### code analysis result: " +
         JSON.stringify(analysisResult)
     );
     return analysisResult;
@@ -140,6 +140,9 @@ export class AshCodeAnalysis {
   async pollCodeAnalysisResponse(
     file: AnalysisFile
   ): Promise<AnalysisResult | null> {
+    this.vcs.logger.info(
+      "##### IAC Connectivity Risk Analysis ##### Step 5 - waiting for response..."
+    );
     let analysisResult = await this.checkCodeAnalysisResponse(file);
     for (let i = 0; i < 50; i++) {
       await this.wait(3000);
@@ -147,12 +150,12 @@ export class AshCodeAnalysis {
       if (analysisResult?.additions) {
         analysisResult.folder = file?.folder;
         this.vcs.logger.info(
-          "##### Algosec ##### Response: " + JSON.stringify(analysisResult)
+          "##### IAC Connectivity Risk Analysis ##### Response: " + JSON.stringify(analysisResult)
         );
         break;
       } else if (analysisResult?.error) {
         this.vcs.logger.exit(
-          "##### Algosec ##### Poll Request failed: " + analysisResult?.error
+          "##### IAC Connectivity Risk Analysis ##### Poll Request failed: " + analysisResult?.error
         );
         break;
       }
@@ -162,9 +165,6 @@ export class AshCodeAnalysis {
 
   async wait(ms = 1000): Promise<void> {
     return await new Promise((resolve) => {
-      this.vcs.logger.info(
-        "##### Algosec ##### Step 3 - waiting for response..."
-      );
       setTimeout(resolve, ms);
     });
   }

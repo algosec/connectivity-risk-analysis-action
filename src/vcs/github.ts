@@ -192,12 +192,12 @@ export class Github implements IVersionControl {
     }
     if (diffFolders?.length == 0) {
       this.logger.info(
-        "##### Algosec ##### No changes were found in terraform plans"
+        "##### IAC Connectivity Risk Analysis ##### No changes were found in terraform plans"
       );
       return []
     }
     this.logger.info(
-      "##### Algosec ##### Step 2 - diffs result: " +
+      "##### IAC Connectivity Risk Analysis ##### Step 2 - diffs result: " +
         JSON.stringify(diffFolders)
     );
     return diffFolders;
@@ -236,10 +236,10 @@ export class Github implements IVersionControl {
       const errors = "";
       // Object.keys(this.steps).forEach(step => errors += this?.steps[step]?.stderr ?? '')
       this.logger.exit(
-        "##### Algosec ##### The risks analysis process failed.\n" + errors
+        "##### IAC Connectivity Risk Analysis ##### The risks analysis process failed.\n" + errors
       );
     } else {
-      this.logger.info("##### Algosec ##### Step 5 - parsing Code Analysis");
+      this.logger.info("##### IAC Connectivity Risk Analysis ##### Step 6 - parsing Code Analysis");
       if (
         analysisResults?.some(
           (response) => response?.additions?.analysis_result?.length > 0
@@ -247,15 +247,15 @@ export class Github implements IVersionControl {
       ) {
         if (this.runMode == "fail")
           this.logger.exit(
-            "##### Algosec ##### The risks analysis process completed successfully with risks, please check report"
+            "##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report"
           );
         else
           this.logger.info(
-            "##### Algosec ##### The risks analysis process completed successfully with risks, please check report"
+            "##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report"
           );
       } else {
         this.logger.info(
-          "##### Algosec ##### Step 6 - the risks analysis process completed successfully without any risks"
+          "##### IAC Connectivity Risk Analysis ##### Analysis process completed successfully without any risks"
         );
       }
     }
