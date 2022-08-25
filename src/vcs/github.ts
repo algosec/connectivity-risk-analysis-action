@@ -320,25 +320,25 @@ ${CODE_BLOCK}\n
       });
     const severityCount = `<div  align="right">${
       count(analysis?.analysis_result, "riskSeverity", "critical") > 0
-        ? '<img width="10" height="10" src="${this.assetsUrl}/critical.svg" />&nbsp;' +
+        ? `<img width="10" height="10" src="${this.assetsUrl}/critical.svg" />&nbsp;` +
           count(analysis?.analysis_result, "riskSeverity", "critical") +
           "&nbsp;Critical"
         : ""
     }${
       count(analysis?.analysis_result, "riskSeverity", "high") > 0
-        ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="${this.assetsUrl}/high.svg" />&nbsp;' +
+        ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="${this.assetsUrl}/high.svg" />&nbsp;` +
           count(analysis?.analysis_result, "riskSeverity", "high") +
           "&nbsp;High"
         : ""
     }${
       count(analysis?.analysis_result, "riskSeverity", "medium") > 0
-        ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="${this.assetsUrl}/medium.svg" />&nbsp;' +
+        ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="${this.assetsUrl}/medium.svg" />&nbsp;` +
           count(analysis?.analysis_result, "riskSeverity", "medium") +
           "&nbsp;Medium"
         : ""
     }${
       count(analysis?.analysis_result, "riskSeverity", "low") > 0
-        ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="${this.assetsUrl}/low.svg" />&nbsp;' +
+        ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="${this.assetsUrl}/low.svg" />&nbsp;` +
           count(analysis?.analysis_result, "riskSeverity", "low") +
           "&nbsp;Low"
         : ""
@@ -433,25 +433,25 @@ ${file?.output?.log?.stderr ? "<br>" + errors + "<br>" : ""}
 \n
 <div align="right">${
       count(mergedRisks, "riskSeverity", "critical") > 0
-        ? '<img width="10" height="10" src="${this.assetsUrl}/critical.svg" />&nbsp;' +
+        ? `<img width="10" height="10" src="${this.assetsUrl}/critical.svg" />&nbsp;` +
           count(mergedRisks, "riskSeverity", "critical") +
           "&nbsp;Critical"
         : ""
     }${
       count(mergedRisks, "riskSeverity", "high") > 0
-        ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="${this.assetsUrl}/high.svg" />&nbsp;' +
+        ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="${this.assetsUrl}/high.svg" />&nbsp;` +
           count(mergedRisks, "riskSeverity", "high") +
           "&nbsp;High"
         : ""
     }${
       count(mergedRisks, "riskSeverity", "medium") > 0
-        ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="${this.assetsUrl}/medium.svg" />&nbsp;' +
+        ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="${this.assetsUrl}/medium.svg" />&nbsp;` +
           count(mergedRisks, "riskSeverity", "medium") +
           "&nbsp;Medium"
         : ""
     }${
       count(mergedRisks, "riskSeverity", "low") > 0
-        ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="${this.assetsUrl}/low.svg" />&nbsp;' +
+        ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="10" height="10" src="${this.assetsUrl}/low.svg" />&nbsp;` +
           count(mergedRisks, "riskSeverity", "low") +
           "&nbsp;Low"
         : ""
