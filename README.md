@@ -16,9 +16,9 @@ jobs:
      runs-on: ubuntu-latest
      steps:
         - name: Algosec Risk Analysis Action
-          uses: algosec/risk-analysis-action@v0.0.1
+          uses: algosec/risk-analysis-action@v0.0.2
           env:
-            # Fail or Continue on error after action finish
+            # Fail or Continue on error after action finish (fail or continue_on_error)
             MODE: continue_on_error
             # IaS Framework type (terraform, cloudformation, etc...)
             FRAMEWORK: terraform
