@@ -28,6 +28,7 @@ export class Github implements IVersionControl {
   pullRequest: string;
   steps: ExecSteps = {};
   workDir: string;
+  useCheckoutAction: boolean = false
   actionUuid: string;
   fileTypes: string[];
   runMode: RunMode;
@@ -45,7 +46,8 @@ export class Github implements IVersionControl {
     this.payload = this._context?.payload;
     this.repo = this._context.repo;
     this.pullRequest = this._context.payload.pull_request.number.toString();
-    this.workDir = this.workspace + "_ALGOSEC_CODE_ANALYSIS";
+    this.useCheckoutAction = process?.env?.USE_CHECKOUT == 'true' ? true : false
+    this.workDir = this.workspace + this.useCheckoutAction ? "" : "_ALGOSEC_CODE_ANALYSIS"
     this.actionUuid = getUuid(this.sha);
     this.assetsUrl =
       "https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons";
@@ -175,7 +177,9 @@ export class Github implements IVersionControl {
   }
 
   async checkForDiffByFileTypes(fileTypes: string[]): Promise<string[]> {
-    await this.prepareRepo();
+    if (!this.useCheckoutAction){
+      await this.prepareRepo();
+    }
     let diffFolders: any[] = [];
     try {
       const diffs = await this.getDiff(this.octokit);

@@ -527,8 +527,9 @@ const uuid_by_string_1 = __importDefault(__nccwpck_require__(7777));
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 class Github {
     constructor() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
         this.steps = {};
+        this.useCheckoutAction = false;
         this.runMode = (_b = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.MODE) !== null && _b !== void 0 ? _b : "fail";
         this.http = new http_client_1.HttpClient();
         this.logger = { debug: core_1.debug, error: core_1.error, exit: core_1.setFailed, info: core_1.info };
@@ -540,7 +541,8 @@ class Github {
         this.payload = (_j = this._context) === null || _j === void 0 ? void 0 : _j.payload;
         this.repo = this._context.repo;
         this.pullRequest = this._context.payload.pull_request.number.toString();
-        this.workDir = this.workspace + "_ALGOSEC_CODE_ANALYSIS";
+        this.useCheckoutAction = ((_k = process === null || process === void 0 ? void 0 : process.env) === null || _k === void 0 ? void 0 : _k.USE_CHECKOUT) == 'true' ? true : false;
+        this.workDir = this.workspace + this.useCheckoutAction ? "" : "_ALGOSEC_CODE_ANALYSIS";
         this.actionUuid = (0, uuid_by_string_1.default)(this.sha);
         this.assetsUrl =
             "https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons";
@@ -649,7 +651,9 @@ class Github {
     }
     checkForDiffByFileTypes(fileTypes) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.prepareRepo();
+            if (!this.useCheckoutAction) {
+                yield this.prepareRepo();
+            }
             let diffFolders = [];
             try {
                 const diffs = yield this.getDiff(this.octokit);
