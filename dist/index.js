@@ -345,13 +345,13 @@ class Terraform {
             const initLog = { stdout: '', stderr: '', exitCode: 0 };
             try {
                 process.chdir(`${options.workDir}/${options.runFolder}`);
-                console.log(`::group:: Init Terraform on folder ${options.runFolder}`);
+                console.log(`::group:: Run Terraform on folder ${options.runFolder}`);
                 steps.init = yield (0, exec_1.exec)("terraform", ["init"]);
-                console.log(`::endgroup::\n::group:: Format Terraform on folder ${options.runFolder}\n`);
+                // console.log(`::endgroup::\n::group:: Format Terraform on folder ${options.runFolder}\n`)
                 steps.fmt = yield (0, exec_1.exec)("terraform", ["fmt", "-diff"]);
-                console.log(`::endgroup::\n::group:: Validate Terraform on folder ${options.runFolder}\n`);
+                // console.log(`::endgroup::\n::group:: Validate Terraform on folder ${options.runFolder}\n`)
                 steps.validate = yield (0, exec_1.exec)("terraform", ["validate", "-no-color"]);
-                console.log(`::endgroup::\n::group:: Plan Terraform on folder ${options.runFolder}\n`);
+                // console.log(`::endgroup::\n::group:: Plan Terraform on folder ${options.runFolder}\n`)
                 if (!(0, fs_1.existsSync)("./tmp")) {
                     yield (0, exec_1.exec)("mkdir", ["tmp"]);
                 }
@@ -361,7 +361,7 @@ class Terraform {
                     "-no-color",
                     `-out=${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
                 ]);
-                console.log(`::endgroup::\n::group:: Show Terraform on folder ${options.runFolder}\n`);
+                // console.log(`::endgroup::\n::group:: Show Terraform on folder ${options.runFolder}\n`)
                 const initLog = {
                     exitCode: 0,
                     stdout: steps.init.stdout.concat(steps.fmt.stdout, steps.validate.stdout, steps.plan.stdout),
@@ -421,7 +421,7 @@ class Terraform {
                         output,
                     };
                     res.push(file);
-                    console.log(`::group::##### IAC Connectivity Risk Analysis #####\n ${((_a = iterable === null || iterable === void 0 ? void 0 : iterable.entries()) === null || _a === void 0 ? void 0 : _a.length) > 1 ? "." + index + 1 : ""} - ${this.type} Result for folder ${file.folder}: ${JSON.stringify(file)}\n::endgroup::`);
+                    console.log(`::group::##### IAC Connectivity Risk Analysis ##### ${((_a = iterable === null || iterable === void 0 ? void 0 : iterable.entries()) === null || _a === void 0 ? void 0 : _a.length) > 1 ? "." + index + 1 : ""} - ${this.type} Result for folder ${file.folder}:\n ${JSON.stringify(file)}\n::endgroup::`);
                 }
             });
             try {
@@ -430,7 +430,7 @@ class Terraform {
             catch (error) {
                 console.log("Framework check failed " + error);
             }
-            console.log(`::group::Files To Analyze\n ${JSON.stringify(res)}\n::endgroup::`);
+            console.log(`::group::Files To Analyze\n ${JSON.stringify(res, null, "\t")}\n::endgroup::`);
             return res;
         });
     }

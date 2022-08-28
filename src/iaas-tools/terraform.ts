@@ -24,13 +24,13 @@ export class Terraform implements IFramework {
     const initLog: ExecOutput = {stdout: '', stderr: '', exitCode: 0};
     try {
       process.chdir(`${options.workDir}/${options.runFolder}`);
-      console.log(`::group:: Init Terraform on folder ${options.runFolder}`)
+      console.log(`::group:: Run Terraform on folder ${options.runFolder}`)
       steps.init = await exec("terraform", ["init"]);
-      console.log(`::endgroup::\n::group:: Format Terraform on folder ${options.runFolder}\n`)
+      // console.log(`::endgroup::\n::group:: Format Terraform on folder ${options.runFolder}\n`)
       steps.fmt = await exec("terraform", ["fmt", "-diff"]);
-      console.log(`::endgroup::\n::group:: Validate Terraform on folder ${options.runFolder}\n`)
+      // console.log(`::endgroup::\n::group:: Validate Terraform on folder ${options.runFolder}\n`)
       steps.validate = await exec("terraform", ["validate", "-no-color"]);
-      console.log(`::endgroup::\n::group:: Plan Terraform on folder ${options.runFolder}\n`)
+      // console.log(`::endgroup::\n::group:: Plan Terraform on folder ${options.runFolder}\n`)
       if (!existsSync("./tmp")) {
         await exec("mkdir", ["tmp"]);
       }
@@ -40,7 +40,7 @@ export class Terraform implements IFramework {
         "-no-color",
         `-out=${process?.cwd()}\\tmp\\tf-${options.runFolder}.out`,
       ]);
-      console.log(`::endgroup::\n::group:: Show Terraform on folder ${options.runFolder}\n`)
+      // console.log(`::endgroup::\n::group:: Show Terraform on folder ${options.runFolder}\n`)
       const initLog = {
         exitCode: 0,
         stdout: steps.init.stdout.concat(
@@ -114,9 +114,9 @@ export class Terraform implements IFramework {
         };
         res.push(file);
         console.log(
-          `::group::##### IAC Connectivity Risk Analysis #####\n ${
+          `::group::##### IAC Connectivity Risk Analysis ##### ${
             iterable?.entries()?.length > 1 ? "." + index + 1 : ""
-          } - ${this.type} Result for folder ${file.folder}: ${JSON.stringify(
+          } - ${this.type} Result for folder ${file.folder}:\n ${JSON.stringify(
             file
           )}\n::endgroup::`
         );
@@ -127,7 +127,7 @@ export class Terraform implements IFramework {
     } catch (error) {
       console.log("Framework check failed " + error);
     }
-    console.log(`::group::Files To Analyze\n ${JSON.stringify(res)}\n::endgroup::`);
+    console.log(`::group::Files To Analyze\n ${JSON.stringify(res, null, "\t")}\n::endgroup::`);
     return res;
   }
 }
