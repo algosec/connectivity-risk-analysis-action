@@ -24,7 +24,7 @@ export class Terraform implements IFramework {
     const initLog: ExecOutput = {stdout: '', stderr: '', exitCode: 0};
     try {
       process.chdir(`${options.workDir}/${options.runFolder}`);
-      console.log(`::group:: Run Terraform on folder ${options.runFolder}`)
+      console.log(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`)
       steps.init = await exec("terraform", ["init"]);
       // console.log(`::endgroup::\n::group:: Format Terraform on folder ${options.runFolder}\n`)
       steps.fmt = await exec("terraform", ["fmt", "-diff"]);
@@ -117,7 +117,7 @@ export class Terraform implements IFramework {
           `::group::##### IAC Connectivity Risk Analysis ##### ${
             iterable?.entries()?.length > 1 ? "." + index + 1 : ""
           } - ${this.type} Result for folder ${file.folder}:\n ${JSON.stringify(
-            file
+            file, null, "\t"
           )}\n::endgroup::`
         );
       }
@@ -127,7 +127,7 @@ export class Terraform implements IFramework {
     } catch (error) {
       console.log("Framework check failed " + error);
     }
-    console.log(`::group::Files To Analyze\n ${JSON.stringify(res, null, "\t")}\n::endgroup::`);
+    console.log(`::group::##### IAC Connectivity Risk Analysis ##### Files To Analyze\n ${JSON.stringify(res, null, "\t")}\n::endgroup::`);
     return res;
   }
 }

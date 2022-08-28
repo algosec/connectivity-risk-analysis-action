@@ -69,19 +69,19 @@ export class AshCodeAnalysis {
       const data = JSON.parse(await res.readBody());
       if (response_code >= 200 && response_code <= 300) {
         this.vcs.logger.info(
-          "##### IAC Connectivity Risk Analysis ##### Passed authentication vs CF's login. new token has been generated."
+          "::group::##### IAC Connectivity Risk Analysis ##### Passed authentication vs CF's login. new token has been generated.::endgroup::"
         );
         return data?.access_token;
       } else {
         this.vcs.logger.exit(
-          `##### IAC Connectivity Risk Analysis ##### Failed to generate token. Error code ${response_code}, msg: ${JSON.stringify(
-            data
-          )}`
+          `::group::##### IAC Connectivity Risk Analysis ##### Failed to generate token.\n Error code ${response_code}, msg: ${JSON.stringify(
+            data, null, "\t"
+          )}\n::endgroup::`
         );
       }
     } catch (error: any) {
       this.vcs.logger.exit(
-        `##### IAC Connectivity Risk Analysis ##### Failed to generate token. Error msg: ${error.toString()}`
+        `::group::##### IAC Connectivity Risk Analysis ##### Failed to generate token. Error msg: ${error.toString()}:endgroup::`
       );
     }
     return "";
@@ -96,7 +96,7 @@ export class AshCodeAnalysis {
 
     if (response) {
       this.vcs.logger.info(
-        "##### IAC Connectivity Risk Analysis ##### File/s were uploaded successfully"
+        "::group::##### IAC Connectivity Risk Analysis ##### File/s were uploaded successfully:endgroup::"
       );
     }
   }
@@ -142,7 +142,7 @@ export class AshCodeAnalysis {
     file: AnalysisFile
   ): Promise<AnalysisResult | null> {
     this.vcs.logger.info(
-      `##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response for folder:${file.folder}\n`
+      `::group::##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response for folder:${file.folder}:endgroup::\n`
     );
     let analysisResult = await this.checkCodeAnalysisResponse(file);
     for (let i = 0; i < 50; i++) {
@@ -151,12 +151,12 @@ export class AshCodeAnalysis {
       if (analysisResult?.additions) {
         analysisResult.folder = file?.folder;
         this.vcs.logger.debug(
-          "##### IAC Connectivity Risk Analysis ##### Response: " + JSON.stringify(analysisResult)
+          "::group::##### IAC Connectivity Risk Analysis ##### Response:\n" + JSON.stringify(analysisResult) + "\n::endgroup::"
         );
         break;
       } else if (analysisResult?.error) {
         this.vcs.logger.exit(
-          "##### IAC Connectivity Risk Analysis ##### Poll Request failed: " + analysisResult?.error
+          "::group::##### IAC Connectivity Risk Analysis ##### Poll Request failed: " + analysisResult?.error + "\n::endgroup::"
         );
         break;
       }
