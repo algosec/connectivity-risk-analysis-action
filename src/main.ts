@@ -6,9 +6,9 @@ import { FrameworkService } from "./iaas-tools/framework.service";
 import { IVersionControl, VersionControlKeys } from "./vcs/vcs.model";
 import { VersionControlService } from "./vcs/vcs.service";
 // import {
-//     codeAnalysisMock as codeAnalysisResponses,
-//     terraformPlanFileMock as filesToAnalyze
-// } from "../test/mockData.folder-error"
+//     codeAnalysisResponses,
+//     filesToAnalyze
+// } from "../test/mockData.gcp"
 
 export class Main {
   steps: ExecSteps = {};

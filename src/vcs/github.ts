@@ -12,7 +12,7 @@ import getUuid from "uuid-by-string";
 export type GithubContext = typeof context;
 type RunMode = "fail" | "continue_on_error";
 // DEBUG LOCALLY
-// import {githubEventPayloadMock } from "../../test/mockData.folder-error"
+// import {githubEventPayloadMock } from "../../test/mockData.gcp"
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 
 export class Github implements IVersionControl {
@@ -46,8 +46,8 @@ export class Github implements IVersionControl {
     this.payload = this._context?.payload;
     this.repo = this._context.repo;
     this.pullRequest = this._context.payload.pull_request.number.toString();
-    this.useCheckoutAction = process?.env?.USE_CHECKOUT == 'true' ? true : false
-    this.workDir = this.workspace + this.useCheckoutAction ? "" : "_ALGOSEC_CODE_ANALYSIS"
+    this.useCheckoutAction = process?.env?.USE_CHECKOUT || process?.env?.USE_CHECKOUT == 'true' ? true : false
+    this.workDir = this.useCheckoutAction ? this.workspace : this.workspace + "_ALGOSEC_CODE_ANALYSIS"
     this.actionUuid = getUuid(this.sha);
     this.assetsUrl =
       "https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons";
@@ -177,9 +177,9 @@ export class Github implements IVersionControl {
   }
 
   async checkForDiffByFileTypes(fileTypes: string[]): Promise<string[]> {
-    // if (!this.useCheckoutAction){
+    if (!this.useCheckoutAction){
       await this.prepareRepo();
-    // }
+    }
     let diffFolders: any[] = [];
     try {
       const diffs = await this.getDiff(this.octokit);
@@ -396,6 +396,7 @@ ${file?.output?.log?.stderr ? "<br>" + errors + "<br>" : ""}
             riskId: risk.riskId,
             riskTitle: risk.riskTitle,
             riskSeverity: risk.riskSeverity,
+            vendor: risk?.items[0].vendor
           };
         });
       });
@@ -430,7 +431,7 @@ ${file?.output?.log?.stderr ? "<br>" + errors + "<br>" : ""}
         risk.riskSeverity
       }.svg" /></td>\n
 <td align="center"><sub><img width="15" height="15" src="${this.assetsUrl}/${
-        risk?.vendor ?? "aws"
+        risk?.vendor.toLowerCase() ?? "aws"
       }.svg" /></sub></td>\n
 <td>${Array.isArray(risk.folder) ? risk.folder.join(", ") : risk.folder}</td>\n
 <td>${risk.riskTitle}</td>\n
