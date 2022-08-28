@@ -67,7 +67,7 @@ class AshCodeAnalysis {
                 const response_code = res.message.statusCode;
                 const data = JSON.parse(yield res.readBody());
                 if (response_code >= 200 && response_code <= 300) {
-                    this.vcs.logger.info("##### IAC Connectivity Risk Analysis ##### Step 1: passed authentication vs CF's login. new token has been generated.");
+                    this.vcs.logger.info("##### IAC Connectivity Risk Analysis ##### Passed authentication vs CF's login. new token has been generated.");
                     return data === null || data === void 0 ? void 0 : data.access_token;
                 }
                 else {
@@ -86,7 +86,7 @@ class AshCodeAnalysis {
             filesToUpload.forEach((file) => fileUploadPromises.push(this.uploadFile(file)));
             const response = yield Promise.all(fileUploadPromises);
             if (response) {
-                this.vcs.logger.info("##### IAC Connectivity Risk Analysis ##### Step 4 - file/s uploaded successfully");
+                this.vcs.logger.info("##### IAC Connectivity Risk Analysis ##### File/s were uploaded successfully");
             }
         });
     }
@@ -127,7 +127,7 @@ class AshCodeAnalysis {
     }
     pollCodeAnalysisResponse(file) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.vcs.logger.info("##### IAC Connectivity Risk Analysis ##### Step 5 - waiting for response...");
+            this.vcs.logger.info("##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response...");
             let analysisResult = yield this.checkCodeAnalysisResponse(file);
             for (let i = 0; i < 50; i++) {
                 yield this.wait(3000);
@@ -414,7 +414,7 @@ class Terraform {
                         output,
                     };
                     res.push(file);
-                    console.log(`##### IAC Connectivity Risk Analysis ##### Step 3${((_a = iterable === null || iterable === void 0 ? void 0 : iterable.entries()) === null || _a === void 0 ? void 0 : _a.length) > 1 ? "." + index + 1 : ""} - ${this.type} Result for folder ${file.folder}: ${JSON.stringify(file)}`);
+                    console.log(`::group::##### IAC Connectivity Risk Analysis ##### ${((_a = iterable === null || iterable === void 0 ? void 0 : iterable.entries()) === null || _a === void 0 ? void 0 : _a.length) > 1 ? "." + index + 1 : ""} - ${this.type} Result for folder ${file.folder}: ${JSON.stringify(file)}::endgroup::`);
                 }
             });
             try {
@@ -423,7 +423,7 @@ class Terraform {
             catch (error) {
                 console.log("Framework check failed " + error);
             }
-            console.log(`Files To Analyze ${JSON.stringify(res)}`);
+            console.log(`::group::Files To Analyze\n ${JSON.stringify(res)}::endgroup::`);
             return res;
         });
     }
@@ -476,7 +476,6 @@ class Main {
                 }
                 const foldersToRunCheck = yield vcs.checkForDiffByFileTypes(framework.fileTypes);
                 if (foldersToRunCheck) {
-                    console.log(`CHECK FOLDERS: ${foldersToRunCheck.join(',')} WORKDIR:  ${vcs.workDir}`);
                     const filesToAnalyze = yield framework.check(foldersToRunCheck, vcs.workDir);
                     if (filesToAnalyze) {
                         const codeAnalysisResponses = yield codeAnalyzer.analyze(filesToAnalyze);
@@ -668,12 +667,10 @@ class Github {
                     this.logger.exit(error === null || error === void 0 ? void 0 : error.message);
             }
             if ((diffFolders === null || diffFolders === void 0 ? void 0 : diffFolders.length) == 0) {
-                this.logger.info("##### IAC Connectivity Risk Analysis ##### No changes were found in terraform plans");
+                this.logger.info("##### IAC Connectivity Risk Analysis ##### No changes were found");
                 return [];
             }
-            this.logger.info("##### IAC Connectivity Risk Analysis ##### Step 2 - found diffs");
-            this.logger.debug("##### IAC Connectivity Risk Analysis ##### diffs result: " +
-                JSON.stringify(diffFolders));
+            this.logger.info("##### IAC Connectivity Risk Analysis ##### Found changes in folders JSON.stringify(diffFolders)");
             return diffFolders;
         });
     }
@@ -709,7 +706,7 @@ class Github {
                 this.logger.exit("##### IAC Connectivity Risk Analysis ##### The risks analysis process failed.\n" + errors);
             }
             else {
-                this.logger.info("##### IAC Connectivity Risk Analysis ##### Step 6 - parsing Code Analysis");
+                this.logger.info("##### IAC Connectivity Risk Analysis ##### Parsing Code Analysis and comment");
                 if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => { var _a, _b; return ((_b = (_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })) {
                     if (this.runMode == "fail")
                         this.logger.exit("##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report");

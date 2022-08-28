@@ -110,11 +110,11 @@ export class Terraform implements IFramework {
         };
         res.push(file);
         console.log(
-          `##### IAC Connectivity Risk Analysis ##### Step 3${
+          `::group::##### IAC Connectivity Risk Analysis ##### ${
             iterable?.entries()?.length > 1 ? "." + index + 1 : ""
           } - ${this.type} Result for folder ${file.folder}: ${JSON.stringify(
             file
-          )}`
+          )}::endgroup::`
         );
       }
     };
@@ -123,7 +123,7 @@ export class Terraform implements IFramework {
     } catch (error) {
       console.log("Framework check failed " + error);
     }
-    console.log(`Files To Analyze ${JSON.stringify(res)}`);
+    console.log(`::group::Files To Analyze\n ${JSON.stringify(res)}::endgroup::`);
     return res;
   }
 }

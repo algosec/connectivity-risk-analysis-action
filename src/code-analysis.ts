@@ -69,7 +69,7 @@ export class AshCodeAnalysis {
       const data = JSON.parse(await res.readBody());
       if (response_code >= 200 && response_code <= 300) {
         this.vcs.logger.info(
-          "##### IAC Connectivity Risk Analysis ##### Step 1: passed authentication vs CF's login. new token has been generated."
+          "##### IAC Connectivity Risk Analysis ##### Passed authentication vs CF's login. new token has been generated."
         );
         return data?.access_token;
       } else {
@@ -96,7 +96,7 @@ export class AshCodeAnalysis {
 
     if (response) {
       this.vcs.logger.info(
-        "##### IAC Connectivity Risk Analysis ##### Step 4 - file/s uploaded successfully"
+        "##### IAC Connectivity Risk Analysis ##### File/s were uploaded successfully"
       );
     }
   }
@@ -141,7 +141,7 @@ export class AshCodeAnalysis {
     file: AnalysisFile
   ): Promise<AnalysisResult | null> {
     this.vcs.logger.info(
-      "##### IAC Connectivity Risk Analysis ##### Step 5 - waiting for response..."
+      "##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response..."
     );
     let analysisResult = await this.checkCodeAnalysisResponse(file);
     for (let i = 0; i < 50; i++) {

@@ -196,16 +196,12 @@ export class Github implements IVersionControl {
     }
     if (diffFolders?.length == 0) {
       this.logger.info(
-        "##### IAC Connectivity Risk Analysis ##### No changes were found in terraform plans"
+        "##### IAC Connectivity Risk Analysis ##### No changes were found"
       );
       return []
     }
     this.logger.info(
-      "##### IAC Connectivity Risk Analysis ##### Step 2 - found diffs"
-    );
-    this.logger.debug(
-      "##### IAC Connectivity Risk Analysis ##### diffs result: " +
-        JSON.stringify(diffFolders)
+      "##### IAC Connectivity Risk Analysis ##### Found changes in folders JSON.stringify(diffFolders)"
     );
     return diffFolders;
   }
@@ -246,7 +242,7 @@ export class Github implements IVersionControl {
         "##### IAC Connectivity Risk Analysis ##### The risks analysis process failed.\n" + errors
       );
     } else {
-      this.logger.info("##### IAC Connectivity Risk Analysis ##### Step 6 - parsing Code Analysis");
+      this.logger.info("##### IAC Connectivity Risk Analysis ##### Parsing Code Analysis and comment");
       if (
         analysisResults?.some(
           (response) => response?.additions?.analysis_result?.length > 0

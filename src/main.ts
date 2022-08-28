@@ -37,7 +37,6 @@ export class Main {
         framework.fileTypes
       );
       if (foldersToRunCheck) {
-        console.log(`CHECK FOLDERS: ${foldersToRunCheck.join(',')} WORKDIR:  ${vcs.workDir}`)
         const filesToAnalyze: AnalysisFile[] = await framework.check(
           foldersToRunCheck,
           vcs.workDir
