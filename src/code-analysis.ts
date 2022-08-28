@@ -69,7 +69,7 @@ export class AshCodeAnalysis {
       const data = JSON.parse(await res.readBody());
       if (response_code >= 200 && response_code <= 300) {
         this.vcs.logger.info(
-          "::group::##### IAC Connectivity Risk Analysis ##### Passed authentication vs CF's login. new token has been generated.::endgroup::"
+          "::group::##### IAC Connectivity Risk Analysis ##### Passed authentication vs CF's login. new token has been generated.\n::endgroup::"
         );
         return data?.access_token;
       } else {
@@ -81,7 +81,7 @@ export class AshCodeAnalysis {
       }
     } catch (error: any) {
       this.vcs.logger.exit(
-        `::group::##### IAC Connectivity Risk Analysis ##### Failed to generate token. Error msg: ${error.toString()}:endgroup::`
+        `::group::##### IAC Connectivity Risk Analysis ##### Failed to generate token. Error msg: ${error.toString()}\n::endgroup::`
       );
     }
     return "";
@@ -96,7 +96,7 @@ export class AshCodeAnalysis {
 
     if (response) {
       this.vcs.logger.info(
-        "::group::##### IAC Connectivity Risk Analysis ##### File/s were uploaded successfully:endgroup::"
+        "::group::##### IAC Connectivity Risk Analysis ##### File/s were uploaded successfully\n::endgroup::"
       );
     }
   }
@@ -125,7 +125,7 @@ export class AshCodeAnalysis {
       .forEach((file) =>
         codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file))
       );
-    console.log('::group::##### IAC Connectivity Risk Analysis ##### Analyzing Risks\n')
+    console.log('::group::##### IAC Connectivity Risk Analysis ##### Parsing Risks and create report\n')
     analysisResult = await Promise.all(codeAnalysisPromises);
     console.log('::endgroup::')
     if (!analysisResult || analysisResult?.error) {
@@ -142,7 +142,7 @@ export class AshCodeAnalysis {
     file: AnalysisFile
   ): Promise<AnalysisResult | null> {
     this.vcs.logger.info(
-      `::group::##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response for folder:${file.folder}:endgroup::\n`
+      `::group::##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response for folder:${file.folder}\n::endgroup::\n`
     );
     let analysisResult = await this.checkCodeAnalysisResponse(file);
     for (let i = 0; i < 50; i++) {
