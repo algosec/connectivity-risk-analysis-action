@@ -149,7 +149,7 @@ export class AshCodeAnalysis {
       analysisResult = await this.checkCodeAnalysisResponse(file);
       if (analysisResult?.additions) {
         analysisResult.folder = file?.folder;
-        this.vcs.logger.info(
+        this.vcs.logger.debug(
           "##### IAC Connectivity Risk Analysis ##### Response: " + JSON.stringify(analysisResult)
         );
         break;

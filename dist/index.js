@@ -134,7 +134,7 @@ class AshCodeAnalysis {
                 analysisResult = yield this.checkCodeAnalysisResponse(file);
                 if (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.additions) {
                     analysisResult.folder = file === null || file === void 0 ? void 0 : file.folder;
-                    this.vcs.logger.info("##### IAC Connectivity Risk Analysis ##### Response: " + JSON.stringify(analysisResult));
+                    this.vcs.logger.debug("##### IAC Connectivity Risk Analysis ##### Response: " + JSON.stringify(analysisResult));
                     break;
                 }
                 else if (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error) {
@@ -476,6 +476,7 @@ class Main {
                 }
                 const foldersToRunCheck = yield vcs.checkForDiffByFileTypes(framework.fileTypes);
                 if (foldersToRunCheck) {
+                    console.log(`CHECK FOLDERS: ${foldersToRunCheck.join(',')} WORKDIR:  ${vcs.workDir}`);
                     const filesToAnalyze = yield framework.check(foldersToRunCheck, vcs.workDir);
                     if (filesToAnalyze) {
                         const codeAnalysisResponses = yield codeAnalyzer.analyze(filesToAnalyze);
@@ -651,9 +652,9 @@ class Github {
     }
     checkForDiffByFileTypes(fileTypes) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!this.useCheckoutAction) {
-                yield this.prepareRepo();
-            }
+            // if (!this.useCheckoutAction){
+            yield this.prepareRepo();
+            // }
             let diffFolders = [];
             try {
                 const diffs = yield this.getDiff(this.octokit);
@@ -670,7 +671,8 @@ class Github {
                 this.logger.info("##### IAC Connectivity Risk Analysis ##### No changes were found in terraform plans");
                 return [];
             }
-            this.logger.info("##### IAC Connectivity Risk Analysis ##### Step 2 - diffs result: " +
+            this.logger.info("##### IAC Connectivity Risk Analysis ##### Step 2 - found diffs");
+            this.logger.debug("##### IAC Connectivity Risk Analysis ##### diffs result: " +
                 JSON.stringify(diffFolders));
             return diffFolders;
         });

@@ -177,9 +177,9 @@ export class Github implements IVersionControl {
   }
 
   async checkForDiffByFileTypes(fileTypes: string[]): Promise<string[]> {
-    if (!this.useCheckoutAction){
+    // if (!this.useCheckoutAction){
       await this.prepareRepo();
-    }
+    // }
     let diffFolders: any[] = [];
     try {
       const diffs = await this.getDiff(this.octokit);
@@ -201,7 +201,10 @@ export class Github implements IVersionControl {
       return []
     }
     this.logger.info(
-      "##### IAC Connectivity Risk Analysis ##### Step 2 - diffs result: " +
+      "##### IAC Connectivity Risk Analysis ##### Step 2 - found diffs"
+    );
+    this.logger.debug(
+      "##### IAC Connectivity Risk Analysis ##### diffs result: " +
         JSON.stringify(diffFolders)
     );
     return diffFolders;
