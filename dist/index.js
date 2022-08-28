@@ -342,7 +342,7 @@ class Terraform {
             const steps = {};
             const initLog = { stdout: '', stderr: '', exitCode: 0 };
             try {
-                process.chdir(`${options.workDir}\\${options.runFolder}`);
+                process.chdir(`${options.workDir}/${options.runFolder}`);
                 console.log(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`);
                 steps.init = yield (0, exec_1.exec)("terraform", ["init"]);
                 // console.log(`::endgroup::\n::group:: Format Terraform on folder ${options.runFolder}\n`)
