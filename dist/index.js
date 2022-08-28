@@ -115,19 +115,20 @@ class AshCodeAnalysis {
             filesToUpload
                 .filter((file) => { var _a; return (_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan; })
                 .forEach((file) => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
+            console.log('::group::##### IAC Connectivity Risk Analysis ##### Analyzing Risks\n');
             analysisResult = yield Promise.all(codeAnalysisPromises);
+            console.log('::endgroup::');
             if (!analysisResult || (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error)) {
                 this.vcs.logger.exit("##### IAC Connectivity Risk Analysis ##### Code Analysis failed");
                 return [];
             }
-            this.vcs.logger.info("##### IAC Connectivity Risk Analysis ##### code analysis result: " +
-                JSON.stringify(analysisResult));
+            this.vcs.logger.debug(`::group::##### IAC Connectivity Risk Analysis ##### Risk analysis result:\n${JSON.stringify(analysisResult)}\n::endgroup::`);
             return analysisResult;
         });
     }
     pollCodeAnalysisResponse(file) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.vcs.logger.info("##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response...");
+            this.vcs.logger.info(`##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response for folder:${file.folder}\n`);
             let analysisResult = yield this.checkCodeAnalysisResponse(file);
             for (let i = 0; i < 50; i++) {
                 yield this.wait(3000);
@@ -344,24 +345,18 @@ class Terraform {
             const initLog = { stdout: '', stderr: '', exitCode: 0 };
             try {
                 process.chdir(`${options.workDir}/${options.runFolder}`);
-                console.log(`::group:: Init Terraform on folder ${options.runFolder}`);
                 steps.init = yield (0, exec_1.exec)("terraform", ["init"]);
-                console.log(`::endgroup::\n::group:: Init Terraform on folder ${options.runFolder}\n`);
                 steps.fmt = yield (0, exec_1.exec)("terraform", ["fmt", "-diff"]);
-                console.log(`::endgroup::\n::group:: Init Terraform on folder ${options.runFolder}\n`);
                 steps.validate = yield (0, exec_1.exec)("terraform", ["validate", "-no-color"]);
-                console.log(`::endgroup::\n::group:: Init Terraform on folder ${options.runFolder}\n`);
                 if (!(0, fs_1.existsSync)("./tmp")) {
                     yield (0, exec_1.exec)("mkdir", ["tmp"]);
                 }
-                console.log(`::group:: Init Terraform on folder ${options.runFolder}\n`);
                 steps.plan = yield (0, exec_1.exec)("terraform", [
                     "plan",
                     "-input=false",
                     "-no-color",
                     `-out=${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
                 ]);
-                console.log(`::endgroup::\n`);
                 const initLog = {
                     exitCode: 0,
                     stdout: steps.init.stdout.concat(steps.fmt.stdout, steps.validate.stdout, steps.plan.stdout),
@@ -384,6 +379,7 @@ class Terraform {
                     result = { plan: {}, log: { stderr: error === null || error === void 0 ? void 0 : error.message, stdout: '', exitCode: 0 }, initLog };
                 }
             }
+            console.log(`::endgroup::`);
             return result;
         });
     }

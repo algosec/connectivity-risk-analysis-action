@@ -22,19 +22,15 @@ export class Terraform implements IFramework {
     let result: FrameworkResult = {plan: {}, log: {stderr: '', stdout: '', exitCode: 0}, initLog: {stderr: '', stdout: '', exitCode: 0}}
     const steps: ExecSteps = {};
     const initLog: ExecOutput = {stdout: '', stderr: '', exitCode: 0};
+     
     try {
       process.chdir(`${options.workDir}/${options.runFolder}`);
-      console.log(`::group:: Init Terraform on folder ${options.runFolder}`)
       steps.init = await exec("terraform", ["init"]);
-      console.log(`::endgroup::\n::group:: Init Terraform on folder ${options.runFolder}\n`)
       steps.fmt = await exec("terraform", ["fmt", "-diff"]);
-      console.log(`::endgroup::\n::group:: Init Terraform on folder ${options.runFolder}\n`)
       steps.validate = await exec("terraform", ["validate", "-no-color"]);
-      console.log(`::endgroup::\n::group:: Init Terraform on folder ${options.runFolder}\n`)
       if (!existsSync("./tmp")) {
         await exec("mkdir", ["tmp"]);
       }
-      console.log(`::group:: Init Terraform on folder ${options.runFolder}\n`)
 
       steps.plan = await exec("terraform", [
         "plan",
@@ -42,7 +38,6 @@ export class Terraform implements IFramework {
         "-no-color",
         `-out=${process?.cwd()}\\tmp\\tf-${options.runFolder}.out`,
       ]);
-      console.log(`::endgroup::\n`)
       const initLog = {
         exitCode: 0,
         stdout: steps.init.stdout.concat(
@@ -76,6 +71,7 @@ export class Terraform implements IFramework {
         result = { plan: {}, log: { stderr: error?.message, stdout: '', exitCode:0  },  initLog };
       }
     }
+    console.log(`::endgroup::`)
     return result
   }
 

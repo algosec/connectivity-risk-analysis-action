@@ -125,14 +125,15 @@ export class AshCodeAnalysis {
       .forEach((file) =>
         codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file))
       );
+    console.log('::group::##### IAC Connectivity Risk Analysis ##### Analyzing Risks\n')
     analysisResult = await Promise.all(codeAnalysisPromises);
+    console.log('::endgroup::')
     if (!analysisResult || analysisResult?.error) {
       this.vcs.logger.exit("##### IAC Connectivity Risk Analysis ##### Code Analysis failed");
       return []
     }
-    this.vcs.logger.info(
-      "##### IAC Connectivity Risk Analysis ##### code analysis result: " +
-        JSON.stringify(analysisResult)
+    this.vcs.logger.debug(
+      `::group::##### IAC Connectivity Risk Analysis ##### Risk analysis result:\n${JSON.stringify(analysisResult)}\n::endgroup::`
     );
     return analysisResult;
   }
@@ -141,7 +142,7 @@ export class AshCodeAnalysis {
     file: AnalysisFile
   ): Promise<AnalysisResult | null> {
     this.vcs.logger.info(
-      "##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response..."
+      `##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response for folder:${file.folder}\n`
     );
     let analysisResult = await this.checkCodeAnalysisResponse(file);
     for (let i = 0; i < 50; i++) {
