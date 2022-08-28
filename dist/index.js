@@ -115,9 +115,7 @@ class AshCodeAnalysis {
             filesToUpload
                 .filter((file) => { var _a; return (_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan; })
                 .forEach((file) => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
-            console.log('::group::##### IAC Connectivity Risk Analysis ##### Parsing Risks and create report\n');
             analysisResult = yield Promise.all(codeAnalysisPromises);
-            console.log('::endgroup::');
             if (!analysisResult || (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error)) {
                 this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### Code Analysis failed");
                 return [];
@@ -412,7 +410,6 @@ class Terraform {
         return __awaiter(this, void 0, void 0, function* () {
             const res = [];
             const asyncIterable = (iterable, action) => __awaiter(this, void 0, void 0, function* () {
-                var _a;
                 for (const [index, value] of iterable === null || iterable === void 0 ? void 0 : iterable.entries()) {
                     const output = yield action({ runFolder: value, workDir });
                     const file = {
@@ -421,7 +418,6 @@ class Terraform {
                         output,
                     };
                     res.push(file);
-                    console.log(`::group::##### IAC Connectivity Risk Analysis ##### ${((_a = iterable === null || iterable === void 0 ? void 0 : iterable.entries()) === null || _a === void 0 ? void 0 : _a.length) > 1 ? "." + index + 1 : ""}${this.type} Result for folder ${file.folder}:\n ${JSON.stringify(file, null, "\t")}\n::endgroup::`);
                 }
             });
             try {

@@ -125,9 +125,7 @@ export class AshCodeAnalysis {
       .forEach((file) =>
         codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file))
       );
-    console.log('::group::##### IAC Connectivity Risk Analysis ##### Parsing Risks and create report\n')
     analysisResult = await Promise.all(codeAnalysisPromises);
-    console.log('::endgroup::')
     if (!analysisResult || analysisResult?.error) {
       this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### Code Analysis failed");
       return []

@@ -113,13 +113,6 @@ export class Terraform implements IFramework {
           output,
         };
         res.push(file);
-        console.log(
-          `::group::##### IAC Connectivity Risk Analysis ##### ${
-            iterable?.entries()?.length > 1 ? "." + index + 1 : ""
-          }${this.type} Result for folder ${file.folder}:\n ${JSON.stringify(
-            file, null, "\t"
-          )}\n::endgroup::`
-        );
       }
     };
     try {
