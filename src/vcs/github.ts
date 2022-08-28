@@ -46,7 +46,7 @@ export class Github implements IVersionControl {
     this.payload = this._context?.payload;
     this.repo = this._context.repo;
     this.pullRequest = this._context.payload.pull_request.number.toString();
-    this.useCheckoutAction = process?.env?.USE_CHECKOUT || process?.env?.USE_CHECKOUT == 'true' ? true : false
+    this.useCheckoutAction = (process?.env?.USE_CHECKOUT && process?.env?.USE_CHECKOUT != 'false') || process?.env?.USE_CHECKOUT == 'true' ? true : false
     this.workDir = this.useCheckoutAction ? this.workspace : this.workspace + "_ALGOSEC_CODE_ANALYSIS"
     this.actionUuid = getUuid(this.sha);
     this.assetsUrl =

@@ -344,7 +344,7 @@ class Terraform {
             const steps = {};
             const initLog = { stdout: '', stderr: '', exitCode: 0 };
             try {
-                process.chdir(`${options.workDir}/${options.runFolder}`);
+                process.chdir(`${options.workDir}\\${options.runFolder}`);
                 console.log(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`);
                 steps.init = yield (0, exec_1.exec)("terraform", ["init"]);
                 // console.log(`::endgroup::\n::group:: Format Terraform on folder ${options.runFolder}\n`)
@@ -534,7 +534,7 @@ const uuid_by_string_1 = __importDefault(__nccwpck_require__(7777));
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 class Github {
     constructor() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
         this.steps = {};
         this.useCheckoutAction = false;
         this.runMode = (_b = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.MODE) !== null && _b !== void 0 ? _b : "fail";
@@ -548,7 +548,7 @@ class Github {
         this.payload = (_j = this._context) === null || _j === void 0 ? void 0 : _j.payload;
         this.repo = this._context.repo;
         this.pullRequest = this._context.payload.pull_request.number.toString();
-        this.useCheckoutAction = ((_k = process === null || process === void 0 ? void 0 : process.env) === null || _k === void 0 ? void 0 : _k.USE_CHECKOUT) || ((_l = process === null || process === void 0 ? void 0 : process.env) === null || _l === void 0 ? void 0 : _l.USE_CHECKOUT) == 'true' ? true : false;
+        this.useCheckoutAction = (((_k = process === null || process === void 0 ? void 0 : process.env) === null || _k === void 0 ? void 0 : _k.USE_CHECKOUT) && ((_l = process === null || process === void 0 ? void 0 : process.env) === null || _l === void 0 ? void 0 : _l.USE_CHECKOUT) != 'false') || ((_m = process === null || process === void 0 ? void 0 : process.env) === null || _m === void 0 ? void 0 : _m.USE_CHECKOUT) == 'true' ? true : false;
         this.workDir = this.useCheckoutAction ? this.workspace : this.workspace + "_ALGOSEC_CODE_ANALYSIS";
         this.actionUuid = (0, uuid_by_string_1.default)(this.sha);
         this.assetsUrl =
