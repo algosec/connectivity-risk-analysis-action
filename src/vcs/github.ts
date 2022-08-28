@@ -201,7 +201,7 @@ export class Github implements IVersionControl {
       return []
     }
     this.logger.info(
-      "##### IAC Connectivity Risk Analysis ##### Found changes in folders JSON.stringify(diffFolders)"
+      `##### IAC Connectivity Risk Analysis ##### Found changes in folders ${diffFolders.join(', ')}`
     );
     return diffFolders;
   }

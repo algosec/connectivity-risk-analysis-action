@@ -345,9 +345,13 @@ class Terraform {
             const initLog = { stdout: '', stderr: '', exitCode: 0 };
             try {
                 process.chdir(`${options.workDir}/${options.runFolder}`);
+                console.log(`::group:: Init Terraform on folder ${options.runFolder}`);
                 steps.init = yield (0, exec_1.exec)("terraform", ["init"]);
+                console.log(`::endgroup::\n::group:: Format Terraform on folder ${options.runFolder}\n`);
                 steps.fmt = yield (0, exec_1.exec)("terraform", ["fmt", "-diff"]);
+                console.log(`::endgroup::\n::group:: Validate Terraform on folder ${options.runFolder}\n`);
                 steps.validate = yield (0, exec_1.exec)("terraform", ["validate", "-no-color"]);
+                console.log(`::endgroup::\n::group:: Plan Terraform on folder ${options.runFolder}\n`);
                 if (!(0, fs_1.existsSync)("./tmp")) {
                     yield (0, exec_1.exec)("mkdir", ["tmp"]);
                 }
@@ -357,6 +361,7 @@ class Terraform {
                     "-no-color",
                     `-out=${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
                 ]);
+                console.log(`::endgroup::\n::group:: Show Terraform on folder ${options.runFolder}\n`);
                 const initLog = {
                     exitCode: 0,
                     stdout: steps.init.stdout.concat(steps.fmt.stdout, steps.validate.stdout, steps.plan.stdout),
@@ -370,6 +375,7 @@ class Terraform {
                         `${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
                     ])).stdout);
                 }
+                console.log(`::endgroup::`);
                 process.chdir(options.workDir);
                 result = { plan: jsonPlan, log: steps.plan, initLog };
             }
@@ -379,7 +385,6 @@ class Terraform {
                     result = { plan: {}, log: { stderr: error === null || error === void 0 ? void 0 : error.message, stdout: '', exitCode: 0 }, initLog };
                 }
             }
-            console.log(`::endgroup::`);
             return result;
         });
     }
@@ -672,7 +677,7 @@ class Github {
                 this.logger.info("##### IAC Connectivity Risk Analysis ##### No changes were found");
                 return [];
             }
-            this.logger.info("##### IAC Connectivity Risk Analysis ##### Found changes in folders JSON.stringify(diffFolders)");
+            this.logger.info(`##### IAC Connectivity Risk Analysis ##### Found changes in folders ${diffFolders.join(', ')}`);
             return diffFolders;
         });
     }
