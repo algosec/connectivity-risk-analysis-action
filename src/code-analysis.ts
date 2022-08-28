@@ -116,23 +116,29 @@ export class AshCodeAnalysis {
     return res;
   }
 
-  async analyze(filesToUpload: AnalysisFile[]): Promise<AnalysisResult[]> {
-    let analysisResult;
-    await this.triggerCodeAnalysis(filesToUpload);
-    const codeAnalysisPromises: Array<Promise<AnalysisResult | null>> = [];
-    filesToUpload
-      .filter((file) => file?.output?.plan)
-      .forEach((file) =>
-        codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file))
+  async analyze(filesToUpload: AnalysisFile[]): Promise<Array<AnalysisResult | null>> {
+    let analysisResult: Array<AnalysisResult | null> = [];
+    try {
+      await this.triggerCodeAnalysis(filesToUpload);
+      const codeAnalysisPromises: Array<Promise<AnalysisResult | null>> = [];
+      filesToUpload
+        .filter((file) => file?.output?.plan)
+        .forEach((file) =>
+          codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file))
+        );
+      analysisResult = await Promise.all(codeAnalysisPromises);
+      if (!analysisResult || analysisResult?.length == 0) {
+        this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### Code Analysis failed");
+        analysisResult = []
+      }
+      this.vcs.logger.debug(
+        `::group::##### IAC Connectivity Risk Analysis ##### Risk analysis result:\n${JSON.stringify(analysisResult, null, "\t")}\n::endgroup::`
       );
-    analysisResult = await Promise.all(codeAnalysisPromises);
-    if (!analysisResult || analysisResult?.error) {
+    } catch(e){
       this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### Code Analysis failed");
-      return []
+      analysisResult = []
     }
-    this.vcs.logger.debug(
-      `::group::##### IAC Connectivity Risk Analysis ##### Risk analysis result:\n${JSON.stringify(analysisResult, null, "\t")}\n::endgroup::`
-    );
+   
     return analysisResult;
   }
 

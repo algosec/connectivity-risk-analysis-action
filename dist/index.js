@@ -109,18 +109,24 @@ class AshCodeAnalysis {
     }
     analyze(filesToUpload) {
         return __awaiter(this, void 0, void 0, function* () {
-            let analysisResult;
-            yield this.triggerCodeAnalysis(filesToUpload);
-            const codeAnalysisPromises = [];
-            filesToUpload
-                .filter((file) => { var _a; return (_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan; })
-                .forEach((file) => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
-            analysisResult = yield Promise.all(codeAnalysisPromises);
-            if (!analysisResult || (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error)) {
-                this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### Code Analysis failed");
-                return [];
+            let analysisResult = [];
+            try {
+                yield this.triggerCodeAnalysis(filesToUpload);
+                const codeAnalysisPromises = [];
+                filesToUpload
+                    .filter((file) => { var _a; return (_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan; })
+                    .forEach((file) => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
+                analysisResult = yield Promise.all(codeAnalysisPromises);
+                if (!analysisResult || (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.length) == 0) {
+                    this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### Code Analysis failed");
+                    analysisResult = [];
+                }
+                this.vcs.logger.debug(`::group::##### IAC Connectivity Risk Analysis ##### Risk analysis result:\n${JSON.stringify(analysisResult, null, "\t")}\n::endgroup::`);
             }
-            this.vcs.logger.debug(`::group::##### IAC Connectivity Risk Analysis ##### Risk analysis result:\n${JSON.stringify(analysisResult, null, "\t")}\n::endgroup::`);
+            catch (e) {
+                this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### Code Analysis failed");
+                analysisResult = [];
+            }
             return analysisResult;
         });
     }
@@ -684,17 +690,23 @@ class Github {
     uploadAnalysisFile(file, jwt) {
         var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function* () {
-            const http = new http_client_1.HttpClient();
-            const body = JSON.stringify((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan);
-            const getPresignedUrl = `${(_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.CF_API_URL}/presignedurl?actionId=${file === null || file === void 0 ? void 0 : file.uuid}&owner=${(_c = github_1.context === null || github_1.context === void 0 ? void 0 : github_1.context.repo) === null || _c === void 0 ? void 0 : _c.owner}&folder=${file === null || file === void 0 ? void 0 : file.folder}`;
-            const presignedUrlResponse = yield (yield http.get(getPresignedUrl, { Authorization: `Bearer ${jwt}` })).readBody();
-            const presignedUrl = JSON.parse(presignedUrlResponse).presignedUrl;
-            const response = yield (yield http.put(presignedUrl, body, { "Content-Type": "application/json" })).readBody();
-            if (response == "") {
-                return true;
+            try {
+                const http = new http_client_1.HttpClient();
+                const body = JSON.stringify((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan);
+                const getPresignedUrl = `${(_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.CF_API_URL}/presignedurl?actionId=${file === null || file === void 0 ? void 0 : file.uuid}&owner=${(_c = github_1.context === null || github_1.context === void 0 ? void 0 : github_1.context.repo) === null || _c === void 0 ? void 0 : _c.owner}&folder=${file === null || file === void 0 ? void 0 : file.folder}`;
+                const presignedUrlResponse = yield (yield http.get(getPresignedUrl, { Authorization: `Bearer ${jwt}` })).readBody();
+                const presignedUrl = JSON.parse(presignedUrlResponse).presignedUrl;
+                const response = yield (yield http.put(presignedUrl, body, { "Content-Type": "application/json" })).readBody();
+                if (response == "") {
+                    return true;
+                }
+                else {
+                    (0, core_1.setFailed)(response);
+                    return false;
+                }
             }
-            else {
-                (0, core_1.setFailed)(response);
+            catch (e) {
+                console.log(`::group::##### IAC Connectivity Risk Analysis ##### Upload file failed due to erros:\n${e}\n::endgroup::`);
                 return false;
             }
         });
@@ -705,8 +717,8 @@ class Github {
             if (body && body != "")
                 this.steps.comment = yield this.createComment(body);
             if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => !(response === null || response === void 0 ? void 0 : response.success))) {
-                const errors = "";
-                // Object.keys(this.steps).forEach(step => errors += this?.steps[step]?.stderr ?? '')
+                let errors = "";
+                Object.keys(this.steps).forEach(step => { var _a, _b; return errors += ((_a = this === null || this === void 0 ? void 0 : this.steps[step]) === null || _a === void 0 ? void 0 : _a.stderr) != '' ? (_b = this === null || this === void 0 ? void 0 : this.steps[step]) === null || _b === void 0 ? void 0 : _b.stderr : ''; });
                 this.logger.exit("- ##### IAC Connectivity Risk Analysis ##### The risks analysis process failed.\n" + errors);
             }
             else {

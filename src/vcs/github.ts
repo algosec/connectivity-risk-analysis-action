@@ -211,22 +211,28 @@ export class Github implements IVersionControl {
   }
 
   async uploadAnalysisFile(file: AnalysisFile, jwt: string): Promise<boolean> {
-    const http = new HttpClient();
-    const body = JSON.stringify(file?.output?.plan);
-    const getPresignedUrl = `${process?.env?.CF_API_URL}/presignedurl?actionId=${file?.uuid}&owner=${context?.repo?.owner}&folder=${file?.folder}`;
-    const presignedUrlResponse = await (
-      await http.get(getPresignedUrl, { Authorization: `Bearer ${jwt}` })
-    ).readBody();
-    const presignedUrl = JSON.parse(presignedUrlResponse).presignedUrl;
-    const response = await (
-      await http.put(presignedUrl, body, { "Content-Type": "application/json" })
-    ).readBody();
-    if (response == "") {
-      return true;
-    } else {
-      exit(response);
-      return false;
+    try {
+      const http = new HttpClient();
+      const body = JSON.stringify(file?.output?.plan);
+      const getPresignedUrl = `${process?.env?.CF_API_URL}/presignedurl?actionId=${file?.uuid}&owner=${context?.repo?.owner}&folder=${file?.folder}`;
+      const presignedUrlResponse = await (
+        await http.get(getPresignedUrl, { Authorization: `Bearer ${jwt}` })
+      ).readBody();
+      const presignedUrl = JSON.parse(presignedUrlResponse).presignedUrl;
+      const response = await (
+        await http.put(presignedUrl, body, { "Content-Type": "application/json" })
+      ).readBody();
+      if (response == "") {
+        return true;
+      } else {
+        exit(response);
+        return false;
+      }
+    } catch(e){
+      console.log(`::group::##### IAC Connectivity Risk Analysis ##### Upload file failed due to erros:\n${e}\n::endgroup::`)
+      return false
     }
+   
   }
 
   async parseOutput(
@@ -236,8 +242,8 @@ export class Github implements IVersionControl {
     const body = this.parseCodeAnalysis(filesToUpload, analysisResults);
     if (body && body != "") this.steps.comment = await this.createComment(body);
     if (analysisResults?.some((response) => !response?.success)) {
-      const errors = "";
-      // Object.keys(this.steps).forEach(step => errors += this?.steps[step]?.stderr ?? '')
+      let errors = "";
+      Object.keys(this.steps).forEach(step => errors += this?.steps[step]?.stderr != '' ? this?.steps[step]?.stderr : '')
       this.logger.exit(
         "- ##### IAC Connectivity Risk Analysis ##### The risks analysis process failed.\n" + errors
       );
