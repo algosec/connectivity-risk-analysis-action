@@ -26,7 +26,7 @@ export class AshCodeAnalysis {
     );
     if (!this.jwt || this.jwt == "") {
       this.vcs.logger.exit(
-        "##### IAC Connectivity Risk Analysis ##### Not Authenticated"
+        "::group::##### IAC Connectivity Risk Analysis ##### Not Authenticated\n::endgroup::"
       );
       return;
     }
@@ -129,7 +129,7 @@ export class AshCodeAnalysis {
     analysisResult = await Promise.all(codeAnalysisPromises);
     console.log('::endgroup::')
     if (!analysisResult || analysisResult?.error) {
-      this.vcs.logger.exit("##### IAC Connectivity Risk Analysis ##### Code Analysis failed");
+      this.vcs.logger.exit("::group::##### IAC Connectivity Risk Analysis ##### Code Analysis failed\n::endgroup::");
       return []
     }
     this.vcs.logger.debug(

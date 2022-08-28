@@ -35,7 +35,7 @@ export async function exec(cmd: string, args: string[]): Promise<ExecOutput> {
     const msg = `Command '${cmd}' failed with args '${args.join(" ")}': ${
       res.stderr
     }: ${err}`;
-    debug(`##### IAC Connectivity Risk Analysis ##### @actions/exec.exec() threw an error: ${msg}`);
+    debug(`::group::##### IAC Connectivity Risk Analysis ##### @actions/exec.exec() threw an error: ${msg}::endgroup::`);
     throw new Error(msg);
   }
 }

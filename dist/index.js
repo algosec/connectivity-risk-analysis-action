@@ -36,7 +36,7 @@ class AshCodeAnalysis {
             this.setSecrets();
             this.jwt = yield this.auth(this.tenantId, this.clientId, this.clientSecret, this.loginAPI);
             if (!this.jwt || this.jwt == "") {
-                this.vcs.logger.exit("##### IAC Connectivity Risk Analysis ##### Not Authenticated");
+                this.vcs.logger.exit("::group::##### IAC Connectivity Risk Analysis ##### Not Authenticated\n::endgroup::");
                 return;
             }
             this.steps.auth = { exitCode: 0, stdout: this.jwt, stderr: "" };
@@ -119,7 +119,7 @@ class AshCodeAnalysis {
             analysisResult = yield Promise.all(codeAnalysisPromises);
             console.log('::endgroup::');
             if (!analysisResult || (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error)) {
-                this.vcs.logger.exit("##### IAC Connectivity Risk Analysis ##### Code Analysis failed");
+                this.vcs.logger.exit("::group::##### IAC Connectivity Risk Analysis ##### Code Analysis failed\n::endgroup::");
                 return [];
             }
             this.vcs.logger.debug(`::group::##### IAC Connectivity Risk Analysis ##### Risk analysis result:\n${JSON.stringify(analysisResult)}\n::endgroup::`);
@@ -228,7 +228,7 @@ function exec(cmd, args) {
         }
         catch (err) {
             const msg = `Command '${cmd}' failed with args '${args.join(" ")}': ${res.stderr}: ${err}`;
-            (0, core_1.debug)(`##### IAC Connectivity Risk Analysis ##### @actions/exec.exec() threw an error: ${msg}`);
+            (0, core_1.debug)(`::group::##### IAC Connectivity Risk Analysis ##### @actions/exec.exec() threw an error: ${msg}::endgroup::`);
             throw new Error(msg);
         }
     });
@@ -397,7 +397,7 @@ class Terraform {
                 "|",
                 "bash",
             ]);
-            console.log("##### IAC Connectivity Risk Analysis ##### tfswitch Installed successfully");
+            console.log("::group::##### IAC Connectivity Risk Analysis ##### tfswitch Installed successfully\n::endgroup::");
             if (((_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.TF_VERSION) == "latest" ||
                 ((_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.TF_VERSION) == "") {
                 steps.switchVersion = yield (0, exec_1.exec)("tfswitch", ["--latest"]);
@@ -674,10 +674,10 @@ class Github {
                     this.logger.exit(error === null || error === void 0 ? void 0 : error.message);
             }
             if ((diffFolders === null || diffFolders === void 0 ? void 0 : diffFolders.length) == 0) {
-                this.logger.info("##### IAC Connectivity Risk Analysis ##### No changes were found");
+                this.logger.info("::group::##### IAC Connectivity Risk Analysis ##### No changes were found\n::endgroup::");
                 return [];
             }
-            this.logger.info(`##### IAC Connectivity Risk Analysis ##### Found changes in folders ${diffFolders.join(', ')}`);
+            this.logger.info(`::group::##### IAC Connectivity Risk Analysis ##### Found changes in folders ${diffFolders.join(', ')}\n::endgroup::`);
             return diffFolders;
         });
     }
@@ -710,18 +710,18 @@ class Github {
             if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => !(response === null || response === void 0 ? void 0 : response.success))) {
                 const errors = "";
                 // Object.keys(this.steps).forEach(step => errors += this?.steps[step]?.stderr ?? '')
-                this.logger.exit("##### IAC Connectivity Risk Analysis ##### The risks analysis process failed.\n" + errors);
+                this.logger.exit("::group::##### IAC Connectivity Risk Analysis ##### The risks analysis process failed.\n" + errors + "\n::endgroup::");
             }
             else {
-                this.logger.info("##### IAC Connectivity Risk Analysis ##### Parsing Code Analysis and comment");
+                this.logger.info("::group::##### IAC Connectivity Risk Analysis ##### Parsing Code Analysis and comment::endgroup::");
                 if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => { var _a, _b; return ((_b = (_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })) {
                     if (this.runMode == "fail")
-                        this.logger.exit("##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report");
+                        this.logger.exit("::group::##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report\n::endgroup::");
                     else
-                        this.logger.info("##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report");
+                        this.logger.info("::group::##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report::endgroup::");
                 }
                 else {
-                    this.logger.info("##### IAC Connectivity Risk Analysis ##### Analysis process completed successfully without any risks");
+                    this.logger.info("::group::##### IAC Connectivity Risk Analysis ##### Analysis process completed successfully without any risks::endgroup::");
                 }
             }
         });

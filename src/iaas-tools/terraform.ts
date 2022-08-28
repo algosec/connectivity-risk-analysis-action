@@ -85,7 +85,7 @@ export class Terraform implements IFramework {
       "|",
       "bash",
     ]);
-    console.log("##### IAC Connectivity Risk Analysis ##### tfswitch Installed successfully");
+    console.log("::group::##### IAC Connectivity Risk Analysis ##### tfswitch Installed successfully\n::endgroup::");
     if (
       process?.env?.TF_VERSION == "latest" ||
       process?.env?.TF_VERSION == ""

@@ -196,12 +196,12 @@ export class Github implements IVersionControl {
     }
     if (diffFolders?.length == 0) {
       this.logger.info(
-        "##### IAC Connectivity Risk Analysis ##### No changes were found"
+        "::group::##### IAC Connectivity Risk Analysis ##### No changes were found\n::endgroup::"
       );
       return []
     }
     this.logger.info(
-      `##### IAC Connectivity Risk Analysis ##### Found changes in folders ${diffFolders.join(', ')}`
+      `::group::##### IAC Connectivity Risk Analysis ##### Found changes in folders ${diffFolders.join(', ')}\n::endgroup::`
     );
     return diffFolders;
   }
@@ -239,10 +239,10 @@ export class Github implements IVersionControl {
       const errors = "";
       // Object.keys(this.steps).forEach(step => errors += this?.steps[step]?.stderr ?? '')
       this.logger.exit(
-        "##### IAC Connectivity Risk Analysis ##### The risks analysis process failed.\n" + errors
+        "::group::##### IAC Connectivity Risk Analysis ##### The risks analysis process failed.\n" + errors + "\n::endgroup::"
       );
     } else {
-      this.logger.info("##### IAC Connectivity Risk Analysis ##### Parsing Code Analysis and comment");
+      this.logger.info("::group::##### IAC Connectivity Risk Analysis ##### Parsing Code Analysis and comment::endgroup::");
       if (
         analysisResults?.some(
           (response) => response?.additions?.analysis_result?.length > 0
@@ -250,15 +250,15 @@ export class Github implements IVersionControl {
       ) {
         if (this.runMode == "fail")
           this.logger.exit(
-            "##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report"
+            "::group::##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report\n::endgroup::"
           );
         else
           this.logger.info(
-            "##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report"
+            "::group::##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report::endgroup::"
           );
       } else {
         this.logger.info(
-          "##### IAC Connectivity Risk Analysis ##### Analysis process completed successfully without any risks"
+          "::group::##### IAC Connectivity Risk Analysis ##### Analysis process completed successfully without any risks::endgroup::"
         );
       }
     }
