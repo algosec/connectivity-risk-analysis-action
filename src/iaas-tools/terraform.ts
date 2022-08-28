@@ -24,20 +24,25 @@ export class Terraform implements IFramework {
     const initLog: ExecOutput = {stdout: '', stderr: '', exitCode: 0};
     try {
       process.chdir(`${options.workDir}/${options.runFolder}`);
-
+      console.log(`::group:: Init Terraform on folder ${options.runFolder}`)
       steps.init = await exec("terraform", ["init"]);
-
+      console.log(`::endgroup::\n::group:: Init Terraform on folder ${options.runFolder}\n`)
       steps.fmt = await exec("terraform", ["fmt", "-diff"]);
+      console.log(`::endgroup::\n::group:: Init Terraform on folder ${options.runFolder}\n`)
       steps.validate = await exec("terraform", ["validate", "-no-color"]);
+      console.log(`::endgroup::\n::group:: Init Terraform on folder ${options.runFolder}\n`)
       if (!existsSync("./tmp")) {
         await exec("mkdir", ["tmp"]);
       }
+      console.log(`::group:: Init Terraform on folder ${options.runFolder}\n`)
+
       steps.plan = await exec("terraform", [
         "plan",
         "-input=false",
         "-no-color",
         `-out=${process?.cwd()}\\tmp\\tf-${options.runFolder}.out`,
       ]);
+      console.log(`::endgroup::\n`)
       const initLog = {
         exitCode: 0,
         stdout: steps.init.stdout.concat(
@@ -110,11 +115,11 @@ export class Terraform implements IFramework {
         };
         res.push(file);
         console.log(
-          `::group::##### IAC Connectivity Risk Analysis ##### ${
+          `::group::##### IAC Connectivity Risk Analysis #####\n ${
             iterable?.entries()?.length > 1 ? "." + index + 1 : ""
           } - ${this.type} Result for folder ${file.folder}: ${JSON.stringify(
             file
-          )}::endgroup::`
+          )}\n::endgroup::`
         );
       }
     };
@@ -123,7 +128,7 @@ export class Terraform implements IFramework {
     } catch (error) {
       console.log("Framework check failed " + error);
     }
-    console.log(`::group::Files To Analyze\n ${JSON.stringify(res)}::endgroup::`);
+    console.log(`::group::Files To Analyze\n ${JSON.stringify(res)}\n::endgroup::`);
     return res;
   }
 }
