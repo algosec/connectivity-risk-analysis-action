@@ -480,7 +480,8 @@ class Main {
                 const foldersToRunCheck = yield vcs.checkForDiffByFileTypes(framework.fileTypes);
                 if (foldersToRunCheck) {
                     const filesToAnalyze = yield framework.check(foldersToRunCheck, vcs.workDir);
-                    if (filesToAnalyze) {
+                    if ((filesToAnalyze === null || filesToAnalyze === void 0 ? void 0 : filesToAnalyze.length) > 0
+                        && filesToAnalyze.some(file => { var _a, _b, _c, _d; return ((_b = (_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.log) === null || _b === void 0 ? void 0 : _b.stdout) != '' || ((_d = (_c = file === null || file === void 0 ? void 0 : file.output) === null || _c === void 0 ? void 0 : _c.initLog) === null || _d === void 0 ? void 0 : _d.stdout) != ''; })) {
                         const codeAnalysisResponses = yield codeAnalyzer.analyze(filesToAnalyze);
                         if ((codeAnalysisResponses === null || codeAnalysisResponses === void 0 ? void 0 : codeAnalysisResponses.length) > 0) {
                             yield vcs.parseOutput(filesToAnalyze, codeAnalysisResponses);

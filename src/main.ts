@@ -41,7 +41,8 @@ export class Main {
           foldersToRunCheck,
           vcs.workDir
         );
-        if (filesToAnalyze) {
+        if (filesToAnalyze?.length > 0 
+          && filesToAnalyze.some(file => file?.output?.log?.stdout != '' || file?.output?.initLog?.stdout != '')) {
           const codeAnalysisResponses = await codeAnalyzer.analyze(
             filesToAnalyze
           );
