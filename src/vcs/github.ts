@@ -213,7 +213,7 @@ export class Github implements IVersionControl {
   async uploadAnalysisFile(file: AnalysisFile, jwt: string): Promise<boolean> {
     try {
       const http = new HttpClient();
-      const body = JSON.stringify(file?.output?.plan);
+      const body = file?.output?.plan;
       const getPresignedUrl = `${process?.env?.CF_API_URL}/presignedurl?actionId=${file?.uuid}&owner=${context?.repo?.owner}&folder=${file?.folder}`;
       const presignedUrlResponse = await (
         await http.get(getPresignedUrl, { Authorization: `Bearer ${jwt}` })

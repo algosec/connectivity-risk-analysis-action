@@ -19,7 +19,7 @@ export class Terraform implements IFramework {
   }
 
   async terraform(options: FrameworkOptions): Promise<FrameworkResult> {
-    let result: FrameworkResult = {plan: {}, log: {stderr: '', stdout: '', exitCode: 0}, initLog: {stderr: '', stdout: '', exitCode: 0}}
+    let result: FrameworkResult = {plan: "", log: {stderr: '', stdout: '', exitCode: 0}, initLog: {stderr: '', stdout: '', exitCode: 0}}
     const steps: ExecSteps = {};
     const initLog: ExecOutput = {stdout: '', stderr: '', exitCode: 0};
     try {
@@ -54,9 +54,10 @@ export class Terraform implements IFramework {
           steps.plan.stderr
         ),
       };
-      let jsonPlan = {};
-      if (steps.plan.stdout) {
-        jsonPlan = JSON.parse(
+      let jsonPlan = '';
+      if (steps.plan.stdout != '') {
+        jsonPlan = 
+        // JSON.parse(
           (
             await exec("terraform", [
               "show",
@@ -64,7 +65,7 @@ export class Terraform implements IFramework {
               `${process?.cwd()}\\tmp\\tf-${options.runFolder}.out`,
             ])
           ).stdout
-        );
+        // );
       }
       console.log(`::endgroup::`)
       process.chdir(options.workDir);
@@ -72,7 +73,7 @@ export class Terraform implements IFramework {
     } catch (error: any) {
       if (error instanceof Error) {
         console.log(error?.message); // setFailed(error?.message)
-        result = { plan: {}, log: { stderr: error?.message, stdout: '', exitCode:0  },  initLog };
+        result = { plan: '', log: { stderr: error?.message, stdout: '', exitCode:0  },  initLog };
       }
     }
     return result
@@ -120,7 +121,8 @@ export class Terraform implements IFramework {
     } catch (error) {
       console.log("Framework check failed " + error);
     }
-    console.log(`::group::##### IAC Connectivity Risk Analysis ##### Files To Analyze\n ${JSON.stringify(res, null, "\t")}\n::endgroup::`);
+    console.log(`- ##### IAC Connectivity Risk Analysis ##### FINISHED TERRAFORM`);
+    // console.log(`::group::##### IAC Connectivity Risk Analysis ##### Files To Analyze\n ${JSON.stringify(res, null, "\t")}\n::endgroup::`);
     return res;
   }
 }

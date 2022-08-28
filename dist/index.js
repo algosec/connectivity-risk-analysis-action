@@ -114,7 +114,7 @@ class AshCodeAnalysis {
                 yield this.triggerCodeAnalysis(filesToUpload);
                 const codeAnalysisPromises = [];
                 filesToUpload
-                    .filter((file) => { var _a; return (_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan; })
+                    .filter((file) => { var _a; return ((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan) != ''; })
                     .forEach((file) => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
                 analysisResult = yield Promise.all(codeAnalysisPromises);
                 if (!analysisResult || (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.length) == 0) {
@@ -124,7 +124,7 @@ class AshCodeAnalysis {
                 this.vcs.logger.debug(`::group::##### IAC Connectivity Risk Analysis ##### Risk analysis result:\n${JSON.stringify(analysisResult, null, "\t")}\n::endgroup::`);
             }
             catch (e) {
-                this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### Code Analysis failed");
+                this.vcs.logger.exit(`::group::##### IAC Connectivity Risk Analysis ##### Code Analysis failed due to erros:\n${e}\n::endgroup::`);
                 analysisResult = [];
             }
             return analysisResult;
@@ -344,7 +344,7 @@ class Terraform {
     }
     terraform(options) {
         return __awaiter(this, void 0, void 0, function* () {
-            let result = { plan: {}, log: { stderr: '', stdout: '', exitCode: 0 }, initLog: { stderr: '', stdout: '', exitCode: 0 } };
+            let result = { plan: "", log: { stderr: '', stdout: '', exitCode: 0 }, initLog: { stderr: '', stdout: '', exitCode: 0 } };
             const steps = {};
             const initLog = { stdout: '', stderr: '', exitCode: 0 };
             try {
@@ -371,13 +371,16 @@ class Terraform {
                     stdout: steps.init.stdout.concat(steps.fmt.stdout, steps.validate.stdout, steps.plan.stdout),
                     stderr: steps.init.stderr.concat(steps.fmt.stderr, steps.validate.stderr, steps.plan.stderr),
                 };
-                let jsonPlan = {};
-                if (steps.plan.stdout) {
-                    jsonPlan = JSON.parse((yield (0, exec_1.exec)("terraform", [
-                        "show",
-                        "-json",
-                        `${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
-                    ])).stdout);
+                let jsonPlan = '';
+                if (steps.plan.stdout != '') {
+                    jsonPlan =
+                        // JSON.parse(
+                        (yield (0, exec_1.exec)("terraform", [
+                            "show",
+                            "-json",
+                            `${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
+                        ])).stdout;
+                    // );
                 }
                 console.log(`::endgroup::`);
                 process.chdir(options.workDir);
@@ -386,7 +389,7 @@ class Terraform {
             catch (error) {
                 if (error instanceof Error) {
                     console.log(error === null || error === void 0 ? void 0 : error.message); // setFailed(error?.message)
-                    result = { plan: {}, log: { stderr: error === null || error === void 0 ? void 0 : error.message, stdout: '', exitCode: 0 }, initLog };
+                    result = { plan: '', log: { stderr: error === null || error === void 0 ? void 0 : error.message, stdout: '', exitCode: 0 }, initLog };
                 }
             }
             return result;
@@ -432,7 +435,8 @@ class Terraform {
             catch (error) {
                 console.log("Framework check failed " + error);
             }
-            console.log(`::group::##### IAC Connectivity Risk Analysis ##### Files To Analyze\n ${JSON.stringify(res, null, "\t")}\n::endgroup::`);
+            console.log(`- ##### IAC Connectivity Risk Analysis ##### FINISHED TERRAFORM`);
+            // console.log(`::group::##### IAC Connectivity Risk Analysis ##### Files To Analyze\n ${JSON.stringify(res, null, "\t")}\n::endgroup::`);
             return res;
         });
     }
@@ -484,14 +488,16 @@ class Main {
                     yield (0, child_process_1.exec)(`rimraf ${vcs.workDir}`);
                 }
                 const foldersToRunCheck = yield vcs.checkForDiffByFileTypes(framework.fileTypes);
-                if (foldersToRunCheck) {
+                if ((foldersToRunCheck === null || foldersToRunCheck === void 0 ? void 0 : foldersToRunCheck.length) > 0) {
                     const filesToAnalyze = yield framework.check(foldersToRunCheck, vcs.workDir);
-                    if ((filesToAnalyze === null || filesToAnalyze === void 0 ? void 0 : filesToAnalyze.length) > 0
-                        && filesToAnalyze.some(file => { var _a, _b, _c, _d; return ((_b = (_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.log) === null || _b === void 0 ? void 0 : _b.stdout) != '' || ((_d = (_c = file === null || file === void 0 ? void 0 : file.output) === null || _c === void 0 ? void 0 : _c.initLog) === null || _d === void 0 ? void 0 : _d.stdout) != ''; })) {
+                    if ((filesToAnalyze === null || filesToAnalyze === void 0 ? void 0 : filesToAnalyze.length) > 0) {
                         const codeAnalysisResponses = yield codeAnalyzer.analyze(filesToAnalyze);
                         if ((codeAnalysisResponses === null || codeAnalysisResponses === void 0 ? void 0 : codeAnalysisResponses.length) > 0) {
                             yield vcs.parseOutput(filesToAnalyze, codeAnalysisResponses);
                         }
+                    }
+                    else {
+                        vcs.logger.exit('- ##### IAC Connectivity Risk Analysis ##### NO FILES TO ANALYZE');
                     }
                 }
             }
@@ -692,7 +698,7 @@ class Github {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const http = new http_client_1.HttpClient();
-                const body = JSON.stringify((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan);
+                const body = (_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan;
                 const getPresignedUrl = `${(_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.CF_API_URL}/presignedurl?actionId=${file === null || file === void 0 ? void 0 : file.uuid}&owner=${(_c = github_1.context === null || github_1.context === void 0 ? void 0 : github_1.context.repo) === null || _c === void 0 ? void 0 : _c.owner}&folder=${file === null || file === void 0 ? void 0 : file.folder}`;
                 const presignedUrlResponse = yield (yield http.get(getPresignedUrl, { Authorization: `Bearer ${jwt}` })).readBody();
                 const presignedUrl = JSON.parse(presignedUrlResponse).presignedUrl;

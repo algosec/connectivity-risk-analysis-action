@@ -27,7 +27,7 @@ export interface FrameworkOptions {
 }
 
 export interface FrameworkResult {
-  plan: object;
+  plan: string;
   log: ExecOutput;
   initLog: ExecOutput;
 }

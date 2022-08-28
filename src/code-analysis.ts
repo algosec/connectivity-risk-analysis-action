@@ -122,7 +122,7 @@ export class AshCodeAnalysis {
       await this.triggerCodeAnalysis(filesToUpload);
       const codeAnalysisPromises: Array<Promise<AnalysisResult | null>> = [];
       filesToUpload
-        .filter((file) => file?.output?.plan)
+        .filter((file) => file?.output?.plan != '')
         .forEach((file) =>
           codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file))
         );
@@ -135,7 +135,7 @@ export class AshCodeAnalysis {
         `::group::##### IAC Connectivity Risk Analysis ##### Risk analysis result:\n${JSON.stringify(analysisResult, null, "\t")}\n::endgroup::`
       );
     } catch(e){
-      this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### Code Analysis failed");
+      this.vcs.logger.exit(`::group::##### IAC Connectivity Risk Analysis ##### Code Analysis failed due to erros:\n${e}\n::endgroup::`);
       analysisResult = []
     }
    

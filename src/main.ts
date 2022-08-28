@@ -36,19 +36,20 @@ export class Main {
       const foldersToRunCheck = await vcs.checkForDiffByFileTypes(
         framework.fileTypes
       );
-      if (foldersToRunCheck) {
+      if (foldersToRunCheck?.length > 0) {
         const filesToAnalyze: AnalysisFile[] = await framework.check(
           foldersToRunCheck,
           vcs.workDir
         );
-        if (filesToAnalyze?.length > 0 
-          && filesToAnalyze.some(file => file?.output?.log?.stdout != '' || file?.output?.initLog?.stdout != '')) {
+        if (filesToAnalyze?.length > 0 ) {
           const codeAnalysisResponses = await codeAnalyzer.analyze(
             filesToAnalyze
           );
           if (codeAnalysisResponses?.length > 0) {
             await vcs.parseOutput(filesToAnalyze, codeAnalysisResponses);
           }
+        }else {
+          vcs.logger.exit('- ##### IAC Connectivity Risk Analysis ##### NO FILES TO ANALYZE')
         }
       }
     } catch (_e) {
