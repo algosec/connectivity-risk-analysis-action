@@ -239,10 +239,10 @@ export class Github implements IVersionControl {
       const errors = "";
       // Object.keys(this.steps).forEach(step => errors += this?.steps[step]?.stderr ?? '')
       this.logger.exit(
-        "::group::##### IAC Connectivity Risk Analysis ##### The risks analysis process failed.\n" + errors + "\n::endgroup::"
+        "- ##### IAC Connectivity Risk Analysis ##### The risks analysis process failed.\n" + errors
       );
     } else {
-      this.logger.info("::group::##### IAC Connectivity Risk Analysis ##### Parsing Code Analysis and comment::endgroup::");
+      this.logger.info("- ##### IAC Connectivity Risk Analysis ##### Parsing Code Analysis and comment");
       if (
         analysisResults?.some(
           (response) => response?.additions?.analysis_result?.length > 0
@@ -250,15 +250,15 @@ export class Github implements IVersionControl {
       ) {
         if (this.runMode == "fail")
           this.logger.exit(
-            "::group::##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report\n::endgroup::"
+            "- ##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report"
           );
         else
           this.logger.info(
-            "::group::##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report::endgroup::"
+            "- ##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report"
           );
       } else {
         this.logger.info(
-          "::group::##### IAC Connectivity Risk Analysis ##### Analysis process completed successfully without any risks::endgroup::"
+          "- ##### IAC Connectivity Risk Analysis ##### Analysis process completed successfully without any risks"
         );
       }
     }

@@ -71,11 +71,11 @@ class AshCodeAnalysis {
                     return data === null || data === void 0 ? void 0 : data.access_token;
                 }
                 else {
-                    this.vcs.logger.exit(`::group::##### IAC Connectivity Risk Analysis ##### Failed to generate token.\n Error code ${response_code}, msg: ${JSON.stringify(data, null, "\t")}\n::endgroup::`);
+                    this.vcs.logger.exit(`- ##### IAC Connectivity Risk Analysis ##### Failed to generate token.\n Error code ${response_code}, msg: ${JSON.stringify(data, null, "\t")}`);
                 }
             }
             catch (error) {
-                this.vcs.logger.exit(`::group::##### IAC Connectivity Risk Analysis ##### Failed to generate token. Error msg: ${error.toString()}\n::endgroup::`);
+                this.vcs.logger.exit(`- ##### IAC Connectivity Risk Analysis ##### Failed to generate token. Error msg: ${error.toString()}`);
             }
             return "";
         });
@@ -128,7 +128,7 @@ class AshCodeAnalysis {
     }
     pollCodeAnalysisResponse(file) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.vcs.logger.info(`::group::##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response for folder: ${file.folder}\n::endgroup::`);
+            this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response for folder: ${file.folder}`);
             let analysisResult = yield this.checkCodeAnalysisResponse(file);
             for (let i = 0; i < 50; i++) {
                 yield this.wait(3000);
@@ -139,7 +139,7 @@ class AshCodeAnalysis {
                     break;
                 }
                 else if (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error) {
-                    this.vcs.logger.exit("::group::##### IAC Connectivity Risk Analysis ##### Poll Request failed: " + (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error) + "\n::endgroup::");
+                    this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### Poll Request failed: " + (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error));
                     break;
                 }
             }
@@ -710,18 +710,18 @@ class Github {
             if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => !(response === null || response === void 0 ? void 0 : response.success))) {
                 const errors = "";
                 // Object.keys(this.steps).forEach(step => errors += this?.steps[step]?.stderr ?? '')
-                this.logger.exit("::group::##### IAC Connectivity Risk Analysis ##### The risks analysis process failed.\n" + errors + "\n::endgroup::");
+                this.logger.exit("- ##### IAC Connectivity Risk Analysis ##### The risks analysis process failed.\n" + errors);
             }
             else {
-                this.logger.info("::group::##### IAC Connectivity Risk Analysis ##### Parsing Code Analysis and comment::endgroup::");
+                this.logger.info("- ##### IAC Connectivity Risk Analysis ##### Parsing Code Analysis and comment");
                 if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => { var _a, _b; return ((_b = (_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })) {
                     if (this.runMode == "fail")
-                        this.logger.exit("::group::##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report\n::endgroup::");
+                        this.logger.exit("- ##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report");
                     else
-                        this.logger.info("::group::##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report::endgroup::");
+                        this.logger.info("- ##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report");
                 }
                 else {
-                    this.logger.info("::group::##### IAC Connectivity Risk Analysis ##### Analysis process completed successfully without any risks::endgroup::");
+                    this.logger.info("- ##### IAC Connectivity Risk Analysis ##### Analysis process completed successfully without any risks");
                 }
             }
         });

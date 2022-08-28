@@ -74,14 +74,14 @@ export class AshCodeAnalysis {
         return data?.access_token;
       } else {
         this.vcs.logger.exit(
-          `::group::##### IAC Connectivity Risk Analysis ##### Failed to generate token.\n Error code ${response_code}, msg: ${JSON.stringify(
+          `- ##### IAC Connectivity Risk Analysis ##### Failed to generate token.\n Error code ${response_code}, msg: ${JSON.stringify(
             data, null, "\t"
-          )}\n::endgroup::`
+          )}`
         );
       }
     } catch (error: any) {
       this.vcs.logger.exit(
-        `::group::##### IAC Connectivity Risk Analysis ##### Failed to generate token. Error msg: ${error.toString()}\n::endgroup::`
+        `- ##### IAC Connectivity Risk Analysis ##### Failed to generate token. Error msg: ${error.toString()}`
       );
     }
     return "";
@@ -142,7 +142,7 @@ export class AshCodeAnalysis {
     file: AnalysisFile
   ): Promise<AnalysisResult | null> {
     this.vcs.logger.info(
-      `::group::##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response for folder: ${file.folder}\n::endgroup::`
+      `- ##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response for folder: ${file.folder}`
     );
     let analysisResult = await this.checkCodeAnalysisResponse(file);
     for (let i = 0; i < 50; i++) {
@@ -156,7 +156,7 @@ export class AshCodeAnalysis {
         break;
       } else if (analysisResult?.error) {
         this.vcs.logger.exit(
-          "::group::##### IAC Connectivity Risk Analysis ##### Poll Request failed: " + analysisResult?.error + "\n::endgroup::"
+          "- ##### IAC Connectivity Risk Analysis ##### Poll Request failed: " + analysisResult?.error
         );
         break;
       }
