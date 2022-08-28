@@ -196,12 +196,12 @@ export class Github implements IVersionControl {
     }
     if (diffFolders?.length == 0) {
       this.logger.info(
-        "::group::##### IAC Connectivity Risk Analysis ##### No changes were found\n::endgroup::"
+        "- ##### IAC Connectivity Risk Analysis ##### No changes were found"
       );
       return []
     }
     this.logger.info(
-      `::group::##### IAC Connectivity Risk Analysis ##### Found changes in folders ${diffFolders.join(', ')}\n::endgroup::`
+      `- ##### IAC Connectivity Risk Analysis ##### Found changes in folders ${diffFolders.join(', ')}`
     );
     return diffFolders;
   }

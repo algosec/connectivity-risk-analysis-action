@@ -85,7 +85,7 @@ export class Terraform implements IFramework {
       "|",
       "bash",
     ]);
-    console.log("::group::##### IAC Connectivity Risk Analysis ##### tfswitch Installed successfully\n::endgroup::");
+    console.log("- ##### IAC Connectivity Risk Analysis ##### tfswitch Installed successfully");
     if (
       process?.env?.TF_VERSION == "latest" ||
       process?.env?.TF_VERSION == ""
@@ -116,7 +116,7 @@ export class Terraform implements IFramework {
         console.log(
           `::group::##### IAC Connectivity Risk Analysis ##### ${
             iterable?.entries()?.length > 1 ? "." + index + 1 : ""
-          } - ${this.type} Result for folder ${file.folder}:\n ${JSON.stringify(
+          }${this.type} Result for folder ${file.folder}:\n ${JSON.stringify(
             file, null, "\t"
           )}\n::endgroup::`
         );
