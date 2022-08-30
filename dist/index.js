@@ -547,26 +547,29 @@ const exec_1 = __nccwpck_require__(1514);
 const exec_2 = __nccwpck_require__(898);
 const risk_model_1 = __nccwpck_require__(7801);
 const uuid_by_string_1 = __importDefault(__nccwpck_require__(7777));
+const promises_1 = __nccwpck_require__(9225);
 // DEBUG LOCALLY
 // import {githubEventPayloadMock } from "../../test/mockData.gcp"
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 class Github {
     constructor() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s;
         this.steps = {};
         this.useCheckoutAction = false;
-        this.runMode = (_b = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.MODE) !== null && _b !== void 0 ? _b : "fail";
+        this.firstRun = false;
+        this.firstRun = ((_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.FIRST_RUN) == 'true';
+        this.runMode = (_c = (_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.MODE) !== null && _c !== void 0 ? _c : "fail";
         this.http = new http_client_1.HttpClient();
         this.logger = { debug: core_1.debug, error: core_1.error, exit: core_1.setFailed, info: core_1.info };
-        this.workspace = (_d = (_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.GITHUB_WORKSPACE) !== null && _d !== void 0 ? _d : "";
-        this.token = (_f = (_e = process === null || process === void 0 ? void 0 : process.env) === null || _e === void 0 ? void 0 : _e.GITHUB_TOKEN) !== null && _f !== void 0 ? _f : "";
-        this.sha = (_h = (_g = process === null || process === void 0 ? void 0 : process.env) === null || _g === void 0 ? void 0 : _g.GITHUB_SHA) !== null && _h !== void 0 ? _h : "";
+        this.workspace = (_e = (_d = process === null || process === void 0 ? void 0 : process.env) === null || _d === void 0 ? void 0 : _d.GITHUB_WORKSPACE) !== null && _e !== void 0 ? _e : "";
+        this.token = (_g = (_f = process === null || process === void 0 ? void 0 : process.env) === null || _f === void 0 ? void 0 : _f.GITHUB_TOKEN) !== null && _g !== void 0 ? _g : "";
+        this.sha = (_j = (_h = process === null || process === void 0 ? void 0 : process.env) === null || _h === void 0 ? void 0 : _h.GITHUB_SHA) !== null && _j !== void 0 ? _j : "";
         this._context = github_1.context;
         this.octokit = (0, github_1.getOctokit)(this.token);
-        this.payload = (_j = this._context) === null || _j === void 0 ? void 0 : _j.payload;
+        this.payload = (_k = this._context) === null || _k === void 0 ? void 0 : _k.payload;
         this.repo = this._context.repo;
-        this.pullRequest = (_o = (_m = (_l = (_k = this._context) === null || _k === void 0 ? void 0 : _k.payload) === null || _l === void 0 ? void 0 : _l.pull_request) === null || _m === void 0 ? void 0 : _m.number) === null || _o === void 0 ? void 0 : _o.toString();
-        this.useCheckoutAction = (((_p = process === null || process === void 0 ? void 0 : process.env) === null || _p === void 0 ? void 0 : _p.USE_CHECKOUT) && ((_q = process === null || process === void 0 ? void 0 : process.env) === null || _q === void 0 ? void 0 : _q.USE_CHECKOUT) != 'false') || ((_r = process === null || process === void 0 ? void 0 : process.env) === null || _r === void 0 ? void 0 : _r.USE_CHECKOUT) == 'true' ? true : false;
+        this.pullRequest = (_p = (_o = (_m = (_l = this._context) === null || _l === void 0 ? void 0 : _l.payload) === null || _m === void 0 ? void 0 : _m.pull_request) === null || _o === void 0 ? void 0 : _o.number) === null || _p === void 0 ? void 0 : _p.toString();
+        this.useCheckoutAction = (((_q = process === null || process === void 0 ? void 0 : process.env) === null || _q === void 0 ? void 0 : _q.USE_CHECKOUT) && ((_r = process === null || process === void 0 ? void 0 : process.env) === null || _r === void 0 ? void 0 : _r.USE_CHECKOUT) != 'false') || ((_s = process === null || process === void 0 ? void 0 : process.env) === null || _s === void 0 ? void 0 : _s.USE_CHECKOUT) == 'true' ? true : false;
         this.workDir = this.useCheckoutAction ? this.workspace : this.workspace + "_ALGOSEC_CODE_ANALYSIS";
         this.actionUuid = (0, uuid_by_string_1.default)(this.sha);
         this.assetsUrl =
@@ -584,6 +587,13 @@ class Github {
             });
             const answer = (_h = (_g = result === null || result === void 0 ? void 0 : result.data) === null || _g === void 0 ? void 0 : _g.files) !== null && _h !== void 0 ? _h : [];
             return answer;
+        });
+    }
+    getDirectories(source) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return (yield (0, promises_1.readdir)(source, { withFileTypes: true }))
+                .filter(dirent => dirent.isDirectory())
+                .map(dirent => dirent.name);
         });
     }
     createComment(body) {
@@ -681,11 +691,16 @@ class Github {
             }
             let diffFolders = [];
             try {
-                const diffs = yield this.getDiff(this.octokit);
-                const foldersSet = new Set(diffs
-                    .filter((diff) => fileTypes === null || fileTypes === void 0 ? void 0 : fileTypes.some((fileType) => { var _a; return (_a = diff === null || diff === void 0 ? void 0 : diff.filename) === null || _a === void 0 ? void 0 : _a.endsWith(fileType); }))
-                    .map((diff) => diff === null || diff === void 0 ? void 0 : diff.filename.split("/")[0]));
-                diffFolders = [...foldersSet];
+                if (this.firstRun) {
+                    diffFolders = yield this.getDirectories(this.workDir);
+                }
+                else {
+                    const diffs = yield this.getDiff(this.octokit);
+                    const foldersSet = new Set(diffs
+                        .filter((diff) => fileTypes === null || fileTypes === void 0 ? void 0 : fileTypes.some((fileType) => { var _a; return (_a = diff === null || diff === void 0 ? void 0 : diff.filename) === null || _a === void 0 ? void 0 : _a.endsWith(fileType); }))
+                        .map((diff) => diff === null || diff === void 0 ? void 0 : diff.filename.split("/")[0]));
+                    diffFolders = [...foldersSet];
+                }
             }
             catch (error) {
                 if (error instanceof Error)
@@ -13231,6 +13246,14 @@ module.exports = require("events");
 
 "use strict";
 module.exports = require("fs");
+
+/***/ }),
+
+/***/ 9225:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("fs/promises");
 
 /***/ }),
 

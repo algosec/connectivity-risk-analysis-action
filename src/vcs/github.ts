@@ -8,6 +8,8 @@ import { exec, ExecOutput } from "@actions/exec";
 import { ExecSteps, AnalysisFile, count } from "../common/exec";
 import { AnalysisResult, AnalysisResultAdditions, severityOrder } from "../common/risk.model";
 import getUuid from "uuid-by-string";
+import { readdir } from "fs/promises";
+
 
 export type GithubContext = typeof context;
 type RunMode = "fail" | "continue_on_error";
@@ -29,12 +31,14 @@ export class Github implements IVersionControl {
   steps: ExecSteps = {};
   workDir: string;
   useCheckoutAction: boolean = false
+  firstRun: boolean = false
   actionUuid: string;
   fileTypes: string[];
   runMode: RunMode;
   assetsUrl: string;
 
   constructor() {
+    this.firstRun = process?.env?.FIRST_RUN == 'true'
     this.runMode = (process?.env?.MODE as RunMode) ?? "fail";
     this.http = new HttpClient();
     this.logger = { debug, error, exit, info };
@@ -64,6 +68,13 @@ export class Github implements IVersionControl {
     const answer = result?.data?.files ?? [];
     return answer;
   }
+
+  async getDirectories(source: string): Promise<string[]> {
+  return (await readdir(source, { withFileTypes: true }))
+    .filter(dirent => dirent.isDirectory())
+    .map(dirent => dirent.name)
+  }
+
 
   async createComment(body: string): Promise<ExecOutput> {
     const result = await this.octokit.rest.issues.createComment({
@@ -180,17 +191,22 @@ export class Github implements IVersionControl {
     if (!this.useCheckoutAction){
       await this.prepareRepo();
     }
-    let diffFolders: any[] = [];
+    let diffFolders: string[] = [];
     try {
-      const diffs = await this.getDiff(this.octokit);
-      const foldersSet = new Set(
-        diffs
-          .filter((diff) =>
-            fileTypes?.some((fileType) => diff?.filename?.endsWith(fileType))
-          )
-          .map((diff) => diff?.filename.split("/")[0])
-      );
-      diffFolders = [...foldersSet];
+      if (this.firstRun){
+        diffFolders = await this.getDirectories(this.workDir)
+      } else {
+        const diffs = await this.getDiff(this.octokit);
+        const foldersSet: Set<string> = new Set(
+          diffs
+            .filter((diff) =>
+              fileTypes?.some((fileType) => diff?.filename?.endsWith(fileType))
+            )
+            .map((diff) => diff?.filename.split("/")[0])
+        );
+        diffFolders = [...foldersSet];
+      }
+    
     } catch (error: unknown) {
       if (error instanceof Error) this.logger.exit(error?.message);
     }
@@ -234,6 +250,7 @@ export class Github implements IVersionControl {
     }
    
   }
+
 
   async parseOutput(
     filesToUpload: AnalysisFile[],
