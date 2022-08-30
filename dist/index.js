@@ -548,6 +548,7 @@ const exec_2 = __nccwpck_require__(898);
 const risk_model_1 = __nccwpck_require__(7801);
 const uuid_by_string_1 = __importDefault(__nccwpck_require__(7777));
 const promises_1 = __nccwpck_require__(9225);
+const fs_1 = __nccwpck_require__(5747);
 // DEBUG LOCALLY
 // import {githubEventPayloadMock } from "../../test/mockData.gcp"
 // context.payload = githubEventPayloadMock as WebhookPayload & any
@@ -595,6 +596,15 @@ class Github {
                 .filter(dirent => dirent.isDirectory())
                 .map(dirent => dirent.name);
         });
+    }
+    hasFileType(dir, fileTypes) {
+        const files = (0, fs_1.readdirSync)(dir);
+        if (files.some(file => fileTypes.some(type => file.endsWith(type)))) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
     createComment(body) {
         var _a, _b, _c, _d, _e;
@@ -692,7 +702,8 @@ class Github {
             let diffFolders = [];
             try {
                 if (this.firstRun) {
-                    diffFolders = yield this.getDirectories(this.workDir);
+                    const allFolders = yield this.getDirectories(this.workDir);
+                    diffFolders = allFolders.filter(folder => this.hasFileType(folder, fileTypes));
                 }
                 else {
                     const diffs = yield this.getDiff(this.octokit);

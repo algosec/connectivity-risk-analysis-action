@@ -9,6 +9,7 @@ import { ExecSteps, AnalysisFile, count } from "../common/exec";
 import { AnalysisResult, AnalysisResultAdditions, severityOrder } from "../common/risk.model";
 import getUuid from "uuid-by-string";
 import { readdir } from "fs/promises";
+import { readdirSync } from "fs";
 
 
 export type GithubContext = typeof context;
@@ -74,6 +75,17 @@ export class Github implements IVersionControl {
     .filter(dirent => dirent.isDirectory())
     .map(dirent => dirent.name)
   }
+
+  hasFileType(dir:string, fileTypes: string[]): boolean {
+    const files = readdirSync(dir);
+      if (files.some(file => fileTypes.some(type => file.endsWith(type)))){
+        return true
+      } else {
+        return false
+      }
+    }
+
+  
 
 
   async createComment(body: string): Promise<ExecOutput> {
@@ -194,7 +206,8 @@ export class Github implements IVersionControl {
     let diffFolders: string[] = [];
     try {
       if (this.firstRun){
-        diffFolders = await this.getDirectories(this.workDir)
+        const allFolders = await this.getDirectories(this.workDir)
+        diffFolders = allFolders.filter(folder => this.hasFileType(folder, fileTypes))
       } else {
         const diffs = await this.getDiff(this.octokit);
         const foldersSet: Set<string> = new Set(
