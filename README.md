@@ -15,17 +15,6 @@ jobs:
      name: 'Algosec IAC Connectivity Risk Analysis'
      runs-on: ubuntu-latest
      steps:
-          # Optional: use @actions/checkout@v3 to checkout the repo and add "USE_CHECKOUT: true" under "env:"
-          
-#       - name: Checkout Repo
-#         uses: @actions/checkout@v3
-          
-          # Optional: must use @actions/checkout@v3 before Authenticate to Google Cloud action
-      
-#        - name: Authenticate to Google Cloud
-#          uses: google-github-actions/auth@v0.7.3
-#          with:
-#            credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
         - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v0.0.5
           env:
