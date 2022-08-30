@@ -51,15 +51,6 @@ jobs:
             
 ```
 
-Use this template to add Code Analysis Action on IaC repository.
-
-This template includes the needed environment variables for the next run
-
-## Use this action
-
-Click the `Use this Template` and provide the new repo details for your action
-
-```
 
 ## Change action.yml
 
