@@ -16,8 +16,8 @@ export class Main {
   vcsType: VersionControlKeys;
 
   constructor() {
-    this.vcsType = process?.env?.VCS_TYPE as VersionControlKeys;
-    this.frameworkType = process?.env?.FRAMEWORK_TYPE as FrameworkKeys;
+    this.vcsType = (process?.env?.VCS ?? 'github') as VersionControlKeys;
+    this.frameworkType = (process?.env?.FRAMEWORK ?? 'terraform') as FrameworkKeys;
   }
 
   async run(): Promise<void> {

@@ -45,7 +45,7 @@ export class Github implements IVersionControl {
     this.octokit = getOctokit(this.token);
     this.payload = this._context?.payload;
     this.repo = this._context.repo;
-    this.pullRequest = this._context.payload.pull_request.number.toString();
+    this.pullRequest = this._context?.payload?.pull_request?.number?.toString();
     this.useCheckoutAction = (process?.env?.USE_CHECKOUT && process?.env?.USE_CHECKOUT != 'false') || process?.env?.USE_CHECKOUT == 'true' ? true : false
     this.workDir = this.useCheckoutAction ? this.workspace : this.workspace + "_ALGOSEC_CODE_ANALYSIS"
     this.actionUuid = getUuid(this.sha);
@@ -248,7 +248,7 @@ export class Github implements IVersionControl {
         "- ##### IAC Connectivity Risk Analysis ##### The risks analysis process failed.\n" + errors
       );
     } else {
-      this.logger.info("- ##### IAC Connectivity Risk Analysis ##### Parsing Code Analysis and comment");
+      this.logger.info("- ##### IAC Connectivity Risk Analysis ##### Creating Risks Report");
       if (
         analysisResults?.some(
           (response) => response?.additions?.analysis_result?.length > 0

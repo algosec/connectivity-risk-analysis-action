@@ -3,7 +3,7 @@ import { debug } from "@actions/core";
 
 export interface AnalysisFile {
   uuid: string;
-  output: any;
+  output: {plan: string, log: ExecOutput, initLog: ExecOutput};
   folder: string;
 }
 export interface ExecSteps {

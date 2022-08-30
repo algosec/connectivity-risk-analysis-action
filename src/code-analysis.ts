@@ -104,13 +104,16 @@ export class AshCodeAnalysis {
   async uploadFile(file: AnalysisFile): Promise<any> {
     let res = false;
     try {
-      if (file?.output) {
+      if (file?.output?.plan != '') {
         const ans = await this.vcs.uploadAnalysisFile(file, this.jwt);
         if (ans) {
           res = true;
         }
+      } else {
+        this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### No plan was not created for: ${file.folder}, please check terraform logs`)
       }
     } catch (e) {
+        this.vcs.logger.error(`::group::##### IAC Connectivity Risk Analysis ##### File upload for: ${file.folder} failed due to errors:\n ${e}\n ::endgroup::`)
       res = false;
     }
     return res;
@@ -149,8 +152,8 @@ export class AshCodeAnalysis {
       `- ##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response for folder: ${file.folder}`
     );
     let analysisResult = await this.checkCodeAnalysisResponse(file);
-    for (let i = 0; i < 50; i++) {
-      await this.wait(3000);
+    for (let i = 0; i < 60; i++) {
+      await this.wait(5000);
       analysisResult = await this.checkCodeAnalysisResponse(file);
       if (analysisResult?.additions) {
         analysisResult.folder = file?.folder;
@@ -159,11 +162,16 @@ export class AshCodeAnalysis {
         );
         break;
       } else if (analysisResult?.error) {
-        this.vcs.logger.exit(
-          "- ##### IAC Connectivity Risk Analysis ##### Poll Request failed: " + analysisResult?.error
+        this.vcs.logger.error(
+          "- ##### IAC Connectivity Risk Analysis ##### Poll Request failed for folder: " + file?.folder + analysisResult?.error
         );
         break;
       }
+    }
+    if (analysisResult?.additions?.analysis_result?.length == 0){
+      this.vcs.logger.error(
+        "- ##### IAC Connectivity Risk Analysis ##### Poll Request has timed out for folder: "+ file?.folder + analysisResult?.error
+      );
     }
     return analysisResult;
   }

@@ -91,17 +91,22 @@ class AshCodeAnalysis {
         });
     }
     uploadFile(file) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
             let res = false;
             try {
-                if (file === null || file === void 0 ? void 0 : file.output) {
+                if (((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan) != '') {
                     const ans = yield this.vcs.uploadAnalysisFile(file, this.jwt);
                     if (ans) {
                         res = true;
                     }
                 }
+                else {
+                    this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### No plan was not created for: ${file.folder}, please check terraform logs`);
+                }
             }
             catch (e) {
+                this.vcs.logger.error(`::group::##### IAC Connectivity Risk Analysis ##### File upload for: ${file.folder} failed due to errors:\n ${e}\n ::endgroup::`);
                 res = false;
             }
             return res;
@@ -131,11 +136,12 @@ class AshCodeAnalysis {
         });
     }
     pollCodeAnalysisResponse(file) {
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response for folder: ${file.folder}`);
             let analysisResult = yield this.checkCodeAnalysisResponse(file);
-            for (let i = 0; i < 50; i++) {
-                yield this.wait(3000);
+            for (let i = 0; i < 60; i++) {
+                yield this.wait(5000);
                 analysisResult = yield this.checkCodeAnalysisResponse(file);
                 if (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.additions) {
                     analysisResult.folder = file === null || file === void 0 ? void 0 : file.folder;
@@ -143,9 +149,12 @@ class AshCodeAnalysis {
                     break;
                 }
                 else if (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error) {
-                    this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### Poll Request failed: " + (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error));
+                    this.vcs.logger.error("- ##### IAC Connectivity Risk Analysis ##### Poll Request failed for folder: " + (file === null || file === void 0 ? void 0 : file.folder) + (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error));
                     break;
                 }
+            }
+            if (((_b = (_a = analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) == 0) {
+                this.vcs.logger.error("- ##### IAC Connectivity Risk Analysis ##### Poll Request has timed out for folder: " + (file === null || file === void 0 ? void 0 : file.folder) + (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error));
             }
             return analysisResult;
         });
@@ -433,9 +442,9 @@ class Terraform {
                 yield asyncIterable(foldersToRunCheck, this.terraform);
             }
             catch (error) {
-                console.log("Framework check failed " + error);
+                console.log("- ##### IAC Connectivity Risk Analysis ##### Framework check failed: " + error);
             }
-            console.log(`- ##### IAC Connectivity Risk Analysis ##### FINISHED TERRAFORM`);
+            console.log(`- ##### IAC Connectivity Risk Analysis ##### Finished Terraform check`);
             // console.log(`::group::##### IAC Connectivity Risk Analysis ##### Files To Analyze\n ${JSON.stringify(res, null, "\t")}\n::endgroup::`);
             return res;
         });
@@ -472,10 +481,10 @@ const vcs_service_1 = __nccwpck_require__(9701);
 // } from "../test/mockData.gcp"
 class Main {
     constructor() {
-        var _a, _b;
+        var _a, _b, _c, _d;
         this.steps = {};
-        this.vcsType = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.VCS_TYPE;
-        this.frameworkType = (_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.FRAMEWORK_TYPE;
+        this.vcsType = ((_b = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.VCS) !== null && _b !== void 0 ? _b : 'github');
+        this.frameworkType = ((_d = (_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.FRAMEWORK) !== null && _d !== void 0 ? _d : 'terraform');
     }
     run() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -543,7 +552,7 @@ const uuid_by_string_1 = __importDefault(__nccwpck_require__(7777));
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 class Github {
     constructor() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
         this.steps = {};
         this.useCheckoutAction = false;
         this.runMode = (_b = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.MODE) !== null && _b !== void 0 ? _b : "fail";
@@ -556,8 +565,8 @@ class Github {
         this.octokit = (0, github_1.getOctokit)(this.token);
         this.payload = (_j = this._context) === null || _j === void 0 ? void 0 : _j.payload;
         this.repo = this._context.repo;
-        this.pullRequest = this._context.payload.pull_request.number.toString();
-        this.useCheckoutAction = (((_k = process === null || process === void 0 ? void 0 : process.env) === null || _k === void 0 ? void 0 : _k.USE_CHECKOUT) && ((_l = process === null || process === void 0 ? void 0 : process.env) === null || _l === void 0 ? void 0 : _l.USE_CHECKOUT) != 'false') || ((_m = process === null || process === void 0 ? void 0 : process.env) === null || _m === void 0 ? void 0 : _m.USE_CHECKOUT) == 'true' ? true : false;
+        this.pullRequest = (_o = (_m = (_l = (_k = this._context) === null || _k === void 0 ? void 0 : _k.payload) === null || _l === void 0 ? void 0 : _l.pull_request) === null || _m === void 0 ? void 0 : _m.number) === null || _o === void 0 ? void 0 : _o.toString();
+        this.useCheckoutAction = (((_p = process === null || process === void 0 ? void 0 : process.env) === null || _p === void 0 ? void 0 : _p.USE_CHECKOUT) && ((_q = process === null || process === void 0 ? void 0 : process.env) === null || _q === void 0 ? void 0 : _q.USE_CHECKOUT) != 'false') || ((_r = process === null || process === void 0 ? void 0 : process.env) === null || _r === void 0 ? void 0 : _r.USE_CHECKOUT) == 'true' ? true : false;
         this.workDir = this.useCheckoutAction ? this.workspace : this.workspace + "_ALGOSEC_CODE_ANALYSIS";
         this.actionUuid = (0, uuid_by_string_1.default)(this.sha);
         this.assetsUrl =
@@ -728,7 +737,7 @@ class Github {
                 this.logger.exit("- ##### IAC Connectivity Risk Analysis ##### The risks analysis process failed.\n" + errors);
             }
             else {
-                this.logger.info("- ##### IAC Connectivity Risk Analysis ##### Parsing Code Analysis and comment");
+                this.logger.info("- ##### IAC Connectivity Risk Analysis ##### Creating Risks Report");
                 if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => { var _a, _b; return ((_b = (_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })) {
                     if (this.runMode == "fail")
                         this.logger.exit("- ##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report");
