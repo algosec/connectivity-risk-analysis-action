@@ -11,7 +11,7 @@ on:
     branches:
       - 'main'
 jobs:
-  algosec-risk-analysis:
+  algosec-iac-connectivity-risk-analysis:
      name: 'Algosec IAC Connectivity Risk Analysis'
      runs-on: ubuntu-latest
      steps:
