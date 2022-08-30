@@ -43,9 +43,7 @@ jobs:
             
             # Needed Github information
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            GITHUB_SHA: ${{ github.sha }}
-            GITHUB_WORKSPACE: ${{ github.workspace }}
-            
+  
             # Cloudflow credentials
             CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
             CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
