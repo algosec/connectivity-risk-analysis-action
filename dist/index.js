@@ -135,7 +135,7 @@ class AshCodeAnalysis {
                 this.vcs.logger.debug(`::group::##### IAC Connectivity Risk Analysis ##### Risk analysis result:\n${JSON.stringify(analysisResult, null, "\t")}\n::endgroup::`);
             }
             catch (e) {
-                this.vcs.logger.exit(`- ##### IAC Connectivity Risk Analysis ##### Code Analysis failed due to errors:${e}`);
+                this.vcs.logger.exit(`- ##### IAC Connectivity Risk Analysis ##### Code Analysis failed due to errors: ${e}`);
                 analysisResult = [];
             }
             return analysisResult;
@@ -560,28 +560,28 @@ const fs_1 = __nccwpck_require__(5747);
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 class Github {
     constructor() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t;
         this.steps = {};
         this.useCheckoutAction = false;
         this.firstRun = false;
         this.firstRun = ((_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.FIRST_RUN) == 'true';
-        this.runMode = (_c = (_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.MODE) !== null && _c !== void 0 ? _c : "fail";
+        this.stopWhenFail = ((_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.STOP_WHEN_FAIL) == 'true';
         this.http = new http_client_1.HttpClient();
         this.logger = { debug: core_1.debug, error: core_1.error, exit: core_1.setFailed, info: core_1.info };
-        this.workspace = (_e = (_d = process === null || process === void 0 ? void 0 : process.env) === null || _d === void 0 ? void 0 : _d.GITHUB_WORKSPACE) !== null && _e !== void 0 ? _e : "";
-        this.token = (_g = (_f = process === null || process === void 0 ? void 0 : process.env) === null || _f === void 0 ? void 0 : _f.GITHUB_TOKEN) !== null && _g !== void 0 ? _g : "";
-        this.sha = (_j = (_h = process === null || process === void 0 ? void 0 : process.env) === null || _h === void 0 ? void 0 : _h.GITHUB_SHA) !== null && _j !== void 0 ? _j : "";
+        this.workspace = (_d = (_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.GITHUB_WORKSPACE) !== null && _d !== void 0 ? _d : "";
+        this.token = (_f = (_e = process === null || process === void 0 ? void 0 : process.env) === null || _e === void 0 ? void 0 : _e.GITHUB_TOKEN) !== null && _f !== void 0 ? _f : "";
+        this.sha = (_h = (_g = process === null || process === void 0 ? void 0 : process.env) === null || _g === void 0 ? void 0 : _g.GITHUB_SHA) !== null && _h !== void 0 ? _h : "";
         this._context = github_1.context;
         this.octokit = (0, github_1.getOctokit)(this.token);
-        this.payload = (_k = this._context) === null || _k === void 0 ? void 0 : _k.payload;
+        this.payload = (_j = this._context) === null || _j === void 0 ? void 0 : _j.payload;
         this.repo = this._context.repo;
-        this.pullRequest = (_p = (_o = (_m = (_l = this._context) === null || _l === void 0 ? void 0 : _l.payload) === null || _m === void 0 ? void 0 : _m.pull_request) === null || _o === void 0 ? void 0 : _o.number) === null || _p === void 0 ? void 0 : _p.toString();
-        this.useCheckoutAction = (((_q = process === null || process === void 0 ? void 0 : process.env) === null || _q === void 0 ? void 0 : _q.USE_CHECKOUT) && ((_r = process === null || process === void 0 ? void 0 : process.env) === null || _r === void 0 ? void 0 : _r.USE_CHECKOUT) != 'false') || ((_s = process === null || process === void 0 ? void 0 : process.env) === null || _s === void 0 ? void 0 : _s.USE_CHECKOUT) == 'true' ? true : false;
+        this.pullRequest = (_o = (_m = (_l = (_k = this._context) === null || _k === void 0 ? void 0 : _k.payload) === null || _l === void 0 ? void 0 : _l.pull_request) === null || _m === void 0 ? void 0 : _m.number) === null || _o === void 0 ? void 0 : _o.toString();
+        this.useCheckoutAction = (((_p = process === null || process === void 0 ? void 0 : process.env) === null || _p === void 0 ? void 0 : _p.USE_CHECKOUT) && ((_q = process === null || process === void 0 ? void 0 : process.env) === null || _q === void 0 ? void 0 : _q.USE_CHECKOUT) != 'false') || ((_r = process === null || process === void 0 ? void 0 : process.env) === null || _r === void 0 ? void 0 : _r.USE_CHECKOUT) == 'true' ? true : false;
         this.workDir = this.useCheckoutAction ? this.workspace : this.workspace + "_ALGOSEC_CODE_ANALYSIS";
         this.actionUuid = (0, uuid_by_string_1.default)(this.sha);
         this.assetsUrl =
             "https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons";
-        this.cfApiUrl = (_u = (_t = process === null || process === void 0 ? void 0 : process.env) === null || _t === void 0 ? void 0 : _t.CF_API_URL) !== null && _u !== void 0 ? _u : "https://api-feature-cs-0015342.dev.cloudflow.algosec.com/cloudflow/api/devsecops/v1";
+        this.cfApiUrl = (_t = (_s = process === null || process === void 0 ? void 0 : process.env) === null || _s === void 0 ? void 0 : _s.CF_API_URL) !== null && _t !== void 0 ? _t : "https://api-feature-cs-0015342.dev.cloudflow.algosec.com/cloudflow/api/devsecops/v1";
     }
     getDiff(octokit) {
         var _a, _b, _c, _d, _e, _f, _g, _h;
@@ -772,7 +772,7 @@ class Github {
             else {
                 this.logger.info("- ##### IAC Connectivity Risk Analysis ##### Creating Risks Report");
                 if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => { var _a, _b; return ((_b = (_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })) {
-                    if (this.runMode == "fail")
+                    if (this.stopWhenFail)
                         this.logger.exit("- ##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report");
                     else
                         this.logger.info("- ##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report");

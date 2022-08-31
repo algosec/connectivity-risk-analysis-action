@@ -13,7 +13,7 @@ import { readdirSync } from "fs";
 
 
 export type GithubContext = typeof context;
-type RunMode = "fail" | "continue_on_error";
+
 // DEBUG LOCALLY
 // import {githubEventPayloadMock } from "../../test/mockData.gcp"
 // context.payload = githubEventPayloadMock as WebhookPayload & any
@@ -35,13 +35,13 @@ export class Github implements IVersionControl {
   firstRun: boolean = false
   actionUuid: string;
   fileTypes: string[];
-  runMode: RunMode;
+  stopWhenFail: boolean;
   assetsUrl: string;
   cfApiUrl: string;
 
   constructor() {
     this.firstRun = process?.env?.FIRST_RUN == 'true'
-    this.runMode = (process?.env?.MODE as RunMode) ?? "fail";
+    this.stopWhenFail = process?.env?.STOP_WHEN_FAIL == 'true';
     this.http = new HttpClient();
     this.logger = { debug, error, exit, info };
     this.workspace = process?.env?.GITHUB_WORKSPACE ?? "";
@@ -287,7 +287,7 @@ export class Github implements IVersionControl {
           (response) => response?.additions?.analysis_result?.length > 0
         )
       ) {
-        if (this.runMode == "fail")
+        if (this.stopWhenFail)
           this.logger.exit(
             "- ##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report"
           );
