@@ -147,7 +147,7 @@ export class AshCodeAnalysis {
         `::group::##### IAC Connectivity Risk Analysis ##### Risk analysis result:\n${JSON.stringify(analysisResult, null, "\t")}\n::endgroup::`
       );
     } catch(e){
-      this.vcs.logger.exit(`::group::##### IAC Connectivity Risk Analysis ##### Code Analysis failed due to errors:\n${e}\n::endgroup::`);
+      this.vcs.logger.exit(`- ##### IAC Connectivity Risk Analysis ##### Code Analysis failed due to errors:${e}`);
       analysisResult = []
     }
    
