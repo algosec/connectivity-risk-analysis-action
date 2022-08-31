@@ -117,7 +117,7 @@ jobs:
           
           # must use @actions/checkout@v3 before Authenticate to Google Cloud action
           # How to create GCP_CREDENTIALS from GCP JSON file https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
-      
+          # Auth Gcp Action https://github.com/google-github-actions/auth
         - name: Authenticate to Google Cloud
           uses: google-github-actions/auth@v0.7.3
           with:
