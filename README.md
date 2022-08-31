@@ -1,6 +1,6 @@
 <img height="100" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/header.svg" /> 
 
-## Algosec IAC Connectivity Risk Analysis 
+## Algosec IaC Connectivity Risk Analysis 
 
 ### Basic Configuration
 
@@ -16,13 +16,16 @@ jobs:
      runs-on: ubuntu-latest
      steps:
         - name: Connectivity Risk Analysis
-          uses: algosec/connectivity-risk-analysis-action@v0.0.5
+          uses: algosec/connectivity-risk-analysis-action@v0.0.6
           env:
             # Optional: when using @actions/checkout@v3 to checkout the repo add "USE_CHECKOUT: true" under "env:"
             # USE_CHECKOUT: true
             
+            # Optional: run checks on all folders with relevant file type
+            # FIRST_RUN: true
+            
             # Fail or Continue on error after action finish (fail or continue_on_error)
-            # MODE: continue_on_error (defualt)
+            # STOP_WHEN_FAIL: true
             
             # IaS Framework type (terraform, cloudformation, etc...)
             # FRAMEWORK: terraform (default)
@@ -116,7 +119,8 @@ jobs:
           uses: @actions/checkout@v3
           
           # must use @actions/checkout@v3 before Authenticate to Google Cloud action
-      
+          # How to create GCP_CREDENTIALS from GCP JSON file https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
+          # Auth Gcp Action https://github.com/google-github-actions/auth
         - name: Authenticate to Google Cloud
           uses: google-github-actions/auth@v0.7.3
           with:
