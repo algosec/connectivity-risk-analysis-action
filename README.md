@@ -1,6 +1,6 @@
 <img height="100" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/header.svg" /> 
 
-## Algosec IAC Connectivity Risk Analysis 
+## Algosec IaC Connectivity Risk Analysis 
 
 ### Basic Configuration
 
