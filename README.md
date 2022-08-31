@@ -25,7 +25,7 @@ jobs:
             # FIRST_RUN: true
             
             # Fail or Continue on error after action finish (fail or continue_on_error)
-            # MODE: continue_on_error (defualt)
+            # STOP_WHEN_FAIL: true
             
             # IaS Framework type (terraform, cloudformation, etc...)
             # FRAMEWORK: terraform (default)
