@@ -122,7 +122,7 @@ export class AshCodeAnalysis {
         this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### No plan was not created for: ${file.folder}, please check terraform logs`)
       }
     } catch (e) {
-        this.vcs.logger.error(`::group::##### IAC Connectivity Risk Analysis ##### File upload for: ${file.folder} failed due to errors:\n ${e}\n ::endgroup::`)
+        this.vcs.logger.error(`- ##### IAC Connectivity Risk Analysis ##### File upload for: ${file.folder} failed due to errors:\n ${e}`)
       res = false;
     }
     return res;
@@ -157,10 +157,10 @@ export class AshCodeAnalysis {
   async pollCodeAnalysisResponse(
     file: AnalysisFile
   ): Promise<AnalysisResult | null> {
+    let analysisResult = await this.checkCodeAnalysisResponse(file);
     this.vcs.logger.info(
       `- ##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response for folder: ${file.folder}`
     );
-    let analysisResult = await this.checkCodeAnalysisResponse(file);
     for (let i = 0; i < 60; i++) {
       await this.wait(5000);
       analysisResult = await this.checkCodeAnalysisResponse(file);

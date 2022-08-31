@@ -112,7 +112,7 @@ class AshCodeAnalysis {
                 }
             }
             catch (e) {
-                this.vcs.logger.error(`::group::##### IAC Connectivity Risk Analysis ##### File upload for: ${file.folder} failed due to errors:\n ${e}\n ::endgroup::`);
+                this.vcs.logger.error(`- ##### IAC Connectivity Risk Analysis ##### File upload for: ${file.folder} failed due to errors:\n ${e}`);
                 res = false;
             }
             return res;
@@ -144,8 +144,8 @@ class AshCodeAnalysis {
     pollCodeAnalysisResponse(file) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
-            this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response for folder: ${file.folder}`);
             let analysisResult = yield this.checkCodeAnalysisResponse(file);
+            this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response for folder: ${file.folder}`);
             for (let i = 0; i < 60; i++) {
                 yield this.wait(5000);
                 analysisResult = yield this.checkCodeAnalysisResponse(file);
