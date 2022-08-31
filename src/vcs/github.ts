@@ -529,9 +529,9 @@ ${risksTableContents}
     const header = `<img height="50" src="${this.assetsUrl}/header.svg" /> \n`;
     const footer = `\n\n---\n\n
 <br>
-Pusher: @${this._context?.actor}\n
-Action: \`${this._context?.eventName}\`\n
-Working Directory: ${this.workspace}\n
+Pusher: @${this._context?.actor}<br>
+Action: \`${this._context?.eventName}\`<br>
+Working Directory: ${this.workspace}<br>
 Workflow: ${this._context?.workflow}`;
     const summary = this.buildCommentSummary(filesToUpload, analysisResults);
 
