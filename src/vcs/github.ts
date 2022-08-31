@@ -37,6 +37,7 @@ export class Github implements IVersionControl {
   fileTypes: string[];
   runMode: RunMode;
   assetsUrl: string;
+  cfApiUrl: string;
 
   constructor() {
     this.firstRun = process?.env?.FIRST_RUN == 'true'
@@ -56,6 +57,8 @@ export class Github implements IVersionControl {
     this.actionUuid = getUuid(this.sha);
     this.assetsUrl =
       "https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons";
+    this.cfApiUrl = process?.env?.CF_API_URL ?? "https://api-feature-cs-0015342.dev.cloudflow.algosec.com/cloudflow/api/devsecops/v1";
+
   }
 
   async getDiff(octokit: InstanceType<typeof GitHub>): Promise<any> {
@@ -243,7 +246,7 @@ export class Github implements IVersionControl {
     try {
       const http = new HttpClient();
       const body = file?.output?.plan;
-      const getPresignedUrl = `${process?.env?.CF_API_URL}/presignedurl?actionId=${file?.uuid}&owner=${context?.repo?.owner}&folder=${file?.folder}`;
+      const getPresignedUrl = `${this.cfApiUrl}/presignedurl?actionId=${file?.uuid}&owner=${context?.repo?.owner}&folder=${file?.folder}`;
       const presignedUrlResponse = await (
         await http.get(getPresignedUrl, { Authorization: `Bearer ${jwt}` })
       ).readBody();
@@ -258,7 +261,7 @@ export class Github implements IVersionControl {
         return false;
       }
     } catch(e){
-      console.log(`::group::##### IAC Connectivity Risk Analysis ##### Upload file failed due to erros:\n${e}\n::endgroup::`)
+      console.log(`::group::##### IAC Connectivity Risk Analysis ##### Upload file failed due to errors:\n${e}\n::endgroup::`)
       return false
     }
    

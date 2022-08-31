@@ -36,7 +36,7 @@ export class AshCodeAnalysis {
   setSecrets(): void {
     const inputs = this.vcs.getInputs();
     this.debugMode = inputs?.ALGOSEC_DEBUG == "true";
-    this.apiUrl = inputs?.CF_API_URL ? inputs?.CF_API_URL : "https://api-feature-cs-0015342.dev.cloudflow.algosec.com/cloudflow/api/devsecops/v1";
+    this.apiUrl = this.vcs.cfApiUrl
     this.loginAPI = inputs?.CF_LOGIN_API ?? "https://dev.app.algosec.com/api/algosaas/auth/v1/access-keys/login";
     this.tenantId = inputs?.CF_TENANT_ID;
     this.clientId = inputs?.CF_CLIENT_ID;
@@ -88,20 +88,29 @@ export class AshCodeAnalysis {
   }
 
   async triggerCodeAnalysis(filesToUpload: AnalysisFile[]): Promise<void> {
-    const fileUploadPromises: Array<Promise<void>> = [];
+    const fileUploadPromises: Array<Promise<boolean>> = [];
     filesToUpload.forEach((file) =>
       fileUploadPromises.push(this.uploadFile(file))
     );
-    const response = await Promise.all(fileUploadPromises);
 
-    if (response) {
+    const responses = await Promise.all(fileUploadPromises);
+
+    if (responses.filter(response => response).length == 0) {
+      this.vcs.logger.exit(
+        "- ##### IAC Connectivity Risk Analysis ##### No files were uploaded, please check logs"
+      );
+    } else if (responses.some(response => !response)) {
+      this.vcs.logger.error(
+        "- ##### IAC Connectivity Risk Analysis ##### Some files failed to upload, please check logs"
+      );
+    } else {
       this.vcs.logger.info(
         "- ##### IAC Connectivity Risk Analysis ##### File/s were uploaded successfully"
       );
     }
   }
 
-  async uploadFile(file: AnalysisFile): Promise<any> {
+  async uploadFile(file: AnalysisFile): Promise<boolean> {
     let res = false;
     try {
       if (file?.output?.plan != '') {
@@ -138,7 +147,7 @@ export class AshCodeAnalysis {
         `::group::##### IAC Connectivity Risk Analysis ##### Risk analysis result:\n${JSON.stringify(analysisResult, null, "\t")}\n::endgroup::`
       );
     } catch(e){
-      this.vcs.logger.exit(`::group::##### IAC Connectivity Risk Analysis ##### Code Analysis failed due to erros:\n${e}\n::endgroup::`);
+      this.vcs.logger.exit(`::group::##### IAC Connectivity Risk Analysis ##### Code Analysis failed due to errors:\n${e}\n::endgroup::`);
       analysisResult = []
     }
    

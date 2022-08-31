@@ -13,6 +13,7 @@ export interface IVersionControl {
   sha: string;
   octokit?: any;
   fileTypes: string[];
+  cfApiUrl: string;
   getRepoRemoteUrl: () => string;
   createComment: (body: string) => any;
   parseCodeAnalysis: (analysis, VersionControl) => any;
@@ -34,6 +35,7 @@ export class GitLab implements IVersionControl {
   sha: string;
   workDir: string;
   fileTypes: string[];
+  cfApiUrl: string;
 
   constructor() {
     this.workspace = process?.env?.GITLAB_WORKSPACE ?? "";
