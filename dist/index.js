@@ -142,7 +142,6 @@ class AshCodeAnalysis {
         });
     }
     pollCodeAnalysisResponse(file) {
-        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             let analysisResult = yield this.checkCodeAnalysisResponse(file);
             this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response for folder: ${file.folder}`);
@@ -159,8 +158,8 @@ class AshCodeAnalysis {
                     break;
                 }
             }
-            if (((_b = (_a = analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) == 0) {
-                this.vcs.logger.error("- ##### IAC Connectivity Risk Analysis ##### Poll Request has timed out for folder: " + (file === null || file === void 0 ? void 0 : file.folder) + (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error));
+            if (!analysisResult) {
+                this.vcs.logger.error("- ##### IAC Connectivity Risk Analysis ##### Poll Request has timed out for folder: " + (file === null || file === void 0 ? void 0 : file.folder));
             }
             return analysisResult;
         });
@@ -389,13 +388,11 @@ class Terraform {
                 let jsonPlan = '';
                 if (steps.plan.stdout != '') {
                     jsonPlan =
-                        // JSON.parse(
                         (yield (0, exec_1.exec)("terraform", [
                             "show",
                             "-json",
                             `${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
                         ])).stdout;
-                    // );
                 }
                 console.log(`::endgroup::`);
                 process.chdir(options.workDir);
@@ -556,7 +553,7 @@ const uuid_by_string_1 = __importDefault(__nccwpck_require__(7777));
 const promises_1 = __nccwpck_require__(9225);
 const fs_1 = __nccwpck_require__(5747);
 // DEBUG LOCALLY
-// import {githubEventPayloadMock } from "../../test/mockData.gcp"
+// import {githubEventPayloadMock } from "../../test/mockData.azure"
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 class Github {
     constructor() {

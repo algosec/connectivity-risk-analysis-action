@@ -177,9 +177,9 @@ export class AshCodeAnalysis {
         break;
       }
     }
-    if (analysisResult?.additions?.analysis_result?.length == 0){
+    if (!analysisResult){
       this.vcs.logger.error(
-        "- ##### IAC Connectivity Risk Analysis ##### Poll Request has timed out for folder: "+ file?.folder + analysisResult?.error
+        "- ##### IAC Connectivity Risk Analysis ##### Poll Request has timed out for folder: "+ file?.folder
       );
     }
     return analysisResult;

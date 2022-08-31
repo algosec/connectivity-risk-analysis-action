@@ -57,7 +57,6 @@ export class Terraform implements IFramework {
       let jsonPlan = '';
       if (steps.plan.stdout != '') {
         jsonPlan = 
-        // JSON.parse(
           (
             await exec("terraform", [
               "show",
@@ -65,7 +64,6 @@ export class Terraform implements IFramework {
               `${process?.cwd()}\\tmp\\tf-${options.runFolder}.out`,
             ])
           ).stdout
-        // );
       }
       console.log(`::endgroup::`)
       process.chdir(options.workDir);

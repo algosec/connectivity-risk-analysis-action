@@ -15,7 +15,7 @@ import { readdirSync } from "fs";
 export type GithubContext = typeof context;
 
 // DEBUG LOCALLY
-// import {githubEventPayloadMock } from "../../test/mockData.gcp"
+// import {githubEventPayloadMock } from "../../test/mockData.azure"
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 
 export class Github implements IVersionControl {
