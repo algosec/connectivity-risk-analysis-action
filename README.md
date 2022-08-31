@@ -16,10 +16,13 @@ jobs:
      runs-on: ubuntu-latest
      steps:
         - name: Connectivity Risk Analysis
-          uses: algosec/connectivity-risk-analysis-action@v0.0.5
+          uses: algosec/connectivity-risk-analysis-action@v0.0.6
           env:
             # Optional: when using @actions/checkout@v3 to checkout the repo add "USE_CHECKOUT: true" under "env:"
             # USE_CHECKOUT: true
+            
+            # Optional: run checks on all folders with relevant file type
+            # FIRST_RUN: true
             
             # Fail or Continue on error after action finish (fail or continue_on_error)
             # MODE: continue_on_error (defualt)
