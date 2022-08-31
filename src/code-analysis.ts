@@ -36,7 +36,7 @@ export class AshCodeAnalysis {
   setSecrets(): void {
     const inputs = this.vcs.getInputs();
     this.debugMode = inputs?.ALGOSEC_DEBUG == "true";
-    this.apiUrl = inputs?.CF_API_URL ?? "https://api-feature-cs-0015342.dev.cloudflow.algosec.com/cloudflow/api/devsecops/v1";
+    this.apiUrl = inputs?.CF_API_URL ? inputs?.CF_API_URL : "https://api-feature-cs-0015342.dev.cloudflow.algosec.com/cloudflow/api/devsecops/v1";
     this.loginAPI = inputs?.CF_LOGIN_API ?? "https://dev.app.algosec.com/api/algosaas/auth/v1/access-keys/login";
     this.tenantId = inputs?.CF_TENANT_ID;
     this.clientId = inputs?.CF_CLIENT_ID;
