@@ -68,7 +68,8 @@ jobs:
             CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
             CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
             CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}  
-            # AWS Environment Variables/ External Action https://github.com/marketplace/actions/configure-aws-credentials-action-for-github-actions
+            # Use AWS Environment Variables or
+            # External Action https://github.com/marketplace/actions/configure-aws-credentials-action-for-github-actions
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}   
             
@@ -93,7 +94,8 @@ jobs:
             CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
             CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
             CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
-            # AZURE Environment Variables/ External Action https://github.com/marketplace/actions/azure-login
+            # Use Azure Environment Variables or
+            # External Action https://github.com/marketplace/actions/azure-login
             ARM_SUBSCRIPTION_ID: ${{ secrets.AZ_SUBSCRIPTION_ID }}
             ARM_TENANT_ID: ${{ secrets.AZ_TENANT_ID }}
             ARM_CLIENT_ID: ${{ secrets.AZ_CLIENT_ID }}
@@ -118,8 +120,9 @@ jobs:
         - name: Checkout Repo
           uses: @actions/checkout@v3
           
-          # must use @actions/checkout@v3 before Authenticate to Google Cloud action
-          # How to create GCP_CREDENTIALS from GCP JSON file https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
+          # Need to use @actions/checkout@v3 before Authenticate to Google Cloud action
+          # Read how to create GCP_CREDENTIALS key from GCP Json File:
+          # https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
           # Auth Gcp Action https://github.com/google-github-actions/auth
         - name: Authenticate to Google Cloud
           uses: google-github-actions/auth@v0.7.3
@@ -132,6 +135,7 @@ jobs:
             CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
             CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
             CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
+            # By default the action doesn't need actions/checkout, so we need to specify its usage
             USE_CHECKOUT: true
             
 ```           
