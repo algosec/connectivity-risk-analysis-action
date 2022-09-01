@@ -26,6 +26,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AshCodeAnalysis = void 0;
 __nccwpck_require__(4227);
+const fs_1 = __nccwpck_require__(5747);
 class AshCodeAnalysis {
     constructor(vcs) {
         this.vcs = vcs;
@@ -43,7 +44,7 @@ class AshCodeAnalysis {
         });
     }
     setSecrets() {
-        var _a;
+        var _a, _b;
         const inputs = this.vcs.getInputs();
         this.debugMode = (inputs === null || inputs === void 0 ? void 0 : inputs.ALGOSEC_DEBUG) == "true";
         this.apiUrl = this.vcs.cfApiUrl;
@@ -51,6 +52,7 @@ class AshCodeAnalysis {
         this.tenantId = inputs === null || inputs === void 0 ? void 0 : inputs.CF_TENANT_ID;
         this.clientId = inputs === null || inputs === void 0 ? void 0 : inputs.CF_CLIENT_ID;
         this.clientSecret = inputs === null || inputs === void 0 ? void 0 : inputs.CF_CLIENT_SECRET;
+        this.gcpCredsJson = (_b = inputs === null || inputs === void 0 ? void 0 : inputs.GOOGLE_CREDENTIALS) !== null && _b !== void 0 ? _b : "";
     }
     auth(tenantId, clientID, clientSecret, loginAPI) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -66,6 +68,7 @@ class AshCodeAnalysis {
                 const res = yield this.vcs.http.post(loginAPI, JSON.stringify(payload), headers);
                 const response_code = res.message.statusCode;
                 const data = JSON.parse(yield res.readBody());
+                this.gcpCredsJson ? yield this.createGcpCredentials(this.gcpCredsJson) : null;
                 if (response_code >= 200 && response_code <= 300) {
                     this.vcs.logger.info("- ##### IAC Connectivity Risk Analysis ##### Passed authentication vs CF's login. new token has been generated.");
                     return data === null || data === void 0 ? void 0 : data.access_token;
@@ -78,6 +81,19 @@ class AshCodeAnalysis {
                 this.vcs.logger.exit(`- ##### IAC Connectivity Risk Analysis ##### Failed to generate token. Error msg: ${error.toString()}`);
             }
             return "";
+        });
+    }
+    createGcpCredentials(gcpCredsString) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // const gcpCreds = JSON.parse(gcpCredsString)
+            const credentialsFilePath = `${this.vcs.workDir}/gcp_auth.json`;
+            try {
+                (0, fs_1.writeFileSync)(credentialsFilePath, gcpCredsString);
+                process.env.GOOGLE_APPLICATION_CREDENTIALS = credentialsFilePath;
+            }
+            catch (e) {
+                console.log("Creating GCP Credentials failed: " + e);
+            }
         });
     }
     triggerCodeAnalysis(filesToUpload) {
@@ -108,7 +124,7 @@ class AshCodeAnalysis {
                     }
                 }
                 else {
-                    this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### No plan was not created for: ${file.folder}, please check terraform logs`);
+                    this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### No plan was created for: ${file.folder}, please check terraform logs`);
                 }
             }
             catch (e) {

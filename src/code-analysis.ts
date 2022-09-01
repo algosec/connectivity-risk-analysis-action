@@ -2,6 +2,7 @@ import "dotenv/config";
 import { IVersionControl } from "./vcs/vcs.model";
 import { ExecSteps, AnalysisFile } from "./common/exec";
 import { AnalysisResult } from "./common/risk.model";
+import { writeFileSync } from "fs";
 
 export class AshCodeAnalysis {
   steps: ExecSteps = {};
@@ -13,6 +14,7 @@ export class AshCodeAnalysis {
   loginAPI;
   actionUuid;
   jwt: string;
+  gcpCredsJson: string
 
   constructor(public vcs: IVersionControl) {}
 
@@ -41,6 +43,7 @@ export class AshCodeAnalysis {
     this.tenantId = inputs?.CF_TENANT_ID;
     this.clientId = inputs?.CF_CLIENT_ID;
     this.clientSecret = inputs?.CF_CLIENT_SECRET;
+    this.gcpCredsJson = inputs?.GOOGLE_CREDENTIALS  ?? ""
   }
 
   async auth(
@@ -67,6 +70,7 @@ export class AshCodeAnalysis {
 
       const response_code = res.message.statusCode;
       const data = JSON.parse(await res.readBody());
+      this.gcpCredsJson ? await this.createGcpCredentials(this.gcpCredsJson) : null
       if (response_code >= 200 && response_code <= 300) {
         this.vcs.logger.info(
           "- ##### IAC Connectivity Risk Analysis ##### Passed authentication vs CF's login. new token has been generated."
@@ -85,6 +89,18 @@ export class AshCodeAnalysis {
       );
     }
     return "";
+  }
+
+  async createGcpCredentials(gcpCredsString: string){
+    // const gcpCreds = JSON.parse(gcpCredsString)
+    const credentialsFilePath =`${this.vcs.workDir}/gcp_auth.json`
+    try {
+      writeFileSync(credentialsFilePath, gcpCredsString)
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = credentialsFilePath
+    } catch(e){
+      console.log("Creating GCP Credentials failed: "+e)
+    }
+
   }
 
   async triggerCodeAnalysis(filesToUpload: AnalysisFile[]): Promise<void> {
@@ -119,7 +135,7 @@ export class AshCodeAnalysis {
           res = true;
         }
       } else {
-        this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### No plan was not created for: ${file.folder}, please check terraform logs`)
+        this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### No plan was created for: ${file.folder}, please check terraform logs`)
       }
     } catch (e) {
         this.vcs.logger.error(`- ##### IAC Connectivity Risk Analysis ##### File upload for: ${file.folder} failed due to errors:\n ${e}`)
