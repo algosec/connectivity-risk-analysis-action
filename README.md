@@ -94,10 +94,10 @@ jobs:
             CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
             CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
             # AZURE Environment Variables/ External Action https://github.com/marketplace/actions/azure-login
-            ARM_SUBSCRIPTION_ID: <azure_subscription_id>
-            ARM_TENANT_ID: <azure_subscription_tenant_id>
-            ARM_CLIENT_ID: <service_principal_appid>
-            ARM_CLIENT_SECRET: <service_principal_password>
+            ARM_SUBSCRIPTION_ID: ${{ secrets.AZ_SUBSCRIPTION_ID }}
+            ARM_TENANT_ID: ${{ secrets.AZ_TENANT_ID }}
+            ARM_CLIENT_ID: ${{ secrets.AZ_CLIENT_ID }}
+            ARM_CLIENT_SECRET: ${{ secrets.AZ_CLIENT_SECRET }}
             
 ```
 
