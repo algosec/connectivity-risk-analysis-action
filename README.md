@@ -1,9 +1,10 @@
-<img height="100" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/header.svg" /> 
+<h2><sub><img height="35" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/algosec_logo.png" /></sub>&nbsp; IaC Connectivity Risk Analysis</h2>
 
-## Algosec IaC Connectivity Risk Analysis 
+This github action runs IaC Connectivity Risk Analysis on the current repository
 
 ### Basic Configuration
 
+Example usage 
 ```yaml
 name: 'Your Repo CI/CD Yaml Workflow'
 on:
@@ -19,19 +20,19 @@ jobs:
           uses: algosec/connectivity-risk-analysis-action@v0.0.6
           env:
             # Optional: when using @actions/checkout@v3 to checkout the repo add "USE_CHECKOUT: true" under "env:"
-            # USE_CHECKOUT: true
+            USE_CHECKOUT: true
             
             # Optional: run checks on all folders with relevant file type
-            # FIRST_RUN: true
+            FIRST_RUN: true
             
             # Fail or Continue on error after action finish (fail or continue_on_error)
-            # STOP_WHEN_FAIL: true
+            STOP_WHEN_FAIL: true
             
             # IaS Framework type (terraform, cloudformation, etc...)
-            # FRAMEWORK: terraform (default)
+            FRAMEWORK: terraform (default)
             
             # Version Control type (github, gitlab, etc...)
-            # VCS: github (default)
+            VCS: github (default)
             
             # Needed Github information
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -51,6 +52,7 @@ jobs:
 
 ### AWS
 
+Example usage 
 ```yaml
 name: 'Your Repo CI/CD Yaml Workflow'
 on:
@@ -76,6 +78,8 @@ jobs:
 ```
 
 ### Azure
+
+Example usage 
 ```yaml
 name: 'Your Repo CI/CD Yaml Workflow'
 on:
@@ -104,6 +108,8 @@ jobs:
 ```
 
 ### Gcp
+
+Example usage 
  ```yaml
 name: 'Your Repo CI/CD Yaml Workflow'
 on:
