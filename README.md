@@ -1,4 +1,4 @@
-<h2><sub><img height="35" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/algosec_logo.png" /></sub>&nbsp; IaC Connectivity Risk Analysis</h2>
+<h2><sub><sub><img height="35" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/algosec_logo.png" /></sub></sub>&nbsp; IaC Connectivity Risk Analysis</h2>
 
 This github action runs IaC Connectivity Risk Analysis on the current repository
 
