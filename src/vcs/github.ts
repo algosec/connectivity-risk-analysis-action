@@ -465,7 +465,7 @@ ${file?.output?.log?.stderr ? "<br>" + errors + "<br>" : ""}
 <td align="center"><img width="10" height="10" src="${this.assetsUrl}/${
         risk.riskSeverity
       }.svg" /></td>\n
-<td align="center"><sub><img width="15" height="15" src="${this.assetsUrl}/${
+<td align="center"><sub><img width="24" height="24" src="${this.assetsUrl}/${
         risk?.vendor.toLowerCase() ?? "aws"
       }.svg" /></sub></td>\n
 <td>${Array.isArray(risk.folder) ? risk.folder.join(", ") : risk.folder}</td>\n
@@ -526,7 +526,7 @@ ${risksTableContents}
     analysisResults: AnalysisResult[]
   ): string {
     const commentBodyArray: any[] = [];
-    const header = `<img height="50" src="${this.assetsUrl}/header.svg" /> \n`;
+    const header = `<h2><sub><img height="35" src="${this.assetsUrl}/algosec_logo.png" /></sub>&nbsp; IaC Connectivity Risk Analysis</h2>\n`;
     const footer = `\n\n---\n\n
 <br>
 Pusher: @${this._context?.actor}<br>
