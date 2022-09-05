@@ -25,13 +25,13 @@ jobs:
             # Optional: run checks on all folders with relevant file type
             FIRST_RUN: false (default)
             
-            # Fail or Continue on error after action finish
+            # Optional: Fail or Continue on error after action finish
             STOP_WHEN_FAIL: true (default)
             
-            # IaS Framework type (terraform, cloudformation, etc...)
+            # Optional: IaS Framework type (terraform, cloudformation, etc...)
             FRAMEWORK: terraform (default)
             
-            # Version Control type (github, gitlab, etc...)
+            # Optional: Version Control type (github, gitlab, etc...)
             VCS: github (default)
             
             # Github's Private Access Token
