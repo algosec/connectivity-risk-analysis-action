@@ -34,7 +34,7 @@ jobs:
             # Version Control type (github, gitlab, etc...)
             VCS: github (default)
             
-            # Needed Github information
+            # Github's Private Access Token
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
             # Cloudflow credentials
@@ -42,7 +42,8 @@ jobs:
             CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
             CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
             
-            # Add your provider's keys to environment variables as secrets or use an external action to preconfigure
+            # Add your provider's keys to environment variables 
+            # as secrets or use an external action to preconfigure
             
 ```
 
@@ -71,7 +72,8 @@ jobs:
             CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
             CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}  
             # Use AWS Environment Variables or
-            # External Action https://github.com/marketplace/actions/configure-aws-credentials-action-for-github-actions
+            # An external Action to authenticate with provider
+            # https://github.com/marketplace/actions/configure-aws-credentials-action-for-github-actions
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}   
             
@@ -98,8 +100,9 @@ jobs:
             CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
             CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
             CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
-            # Use Azure Environment Variables or
-            # External Action https://github.com/marketplace/actions/azure-login
+            # Use AWS Environment Variables or
+            # An external Action to authenticate with provider
+            # https://github.com/marketplace/actions/azure-login
             ARM_SUBSCRIPTION_ID: ${{ secrets.AZ_SUBSCRIPTION_ID }}
             ARM_TENANT_ID: ${{ secrets.AZ_TENANT_ID }}
             ARM_CLIENT_ID: ${{ secrets.AZ_CLIENT_ID }}
@@ -121,7 +124,8 @@ jobs:
      name: 'Algosec IAC Connectivity Risk Analysis'
      runs-on: ubuntu-latest
      steps:
-          # use @actions/checkout@v3 to checkout the repo and add "USE_CHECKOUT: true" under "env:"
+          # use @actions/checkout@v3 to checkout the repo 
+          # and add "USE_CHECKOUT: true" under "env:"
           
         - name: Checkout Repo
           uses: @actions/checkout@v3
@@ -129,7 +133,8 @@ jobs:
           # Need to use @actions/checkout@v3 before Authenticate to Google Cloud action
           # Read how to create GCP_CREDENTIALS key from GCP Json File:
           # https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
-          # Auth Gcp Action https://github.com/google-github-actions/auth
+          # Auth Gcp Action 
+          # https://github.com/google-github-actions/auth
         - name: Authenticate to Google Cloud
           uses: google-github-actions/auth@v0.7.3
           with:
