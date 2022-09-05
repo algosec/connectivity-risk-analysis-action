@@ -25,7 +25,7 @@ jobs:
             # Optional: run checks on all folders with relevant file type
             FIRST_RUN: true
             
-            # Fail or Continue on error after action finish (fail or continue_on_error)
+            # Fail or Continue on error after action finish
             STOP_WHEN_FAIL: true
             
             # IaS Framework type (terraform, cloudformation, etc...)
