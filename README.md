@@ -20,13 +20,13 @@ jobs:
           uses: algosec/connectivity-risk-analysis-action@v0.0.6
           env:
             # Optional: when using @actions/checkout@v3 to checkout the repo add "USE_CHECKOUT: true" under "env:"
-            # USE_CHECKOUT: false (default)
+            USE_CHECKOUT: false (default)
             
             # Optional: run checks on all folders with relevant file type
-            # FIRST_RUN: false (default)
+            FIRST_RUN: false (default)
             
             # Fail or Continue on error after action finish
-            # STOP_WHEN_FAIL: true (default)
+            STOP_WHEN_FAIL: true (default)
             
             # IaS Framework type (terraform, cloudformation, etc...)
             FRAMEWORK: terraform (default)
