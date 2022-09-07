@@ -455,6 +455,7 @@ class Terraform {
                         folder: value,
                         output,
                     };
+                    console.log(`- ##### IAC Connectivity Risk Analysis ##### Folder ${file.folder} Action UUID: ${file.uuid}`);
                     res.push(file);
                 }
             });
@@ -567,8 +568,8 @@ const exec_1 = __nccwpck_require__(1514);
 const exec_2 = __nccwpck_require__(898);
 const risk_model_1 = __nccwpck_require__(7801);
 const uuid_by_string_1 = __importDefault(__nccwpck_require__(7777));
-const promises_1 = __nccwpck_require__(9225);
 const fs_1 = __nccwpck_require__(5747);
+const path_1 = __importDefault(__nccwpck_require__(5622));
 // DEBUG LOCALLY
 // import {githubEventPayloadMock } from "../../test/mockData.azure"
 // context.payload = githubEventPayloadMock as WebhookPayload & any
@@ -611,12 +612,16 @@ class Github {
             return answer;
         });
     }
-    getDirectories(source) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return (yield (0, promises_1.readdir)(source, { withFileTypes: true }))
-                .filter(dirent => dirent.isDirectory())
-                .map(dirent => dirent.name);
-        });
+    flatten(lists) {
+        return lists.reduce((a, b) => a.concat(b), []);
+    }
+    getDirectories(srcpath) {
+        return (0, fs_1.readdirSync)(srcpath)
+            .map(file => path_1.default.join(srcpath, file))
+            .filter(path => (0, fs_1.statSync)(path).isDirectory());
+    }
+    getDirectoriesRecursive(srcpath) {
+        return [srcpath, ...this.flatten(this.getDirectories(srcpath).map(this.getDirectoriesRecursive))];
     }
     hasFileType(dir, fileTypes) {
         const files = (0, fs_1.readdirSync)(dir);
@@ -723,7 +728,7 @@ class Github {
             let diffFolders = [];
             try {
                 if (this.firstRun) {
-                    const allFolders = yield this.getDirectories(this.workDir);
+                    const allFolders = yield this.getDirectoriesRecursive(this.workDir);
                     diffFolders = allFolders.filter(folder => this.hasFileType(folder, fileTypes));
                 }
                 else {
@@ -13278,14 +13283,6 @@ module.exports = require("events");
 
 "use strict";
 module.exports = require("fs");
-
-/***/ }),
-
-/***/ 9225:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("fs/promises");
 
 /***/ }),
 

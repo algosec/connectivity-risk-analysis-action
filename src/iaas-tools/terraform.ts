@@ -111,6 +111,7 @@ export class Terraform implements IFramework {
           folder: value,
           output,
         };
+        console.log(`- ##### IAC Connectivity Risk Analysis ##### Folder ${file.folder} Action UUID: ${file.uuid}`);
         res.push(file);
       }
     };

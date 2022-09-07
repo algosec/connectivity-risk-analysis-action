@@ -9,7 +9,8 @@ import { ExecSteps, AnalysisFile, count } from "../common/exec";
 import { AnalysisResult, AnalysisResultAdditions, severityOrder } from "../common/risk.model";
 import getUuid from "uuid-by-string";
 import { readdir } from "fs/promises";
-import { readdirSync } from "fs";
+import { readdirSync, statSync } from "fs";
+import path from "path";
 
 
 export type GithubContext = typeof context;
@@ -73,10 +74,18 @@ export class Github implements IVersionControl {
     return answer;
   }
 
-  async getDirectories(source: string): Promise<string[]> {
-  return (await readdir(source, { withFileTypes: true }))
-    .filter(dirent => dirent.isDirectory())
-    .map(dirent => dirent.name)
+  flatten(lists) {
+    return lists.reduce((a, b) => a.concat(b), []);
+  }
+  
+  getDirectories(srcpath) {
+    return readdirSync(srcpath)
+      .map(file => path.join(srcpath, file))
+      .filter(path => statSync(path).isDirectory());
+  }
+  
+  getDirectoriesRecursive(srcpath) {
+    return [srcpath, ...this.flatten(this.getDirectories(srcpath).map(this.getDirectoriesRecursive))];
   }
 
   hasFileType(dir:string, fileTypes: string[]): boolean {
@@ -209,7 +218,7 @@ export class Github implements IVersionControl {
     let diffFolders: string[] = [];
     try {
       if (this.firstRun){
-        const allFolders = await this.getDirectories(this.workDir)
+        const allFolders = await this.getDirectoriesRecursive(this.workDir)
         diffFolders = allFolders.filter(folder => this.hasFileType(folder, fileTypes))
       } else {
         const diffs = await this.getDiff(this.octokit);
