@@ -81,9 +81,11 @@ export class Github implements IVersionControl {
  
       for (const item of items) {
         folders.push(`${srcpath}/${item.name}`)
-        folders = [...folders, ...this.getDirectories(`${srcpath}/${item.name}`)];
+        if (readdirSync(`${srcpath}/${item.name}`).length > 0){
+          folders = [...folders, ...this.getDirectories(`${srcpath}/${item.name}`)];
+        }
     }
-    return items
+    return folders
   }
   
 
