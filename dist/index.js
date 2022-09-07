@@ -612,13 +612,12 @@ class Github {
         });
     }
     getDirectories(srcpath) {
-        let files = [];
-        const items = (0, fs_1.readdirSync)(srcpath, { withFileTypes: true });
+        let folders = [];
+        const items = (0, fs_1.readdirSync)(srcpath, { withFileTypes: true })
+            .filter(file => file.isDirectory());
         for (const item of items) {
-            if (item.isDirectory()) {
-                files.push(`${srcpath}/${item.name}`);
-                files = [...files, ...this.getDirectories(`${srcpath}/${item.name}`)];
-            }
+            folders.push(`${srcpath}/${item.name}`);
+            folders = [...folders, ...this.getDirectories(`${srcpath}/${item.name}`)];
         }
         return items;
     }
