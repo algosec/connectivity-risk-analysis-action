@@ -34,6 +34,7 @@ class AshCodeAnalysis {
     }
     init() {
         return __awaiter(this, void 0, void 0, function* () {
+            this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### Action UUID: ${this.vcs.actionUuid}`);
             this.setSecrets();
             this.jwt = yield this.auth(this.tenantId, this.clientId, this.clientSecret, this.loginAPI);
             if (!this.jwt || this.jwt == "") {
@@ -953,7 +954,7 @@ ${risksTableContents}
     parseCodeAnalysis(filesToUpload, analysisResults) {
         var _a, _b, _c;
         const commentBodyArray = [];
-        const header = `<h2><sub><sub><img height="35" src="${this.assetsUrl}/algosec_logo.png" /></sub></sub>&nbsp; IaC Connectivity Risk Analysis</h2>\n`;
+        const header = `<img height="50" src="${this.assetsUrl}/header.svg" /> \n`;
         const footer = `\n\n---\n\n
 <br>
 Pusher: @${(_a = this._context) === null || _a === void 0 ? void 0 : _a.actor}<br>

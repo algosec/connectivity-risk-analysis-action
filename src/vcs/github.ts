@@ -526,7 +526,7 @@ ${risksTableContents}
     analysisResults: AnalysisResult[]
   ): string {
     const commentBodyArray: any[] = [];
-    const header = `<h2><sub><sub><img height="35" src="${this.assetsUrl}/algosec_logo.png" /></sub></sub>&nbsp; IaC Connectivity Risk Analysis</h2>\n`;
+    const header = `<img height="50" src="${this.assetsUrl}/header.svg" /> \n`;
     const footer = `\n\n---\n\n
 <br>
 Pusher: @${this._context?.actor}<br>
