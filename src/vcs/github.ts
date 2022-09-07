@@ -219,8 +219,8 @@ export class Github implements IVersionControl {
     let diffFolders: any[] = [];
     try {
       if (this.firstRun){
-        const allFolders = await this.getDirectories(this.workDir)
-        diffFolders = allFolders.filter(folder => this.hasFileType(folder.name, fileTypes))
+        const allFolders = await this.getDirectories(this.workDir).map(file => file.name)
+        diffFolders = allFolders.filter(folder => this.hasFileType(folder, fileTypes))
       } else {
         const diffs = await this.getDiff(this.octokit);
         const foldersSet: Set<string> = new Set(
