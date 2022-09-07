@@ -616,6 +616,8 @@ class Github {
         const items = (0, fs_1.readdirSync)(srcpath, { withFileTypes: true })
             .filter(file => file.isDirectory());
         for (const item of items) {
+            if (!item || item[0] == 'undefined')
+                return;
             folders.push(`${srcpath}/${item.name}`);
             if ((0, fs_1.readdirSync)(`${srcpath}/${item.name}`).length > 0) {
                 folders = [...folders, ...this.getDirectories(`${srcpath}/${item.name}`)];

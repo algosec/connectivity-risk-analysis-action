@@ -8,9 +8,7 @@ import { exec, ExecOutput } from "@actions/exec";
 import { ExecSteps, AnalysisFile, count } from "../common/exec";
 import { AnalysisResult, AnalysisResultAdditions, severityOrder } from "../common/risk.model";
 import getUuid from "uuid-by-string";
-import { readdir } from "fs/promises";
-import { readdirSync, statSync } from "fs";
-import path from "path";
+import { readdirSync } from "fs";
 
 
 export type GithubContext = typeof context;
@@ -80,6 +78,7 @@ export class Github implements IVersionControl {
       .filter(file => file.isDirectory());
  
       for (const item of items) {
+        if(!item || item[0] == 'undefined') return;
         folders.push(`${srcpath}/${item.name}`)
         if (readdirSync(`${srcpath}/${item.name}`).length > 0){
           folders = [...folders, ...this.getDirectories(`${srcpath}/${item.name}`)];
