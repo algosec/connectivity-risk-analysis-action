@@ -569,7 +569,6 @@ const exec_2 = __nccwpck_require__(898);
 const risk_model_1 = __nccwpck_require__(7801);
 const uuid_by_string_1 = __importDefault(__nccwpck_require__(7777));
 const fs_1 = __nccwpck_require__(5747);
-const path_1 = __importDefault(__nccwpck_require__(5622));
 // DEBUG LOCALLY
 // import {githubEventPayloadMock } from "../../test/mockData.azure"
 // context.payload = githubEventPayloadMock as WebhookPayload & any
@@ -612,16 +611,16 @@ class Github {
             return answer;
         });
     }
-    flatten(lists) {
-        return lists.reduce((a, b) => a.concat(b), []);
-    }
     getDirectories(srcpath) {
-        return (0, fs_1.readdirSync)(srcpath)
-            .map(file => path_1.default.join(srcpath, file))
-            .filter(path => (0, fs_1.statSync)(path).isDirectory());
-    }
-    getDirectoriesRecursive(srcpath) {
-        return [srcpath, ...this.flatten(this.getDirectories(srcpath).map(this.getDirectoriesRecursive))];
+        let files = [];
+        const items = (0, fs_1.readdirSync)(srcpath, { withFileTypes: true });
+        for (const item of items) {
+            if (item.isDirectory()) {
+                files.push(`${srcpath}/${item.name}`);
+                files = [...files, ...this.getDirectories(`${srcpath}/${item.name}`)];
+            }
+        }
+        return items;
     }
     hasFileType(dir, fileTypes) {
         const files = (0, fs_1.readdirSync)(dir);
@@ -728,8 +727,8 @@ class Github {
             let diffFolders = [];
             try {
                 if (this.firstRun) {
-                    const allFolders = yield this.getDirectoriesRecursive(this.workDir);
-                    diffFolders = allFolders.filter(folder => this.hasFileType(folder, fileTypes));
+                    const allFolders = yield this.getDirectories(this.workDir);
+                    diffFolders = allFolders.filter(folder => this.hasFileType(folder.name, fileTypes));
                 }
                 else {
                     const diffs = yield this.getDiff(this.octokit);

@@ -74,19 +74,20 @@ export class Github implements IVersionControl {
     return answer;
   }
 
-  flatten(lists) {
-    return lists.reduce((a, b) => a.concat(b), []);
-  }
-  
   getDirectories(srcpath) {
-    return readdirSync(srcpath)
-      .map(file => path.join(srcpath, file))
-      .filter(path => statSync(path).isDirectory());
+    let files: any = [];
+    const items = readdirSync(srcpath, { withFileTypes: true });
+ 
+      for (const item of items) {
+        if (item.isDirectory()) {
+            files.push(`${srcpath}/${item.name}`)
+            files = [...files, ...this.getDirectories(`${srcpath}/${item.name}`)];
+        } 
+    }
+    return items
   }
   
-  getDirectoriesRecursive(srcpath) {
-    return [srcpath, ...this.flatten(this.getDirectories(srcpath).map(this.getDirectoriesRecursive))];
-  }
+
 
   hasFileType(dir:string, fileTypes: string[]): boolean {
     const files = readdirSync(dir);
@@ -215,11 +216,11 @@ export class Github implements IVersionControl {
     if (!this.useCheckoutAction){
       await this.prepareRepo();
     }
-    let diffFolders: string[] = [];
+    let diffFolders: any[] = [];
     try {
       if (this.firstRun){
-        const allFolders = await this.getDirectoriesRecursive(this.workDir)
-        diffFolders = allFolders.filter(folder => this.hasFileType(folder, fileTypes))
+        const allFolders = await this.getDirectories(this.workDir)
+        diffFolders = allFolders.filter(folder => this.hasFileType(folder.name, fileTypes))
       } else {
         const diffs = await this.getDiff(this.octokit);
         const foldersSet: Set<string> = new Set(
