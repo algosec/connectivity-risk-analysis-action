@@ -6,7 +6,7 @@ import {
   IFramework,
 } from "./framework.model";
 import { existsSync } from "fs";
-import getUuidByString from "uuid-by-string";
+import * as uuid from "uuid";
 import { IVersionControl } from "../vcs/vcs.model";
 import { ExecOutput } from "@actions/exec";
 
@@ -107,7 +107,7 @@ export class Terraform implements IFramework {
       for (const [index, value] of iterable?.entries()) {
         const output = await action({ runFolder: value, workDir });
         const file: AnalysisFile = {
-          uuid: getUuidByString(value),
+          uuid: uuid.v4(),
           folder: value,
           output,
         };
