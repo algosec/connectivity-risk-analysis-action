@@ -19,9 +19,6 @@ export class AshCodeAnalysis {
   constructor(public vcs: IVersionControl) {}
 
   async init(): Promise<void> {
-    this.vcs.logger.info(
-      `- ##### IAC Connectivity Risk Analysis ##### Action UUID: ${this.vcs.actionUuid}`
-    );
     this.setSecrets();
     this.jwt = await this.auth(
       this.tenantId,
