@@ -39,8 +39,8 @@ export class Github implements IVersionControl {
   cfApiUrl: string;
 
   constructor() {
-    this.firstRun = process?.env?.FIRST_RUN == 'true'
-    this.stopWhenFail = process?.env?.STOP_WHEN_FAIL == 'true';
+    this.firstRun = process?.env?.FIRST_RUN == 'true';
+    this.stopWhenFail = process?.env?.STOP_WHEN_FAIL != 'false';
     this.http = new HttpClient();
     this.logger = { debug, error, exit, info };
     this.workspace = process?.env?.GITHUB_WORKSPACE ?? "";
