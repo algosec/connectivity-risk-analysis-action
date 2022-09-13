@@ -54,7 +54,6 @@ In order to run IaC on a certain provider, it is required to pass an authenticat
 
 - Environment variables - most cloud providers will authenticate automatically using environment varaibles
 - Action - if environment variables isn't an option, try looking for an action for this provider, using github marketplace
-- 
 
 ### AWS
 
