@@ -210,7 +210,7 @@ export class AshCodeAnalysis {
   async checkCodeAnalysisResponse(
     file: AnalysisFile
   ): Promise<AnalysisResult | null> {
-    const pollUrl = `${this.apiUrl}/message?customer=${this.vcs.repo.owner}&action_id=${file.uuid}`;
+    const pollUrl = `${this.apiUrl}/risk_analysis?customer=${this.vcs.repo.owner}&action_id=${file.uuid}`;
     const response = await this.vcs.http.get(pollUrl, {
       Authorization: "Bearer " + this.jwt,
     });
