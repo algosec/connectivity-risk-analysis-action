@@ -1,8 +1,10 @@
 <a href="#"><img height="100" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/header.svg" /></a>
-This github action runs IaC Connectivity Risk Analysis on the current repository
+The IaC Connectivity Risk Analysis github action runs on the current repository and return risks analysis for any changes in IaC framework
 
 ### Basic Configuration
-
+Here is an example of all possible parameters passed as environment variables to the action, 
+please take in consideration that only the github and cloudflow credentials are mandatory in order to run this action,
+along with the credentials of the used provider/s which you can see in the next section Cloud Providers
 Example usage 
 ```yaml
 name: 'Your Repo CI/CD Yaml Workflow'
@@ -48,7 +50,10 @@ jobs:
 
 
 ## Cloud Providers configuration
+In order to run IaC on a certain provider, it is required to pass an authenticatation in one of the following options:
 
+- Environment variables - most cloud providers will authenticate automatically using environment varaibles
+- Action - if environment variables isn't an option, try looking for an action for this provider, using github marketplace
 
 ### AWS
 
