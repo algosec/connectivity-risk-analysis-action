@@ -311,17 +311,17 @@ export class Github implements IVersionControl {
     let analysisBody = "";
 
     if (!analysis?.analysis_result) {
-      analysisBody = `<details>\n<summary><sub><sub><sub><img href="#" height="20" width="20" src="${
+      analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${
         this.assetsUrl
-      }/failure.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${
+      }/failure.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${
         file.folder
       }</b></h3></summary>\n${this.buildCommentFrameworkResult(
         file
       )}\n</details>`;
     } else if (analysis?.analysis_result?.length == 0) {
-      analysisBody = `<details>\n<summary><sub><sub><sub><img href="#" height="20" width="20" src="${
+      analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${
         this.assetsUrl
-      }/success.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${
+      }/success.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${
         file.folder
       }</b></h3></summary>\n${this.buildCommentFrameworkResult(
         file
@@ -349,9 +349,9 @@ export class Github implements IVersionControl {
       )
       .forEach((risk) => {
         risksList += `<details>\n
-<summary><img href="#" width="10" height="10" src="${this.assetsUrl}/${
+<summary><a href="#"><img  width="10" height="10" src="${this.assetsUrl}/${
           risk.riskSeverity
-        }.svg" />  ${risk.riskId}</summary> \n
+        }.svg" /></a>  ${risk.riskId}</summary> \n
 ### **Title:**\n${risk.riskTitle}\n
 ### **Description:**\n${risk.riskDescription}\n
 ### **Recommendation:**\n${risk.riskRecommendation.toString()}\n
@@ -363,32 +363,32 @@ ${CODE_BLOCK}\n
       });
     const severityCount = `<div  align="right">${
       count(analysis?.analysis_result, "riskSeverity", "critical") > 0
-        ? `<img href="#" width="10" height="10" src="${this.assetsUrl}/critical.svg" />&nbsp;` +
+        ? `<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/critical.svg" /></a>&nbsp;` +
           count(analysis?.analysis_result, "riskSeverity", "critical") +
           "&nbsp;Critical"
         : ""
     }${
       count(analysis?.analysis_result, "riskSeverity", "high") > 0
-        ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img href="#" width="10" height="10" src="${this.assetsUrl}/high.svg" />&nbsp;` +
+        ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/high.svg" /></a>&nbsp;` +
           count(analysis?.analysis_result, "riskSeverity", "high") +
           "&nbsp;High"
         : ""
     }${
       count(analysis?.analysis_result, "riskSeverity", "medium") > 0
-        ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img href="#" width="10" height="10" src="${this.assetsUrl}/medium.svg" />&nbsp;` +
+        ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/medium.svg" /></a>&nbsp;` +
           count(analysis?.analysis_result, "riskSeverity", "medium") +
           "&nbsp;Medium"
         : ""
     }${
       count(analysis?.analysis_result, "riskSeverity", "low") > 0
-        ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img href="#" width="10" height="10" src="${this.assetsUrl}/low.svg" />&nbsp;` +
+        ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/low.svg" /></a>&nbsp;` +
           count(analysis?.analysis_result, "riskSeverity", "low") +
           "&nbsp;Low"
         : ""
     }</div>`;
-    const codeAnalysisContent = `<summary><sub><sub><sub><img href="#" height="20" width="20" src="${
+    const codeAnalysisContent = `<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${
       this.assetsUrl
-    }/warning.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${
+    }/warning.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${
       file.folder +
       (analysis?.analysis_result?.length == 0 ? "- No Risks Found" : "")
     }</b></h3>${
@@ -463,12 +463,12 @@ ${file?.output?.log?.stderr ? "<br>" + errors + "<br>" : ""}
     Object.values(groupedRisksById).forEach((risk: any) => {
       risksTableContents += `<tr>\n
 <td>${risk.riskId}</td>\n
-<td align="center"><img href="#" width="10" height="10" src="${this.assetsUrl}/${
+<td align="center"><a href="#"><img  width="10" height="10" src="${this.assetsUrl}/${
         risk.riskSeverity
-      }.svg" /></td>\n
-<td align="center"><sub><img href="#" width="24" height="24" src="${this.assetsUrl}/${
+      }.svg" /></a></td>\n
+<td align="center"><sub><a href="#"><img  width="24" height="24" src="${this.assetsUrl}/${
         risk?.vendor.toLowerCase() ?? "aws"
-      }.svg" /></sub></td>\n
+      }.svg" /></a></sub></td>\n
 <td>${Array.isArray(risk.folder) ? risk.folder.join(", ") : risk.folder}</td>\n
 <td>${risk.riskTitle}</td>\n
 </tr>\n`;
@@ -477,25 +477,25 @@ ${file?.output?.log?.stderr ? "<br>" + errors + "<br>" : ""}
 \n
 <div align="right">${
       count(mergedRisks, "riskSeverity", "critical") > 0
-        ? `<img href="#" width="10" height="10" src="${this.assetsUrl}/critical.svg" />&nbsp;` +
+        ? `<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/critical.svg" /></a>&nbsp;` +
           count(mergedRisks, "riskSeverity", "critical") +
           "&nbsp;Critical"
         : ""
     }${
       count(mergedRisks, "riskSeverity", "high") > 0
-        ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img href="#" width="10" height="10" src="${this.assetsUrl}/high.svg" />&nbsp;` +
+        ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/high.svg" /></a>&nbsp;` +
           count(mergedRisks, "riskSeverity", "high") +
           "&nbsp;High"
         : ""
     }${
       count(mergedRisks, "riskSeverity", "medium") > 0
-        ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img href="#" width="10" height="10" src="${this.assetsUrl}/medium.svg" />&nbsp;` +
+        ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/medium.svg" /></a>&nbsp;` +
           count(mergedRisks, "riskSeverity", "medium") +
           "&nbsp;Medium"
         : ""
     }${
       count(mergedRisks, "riskSeverity", "low") > 0
-        ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img href="#" width="10" height="10" src="${this.assetsUrl}/low.svg" />&nbsp;` +
+        ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/low.svg" /></a>&nbsp;` +
           count(mergedRisks, "riskSeverity", "low") +
           "&nbsp;Low"
         : ""
@@ -527,7 +527,7 @@ ${risksTableContents}
     analysisResults: AnalysisResult[]
   ): string {
     const commentBodyArray: any[] = [];
-    const header = `<img href="#" height="50" src="${this.assetsUrl}/header.svg" /> \n`;
+    const header = `<a href="#"><img  height="50" src="${this.assetsUrl}/header.svg" /></a> \n`;
     const footer = `\n\n---\n\n
 <br>
 Pusher: @${this._context?.actor}<br>
