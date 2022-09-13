@@ -412,7 +412,6 @@ class Terraform {
                     "-no-color",
                     `-out=${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
                 ]);
-                // console.log(`::endgroup::\n::group:: Show Terraform on folder ${options.runFolder}\n`)
                 const initLog = {
                     exitCode: 0,
                     stdout: steps.init.stdout.concat(steps.fmt.stdout, steps.validate.stdout, steps.plan.stdout),
