@@ -150,7 +150,7 @@ export class AshCodeAnalysis {
       await this.triggerCodeAnalysis(filesToUpload);
       const codeAnalysisPromises: Array<Promise<AnalysisResult | null>> = [];
       filesToUpload
-        .filter((file) => file?.output?.plan != '')
+        .filter((file) => file?.output?.plan != '' || file?.output?.plan)
         .forEach((file) =>
           codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file))
         );

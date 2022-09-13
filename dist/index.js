@@ -141,7 +141,7 @@ class AshCodeAnalysis {
                 yield this.triggerCodeAnalysis(filesToUpload);
                 const codeAnalysisPromises = [];
                 filesToUpload
-                    .filter((file) => { var _a; return ((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan) != ''; })
+                    .filter((file) => { var _a, _b; return ((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan) != '' || ((_b = file === null || file === void 0 ? void 0 : file.output) === null || _b === void 0 ? void 0 : _b.plan); })
                     .forEach((file) => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
                 analysisResult = yield Promise.all(codeAnalysisPromises);
                 if (!analysisResult || (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.length) == 0) {
@@ -401,11 +401,8 @@ class Terraform {
                 process.chdir(`${options.workDir}/${options.runFolder}`);
                 console.log(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`);
                 steps.init = yield (0, exec_1.exec)("terraform", ["init"]);
-                // console.log(`::endgroup::\n::group:: Format Terraform on folder ${options.runFolder}\n`)
                 steps.fmt = yield (0, exec_1.exec)("terraform", ["fmt", "-diff"]);
-                // console.log(`::endgroup::\n::group:: Validate Terraform on folder ${options.runFolder}\n`)
                 steps.validate = yield (0, exec_1.exec)("terraform", ["validate", "-no-color"]);
-                // console.log(`::endgroup::\n::group:: Plan Terraform on folder ${options.runFolder}\n`)
                 if (!(0, fs_1.existsSync)("./tmp")) {
                     yield (0, exec_1.exec)("mkdir", ["tmp"]);
                 }

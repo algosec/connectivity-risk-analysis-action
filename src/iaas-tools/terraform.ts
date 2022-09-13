@@ -26,11 +26,8 @@ export class Terraform implements IFramework {
       process.chdir(`${options.workDir}/${options.runFolder}`);
       console.log(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`)
       steps.init = await exec("terraform", ["init"]);
-      // console.log(`::endgroup::\n::group:: Format Terraform on folder ${options.runFolder}\n`)
       steps.fmt = await exec("terraform", ["fmt", "-diff"]);
-      // console.log(`::endgroup::\n::group:: Validate Terraform on folder ${options.runFolder}\n`)
       steps.validate = await exec("terraform", ["validate", "-no-color"]);
-      // console.log(`::endgroup::\n::group:: Plan Terraform on folder ${options.runFolder}\n`)
       if (!existsSync("./tmp")) {
         await exec("mkdir", ["tmp"]);
       }
@@ -40,7 +37,6 @@ export class Terraform implements IFramework {
         "-no-color",
         `-out=${process?.cwd()}\\tmp\\tf-${options.runFolder}.out`,
       ]);
-      // console.log(`::endgroup::\n::group:: Show Terraform on folder ${options.runFolder}\n`)
       const initLog = {
         exitCode: 0,
         stdout: steps.init.stdout.concat(
