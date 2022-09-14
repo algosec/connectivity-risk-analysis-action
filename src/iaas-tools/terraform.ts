@@ -23,9 +23,8 @@ export class Terraform implements IFramework {
     const steps: ExecSteps = {};
     const initLog: ExecOutput = {stdout: '', stderr: '', exitCode: 0};
     try {
-      process.chdir(`${options.runFolder}`);
-      const runFolder = options.runFolder?.split(/([/\\])\w+/g).pop()
-      console.log(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${runFolder}`)
+      process.chdir(`${options.path}`);
+      console.log(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`)
       steps.init = await exec("terraform", ["init"]);
       steps.fmt = await exec("terraform", ["fmt", "-diff"]);
       steps.validate = await exec("terraform", ["validate", "-no-color"]);
@@ -36,7 +35,7 @@ export class Terraform implements IFramework {
         "plan",
         "-input=false",
         "-no-color",
-        `-out=${process?.cwd()}\\tmp\\tf-${runFolder}.out`,
+        `-out=${process?.cwd()}\\tmp\\tf-${options.runFolder}.out`,
       ]);
       const initLog = {
         exitCode: 0,
@@ -58,7 +57,7 @@ export class Terraform implements IFramework {
             await exec("terraform", [
               "show",
               "-json",
-              `${process.cwd()}\\tmp\\tf-${runFolder}.out`,
+              `${process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
             ])
           ).stdout
       }
@@ -102,10 +101,10 @@ export class Terraform implements IFramework {
     const res: AnalysisFile[] = [];
     const asyncIterable = async (iterable, action) => {
       for (const [index, value] of iterable?.entries()) {
-        const output = await action({ runFolder: value, workDir });
+        const output = await action({ runFolder: value?.split(/([/\\])\w+/g)?.pop(), workDir, path: value });
         const file: AnalysisFile = {
           uuid: uuid.v4(),
-          folder: value,
+          folder: value?.split(/([/\\])\w+/g)?.pop(),
           output,
         };
         console.log(`- ##### IAC Connectivity Risk Analysis ##### Folder ${file.folder} Action UUID: ${file.uuid}`);

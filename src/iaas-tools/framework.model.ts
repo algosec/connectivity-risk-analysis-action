@@ -24,6 +24,7 @@ export const frameworkMap = {
 export interface FrameworkOptions {
   runFolder: string;
   workDir: string;
+  path: string
 }
 
 export interface FrameworkResult {

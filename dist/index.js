@@ -394,15 +394,13 @@ class Terraform {
         this.steps = {};
     }
     terraform(options) {
-        var _a;
         return __awaiter(this, void 0, void 0, function* () {
             let result = { plan: "", log: { stderr: '', stdout: '', exitCode: 0 }, initLog: { stderr: '', stdout: '', exitCode: 0 } };
             const steps = {};
             const initLog = { stdout: '', stderr: '', exitCode: 0 };
             try {
-                process.chdir(`${options.runFolder}`);
-                const runFolder = (_a = options.runFolder) === null || _a === void 0 ? void 0 : _a.split(/([/\\])\w+/g).pop();
-                console.log(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${runFolder}`);
+                process.chdir(`${options.path}`);
+                console.log(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`);
                 steps.init = yield (0, exec_1.exec)("terraform", ["init"]);
                 steps.fmt = yield (0, exec_1.exec)("terraform", ["fmt", "-diff"]);
                 steps.validate = yield (0, exec_1.exec)("terraform", ["validate", "-no-color"]);
@@ -413,7 +411,7 @@ class Terraform {
                     "plan",
                     "-input=false",
                     "-no-color",
-                    `-out=${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\tf-${runFolder}.out`,
+                    `-out=${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
                 ]);
                 const initLog = {
                     exitCode: 0,
@@ -426,7 +424,7 @@ class Terraform {
                         (yield (0, exec_1.exec)("terraform", [
                             "show",
                             "-json",
-                            `${process.cwd()}\\tmp\\tf-${runFolder}.out`,
+                            `${process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
                         ])).stdout;
                 }
                 console.log(`::endgroup::`);
@@ -466,11 +464,12 @@ class Terraform {
         return __awaiter(this, void 0, void 0, function* () {
             const res = [];
             const asyncIterable = (iterable, action) => __awaiter(this, void 0, void 0, function* () {
+                var _a, _b;
                 for (const [index, value] of iterable === null || iterable === void 0 ? void 0 : iterable.entries()) {
-                    const output = yield action({ runFolder: value, workDir });
+                    const output = yield action({ runFolder: (_a = value === null || value === void 0 ? void 0 : value.split(/([/\\])\w+/g)) === null || _a === void 0 ? void 0 : _a.pop(), workDir, path: value });
                     const file = {
                         uuid: uuid.v4(),
-                        folder: value,
+                        folder: (_b = value === null || value === void 0 ? void 0 : value.split(/([/\\])\w+/g)) === null || _b === void 0 ? void 0 : _b.pop(),
                         output,
                     };
                     console.log(`- ##### IAC Connectivity Risk Analysis ##### Folder ${file.folder} Action UUID: ${file.uuid}`);
