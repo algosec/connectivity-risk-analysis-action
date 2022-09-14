@@ -762,7 +762,7 @@ class Github {
                     const diffs = yield this.getDiff(this.octokit);
                     const foldersSet = new Set(diffs
                         .filter((diff) => fileTypes === null || fileTypes === void 0 ? void 0 : fileTypes.some((fileType) => { var _a; return (_a = diff === null || diff === void 0 ? void 0 : diff.filename) === null || _a === void 0 ? void 0 : _a.endsWith(fileType); }))
-                        .map((diff) => allFoldersPaths.find(path => path.endsWith(diff === null || diff === void 0 ? void 0 : diff.filename.split("/")[0]))));
+                        .map((diff) => allFoldersPaths.find(path => path.endsWith(diff === null || diff === void 0 ? void 0 : diff.filename))));
                     diffFolders = [...foldersSet];
                 }
             }

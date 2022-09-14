@@ -233,7 +233,7 @@ export class Github implements IVersionControl {
             .filter((diff) =>
               fileTypes?.some((fileType) => diff?.filename?.endsWith(fileType))
             )
-            .map((diff) => allFoldersPaths.find(path => path.endsWith(diff?.filename.split("/")[0])))
+            .map((diff) => allFoldersPaths.find(path => path.endsWith(diff?.filename)))
         );
         diffFolders = [...foldersSet];
       }
