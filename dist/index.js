@@ -141,7 +141,7 @@ class AshCodeAnalysis {
                 yield this.triggerCodeAnalysis(filesToUpload);
                 const codeAnalysisPromises = [];
                 filesToUpload
-                    .filter((file) => { var _a, _b; return ((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan) != '' || ((_b = file === null || file === void 0 ? void 0 : file.output) === null || _b === void 0 ? void 0 : _b.plan); })
+                    .filter((file) => { var _a; return ((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan) != ''; })
                     .forEach((file) => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
                 analysisResult = yield Promise.all(codeAnalysisPromises);
                 if (!analysisResult || (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.length) == 0) {
@@ -190,7 +190,7 @@ class AshCodeAnalysis {
     checkCodeAnalysisResponse(file) {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            const pollUrl = `${this.apiUrl}/risk_analysis?customer=${this.vcs.repo.owner}&action_id=${file.uuid}`;
+            const pollUrl = `${this.apiUrl}/analysis_result?customer=${this.vcs.repo.owner}&action_id=${file.uuid}`;
             const response = yield this.vcs.http.get(pollUrl, {
                 Authorization: "Bearer " + this.jwt,
             });
