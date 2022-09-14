@@ -248,7 +248,7 @@ export class Github implements IVersionControl {
       return []
     }
     this.logger.info(
-      `- ##### IAC Connectivity Risk Analysis ##### Found changes in folders ${diffFolders.join(', ')}`
+      `- ##### IAC Connectivity Risk Analysis ##### Found changes in folders:\n ${diffFolders.join(',\n')}`
     );
     return diffFolders;
   }

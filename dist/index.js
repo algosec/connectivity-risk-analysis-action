@@ -399,7 +399,7 @@ class Terraform {
             const steps = {};
             const initLog = { stdout: '', stderr: '', exitCode: 0 };
             try {
-                process.chdir(`${options.workDir}/${options.runFolder}`);
+                process.chdir(`${options.runFolder}`);
                 console.log(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`);
                 steps.init = yield (0, exec_1.exec)("terraform", ["init"]);
                 steps.fmt = yield (0, exec_1.exec)("terraform", ["fmt", "-diff"]);
@@ -773,7 +773,7 @@ class Github {
                 this.logger.info("- ##### IAC Connectivity Risk Analysis ##### No changes were found");
                 return [];
             }
-            this.logger.info(`- ##### IAC Connectivity Risk Analysis ##### Found changes in folders ${diffFolders.join(', ')}`);
+            this.logger.info(`- ##### IAC Connectivity Risk Analysis ##### Found changes in folders:\n ${diffFolders.join(',\n')}`);
             return diffFolders;
         });
     }

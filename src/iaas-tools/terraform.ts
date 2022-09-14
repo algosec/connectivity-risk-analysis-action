@@ -23,7 +23,7 @@ export class Terraform implements IFramework {
     const steps: ExecSteps = {};
     const initLog: ExecOutput = {stdout: '', stderr: '', exitCode: 0};
     try {
-      process.chdir(`${options.workDir}/${options.runFolder}`);
+      process.chdir(`${options.runFolder}`);
       console.log(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`)
       steps.init = await exec("terraform", ["init"]);
       steps.fmt = await exec("terraform", ["fmt", "-diff"]);
