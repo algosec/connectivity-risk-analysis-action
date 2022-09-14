@@ -900,8 +900,9 @@ ${CODE_BLOCK}\n
         return codeAnalysisContent;
     }
     buildCommentReportError(file) {
+        var _a, _b, _c, _d, _e, _f;
         const CODE_BLOCK = "```";
-        const errorsBody = this.steps.upload.stderr.concat(this.steps.analyze.stderr);
+        const errorsBody = ((_c = (_b = (_a = this.steps) === null || _a === void 0 ? void 0 : _a.upload) === null || _b === void 0 ? void 0 : _b.stderr) !== null && _c !== void 0 ? _c : '').concat((_f = (_e = (_d = this.steps) === null || _d === void 0 ? void 0 : _d.analyze) === null || _e === void 0 ? void 0 : _e.stderr) !== null && _f !== void 0 ? _f : '');
         const errors = `Errors\n
 ${CODE_BLOCK}\n
 ${errorsBody}\n

@@ -416,7 +416,7 @@ ${CODE_BLOCK}\n
 
   buildCommentReportError(file: AnalysisFile): string {
     const CODE_BLOCK = "```";
-    const errorsBody = this.steps.upload.stderr.concat(this.steps.analyze.stderr)
+    const errorsBody = (this.steps?.upload?.stderr ?? '').concat(this.steps?.analyze?.stderr ?? '')
     const errors = `Errors\n
 ${CODE_BLOCK}\n
 ${errorsBody}\n
