@@ -344,7 +344,8 @@ class FrameworkService {
             return framework_model_1.FrameworkFactory.getInstance(type, vcs);
         }
         catch (e) {
-            throw new Error(e);
+            vcs.logger.error(e);
+            return null;
         }
     }
 }
@@ -545,11 +546,14 @@ class Main {
                     yield (0, child_process_1.exec)(`rimraf ${vcs.workDir}`);
                 }
                 let foldersToRunCheck = [];
-                if (isInitilizaed) {
+                if (isInitilizaed && framework) {
                     foldersToRunCheck = yield vcs.checkForDiffByFileTypes(framework.fileTypes);
                 }
+                else {
+                    vcs.logger.exit();
+                }
                 if ((foldersToRunCheck === null || foldersToRunCheck === void 0 ? void 0 : foldersToRunCheck.length) > 0) {
-                    const filesToAnalyze = yield framework.check(foldersToRunCheck, vcs.workDir);
+                    const filesToAnalyze = yield (framework === null || framework === void 0 ? void 0 : framework.check(foldersToRunCheck, vcs.workDir));
                     if ((filesToAnalyze === null || filesToAnalyze === void 0 ? void 0 : filesToAnalyze.length) > 0) {
                         const codeAnalysisResponses = yield codeAnalyzer.analyze(filesToAnalyze);
                         if ((codeAnalysisResponses === null || codeAnalysisResponses === void 0 ? void 0 : codeAnalysisResponses.length) > 0) {
@@ -1083,7 +1087,12 @@ exports.VersionControlService = void 0;
 const vcs_model_1 = __nccwpck_require__(7899);
 class VersionControlService {
     getInstanceByType(type) {
-        return vcs_model_1.VersionControlFactory.getInstance(type);
+        try {
+            return vcs_model_1.VersionControlFactory.getInstance(type);
+        }
+        catch (e) {
+            throw new Error(e);
+        }
     }
 }
 exports.VersionControlService = VersionControlService;

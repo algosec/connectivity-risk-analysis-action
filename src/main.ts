@@ -24,7 +24,7 @@ export class Main {
     try {
       const vcs: IVersionControl =
         new VersionControlService().getInstanceByType(this.vcsType);
-      const framework: IFramework = new FrameworkService().getInstanceByType(
+      const framework: IFramework | null = new FrameworkService().getInstanceByType(
         this.frameworkType,
         vcs
       );
@@ -34,13 +34,15 @@ export class Main {
         await exec(`rimraf ${vcs.workDir}`);
       }
       let foldersToRunCheck = []
-      if (isInitilizaed) {
+      if (isInitilizaed && framework) {
         foldersToRunCheck = await vcs.checkForDiffByFileTypes(
           framework.fileTypes
         );
+      } else {
+        vcs.logger.exit()
       }
       if (foldersToRunCheck?.length > 0) {
-        const filesToAnalyze: AnalysisFile[] = await framework.check(
+        const filesToAnalyze: AnalysisFile[] = await framework?.check(
           foldersToRunCheck,
           vcs.workDir
         );

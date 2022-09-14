@@ -13,7 +13,8 @@ export class FrameworkService {
     try{
       return FrameworkFactory.getInstance(type, vcs);
     } catch(e){
-      throw new Error(e);
+      vcs.logger.error(e);
+      return null
     }
   }
 }

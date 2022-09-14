@@ -8,6 +8,10 @@ export class VersionControlService {
   getInstanceByType<K extends VersionControlKeys>(
     type: VersionControlSingleKeys<K>
   ) {
-    return VersionControlFactory.getInstance(type);
+    try{
+      return VersionControlFactory.getInstance(type);
+    } catch(e){
+      throw new Error(e);
+    }
   }
 }
