@@ -317,7 +317,12 @@ exports.frameworkMap = {
 };
 class FrameworkFactory {
     static getInstance(frameworkKey, vcs) {
-        return new exports.frameworkMap[frameworkKey](vcs);
+        try {
+            return new exports.frameworkMap[frameworkKey](vcs);
+        }
+        catch (error) {
+            throw new Error("- ##### IAC Connectivity Risk Analysis ##### Unsupported framework type: " + frameworkKey);
+        }
     }
 }
 exports.FrameworkFactory = FrameworkFactory;
@@ -335,7 +340,12 @@ exports.FrameworkService = void 0;
 const framework_model_1 = __nccwpck_require__(80);
 class FrameworkService {
     getInstanceByType(type, vcs) {
-        return framework_model_1.FrameworkFactory.getInstance(type, vcs);
+        try {
+            return framework_model_1.FrameworkFactory.getInstance(type, vcs);
+        }
+        catch (e) {
+            throw new Error(e);
+        }
     }
 }
 exports.FrameworkService = FrameworkService;
