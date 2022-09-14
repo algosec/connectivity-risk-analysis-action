@@ -56,6 +56,10 @@ export class FrameworkFactory {
     frameworkKey: FrameworkSingleKeys<K>,
     vcs: IVersionControl
   ): FrameworkClassType<K> {
-    return new frameworkMap[frameworkKey](vcs);
+      try {
+        return new frameworkMap[frameworkKey](vcs);
+      } catch (error) {
+        throw new Error("- ##### IAC Connectivity Risk Analysis ##### Unsupported framework type: " + frameworkKey);
+      }
   }
 }
