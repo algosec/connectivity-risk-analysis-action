@@ -411,7 +411,7 @@ class Terraform {
                     "plan",
                     "-input=false",
                     "-no-color",
-                    `-out=${options === null || options === void 0 ? void 0 : options.workDir}\\tmp\\tf-${options.runFolder}.out`,
+                    `-out=${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
                 ]);
                 const initLog = {
                     exitCode: 0,
@@ -424,7 +424,7 @@ class Terraform {
                         (yield (0, exec_1.exec)("terraform", [
                             "show",
                             "-json",
-                            `${options.workDir}\\tmp\\tf-${options.runFolder}.out`,
+                            `${process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
                         ])).stdout;
                 }
                 console.log(`::endgroup::`);
@@ -762,7 +762,7 @@ class Github {
                     const diffs = yield this.getDiff(this.octokit);
                     const foldersSet = new Set(diffs
                         .filter((diff) => fileTypes === null || fileTypes === void 0 ? void 0 : fileTypes.some((fileType) => { var _a; return (_a = diff === null || diff === void 0 ? void 0 : diff.filename) === null || _a === void 0 ? void 0 : _a.endsWith(fileType); }))
-                        .map((diff) => allFoldersPaths.find(path => path.includes(diff))));
+                        .map((diff) => allFoldersPaths.find(path => path.endsWith(diff === null || diff === void 0 ? void 0 : diff.filename.split("/")[0]))));
                     diffFolders = [...foldersSet];
                 }
             }
@@ -774,7 +774,7 @@ class Github {
                 this.logger.info("- ##### IAC Connectivity Risk Analysis ##### No changes were found");
                 return [];
             }
-            this.logger.info(`- ##### IAC Connectivity Risk Analysis ##### Found changes in folders:\n ${diffFolders.join(',\n')}`);
+            this.logger.info(`- ##### IAC Connectivity Risk Analysis ##### Running IaC on folders:\n ${diffFolders.join(',\n')}`);
             return diffFolders;
         });
     }

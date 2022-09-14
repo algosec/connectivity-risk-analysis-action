@@ -35,7 +35,7 @@ export class Terraform implements IFramework {
         "plan",
         "-input=false",
         "-no-color",
-        `-out=${options?.workDir}\\tmp\\tf-${options.runFolder}.out`,
+        `-out=${process?.cwd()}\\tmp\\tf-${options.runFolder}.out`,
       ]);
       const initLog = {
         exitCode: 0,
@@ -57,7 +57,7 @@ export class Terraform implements IFramework {
             await exec("terraform", [
               "show",
               "-json",
-              `${options.workDir}\\tmp\\tf-${options.runFolder}.out`,
+              `${process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
             ])
           ).stdout
       }

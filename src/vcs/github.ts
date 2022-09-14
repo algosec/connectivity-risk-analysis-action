@@ -233,7 +233,7 @@ export class Github implements IVersionControl {
             .filter((diff) =>
               fileTypes?.some((fileType) => diff?.filename?.endsWith(fileType))
             )
-            .map((diff) => allFoldersPaths.find(path => path.includes(diff)))
+            .map((diff) => allFoldersPaths.find(path => path.endsWith(diff?.filename.split("/")[0])))
         );
         diffFolders = [...foldersSet];
       }
@@ -248,7 +248,7 @@ export class Github implements IVersionControl {
       return []
     }
     this.logger.info(
-      `- ##### IAC Connectivity Risk Analysis ##### Found changes in folders:\n ${diffFolders.join(',\n')}`
+      `- ##### IAC Connectivity Risk Analysis ##### Running IaC on folders:\n ${diffFolders.join(',\n')}`
     );
     return diffFolders;
   }
