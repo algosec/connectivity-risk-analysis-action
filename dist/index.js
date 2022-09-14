@@ -394,6 +394,7 @@ class Terraform {
         this.steps = {};
     }
     terraform(options) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
             let result = { plan: "", log: { stderr: '', stdout: '', exitCode: 0 }, initLog: { stderr: '', stdout: '', exitCode: 0 } };
             const steps = {};
@@ -424,7 +425,7 @@ class Terraform {
                         (yield (0, exec_1.exec)("terraform", [
                             "show",
                             "-json",
-                            `${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
+                            `${process.cwd()}\\tmp\\tf-${(_a = options.runFolder) === null || _a === void 0 ? void 0 : _a.split('/').pop()}.out`,
                         ])).stdout;
                 }
                 console.log(`::endgroup::`);

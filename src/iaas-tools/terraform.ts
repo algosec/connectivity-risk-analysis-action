@@ -57,7 +57,7 @@ export class Terraform implements IFramework {
             await exec("terraform", [
               "show",
               "-json",
-              `${process?.cwd()}\\tmp\\tf-${options.runFolder}.out`,
+              `${process.cwd()}\\tmp\\tf-${options.runFolder?.split('/').pop()}.out`,
             ])
           ).stdout
       }
