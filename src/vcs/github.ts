@@ -332,6 +332,8 @@ export class Github implements IVersionControl {
         file.folder
       }</b></h3></summary>\n${this.buildCommentFrameworkResult(
         file
+      )}\n${this.buildCommentReportError(
+        file
       )}\n</details>`;
     } else if (analysis?.analysis_result?.length == 0) {
       analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${
@@ -410,6 +412,20 @@ ${CODE_BLOCK}\n
       analysis?.analysis_result?.length > 0 ? severityCount : ""
     }</summary>\n${risksList}\n`;
     return codeAnalysisContent;
+  }
+
+  buildCommentReportError(file: AnalysisFile): string {
+    const CODE_BLOCK = "```";
+    const errorsBody = this.steps.upload.stderr.concat(this.steps.analyze.stderr)
+    const errors = `Errors\n
+${CODE_BLOCK}\n
+${errorsBody}\n
+${CODE_BLOCK}\n`;
+    const analysisContent = `\n<details>
+<summary>Analysis Log</summary>
+${errorsBody != '' ? "<br>" + errors + "<br>" : ""}
+</details> <!-- End Format Logs -->\n`;
+    return analysisContent;
   }
 
   buildCommentFrameworkResult(file: AnalysisFile): string {
@@ -546,8 +562,7 @@ ${risksTableContents}
     const footer = `\n\n---\n\n
 <br>
 Pusher: @${this._context?.actor}<br>
-Action: \`${this._context?.eventName}\`<br>
-Working Directory: ${this.workspace}<br>
+Action: ${this._context?.eventName}<br>
 Workflow: ${this._context?.workflow}`;
     const summary = this.buildCommentSummary(filesToUpload, analysisResults);
 

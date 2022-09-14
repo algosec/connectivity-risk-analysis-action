@@ -98,17 +98,23 @@ class AshCodeAnalysis {
     }
     triggerCodeAnalysis(filesToUpload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const fileUploadPromises = [];
-            filesToUpload.forEach((file) => fileUploadPromises.push(this.uploadFile(file)));
-            const responses = yield Promise.all(fileUploadPromises);
-            if (responses.filter(response => response).length == 0) {
-                this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### No files were uploaded, please check logs");
+            try {
+                const fileUploadPromises = [];
+                filesToUpload.forEach((file) => fileUploadPromises.push(this.uploadFile(file)));
+                const responses = yield Promise.all(fileUploadPromises);
+                if (responses.filter(response => response).length == 0) {
+                    this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### No files were uploaded, please check logs");
+                }
+                else if (responses.some(response => !response)) {
+                    this.vcs.logger.error("- ##### IAC Connectivity Risk Analysis ##### Some files failed to upload, please check logs");
+                }
+                else {
+                    this.vcs.logger.info("- ##### IAC Connectivity Risk Analysis ##### File/s were uploaded successfully");
+                }
             }
-            else if (responses.some(response => !response)) {
+            catch (e) {
+                this.vcs.steps.upload = { exitCode: 0, stdout: '', stderr: "- ##### IAC Connectivity Risk Analysis ##### Upload Failure: " + e };
                 this.vcs.logger.error("- ##### IAC Connectivity Risk Analysis ##### Some files failed to upload, please check logs");
-            }
-            else {
-                this.vcs.logger.info("- ##### IAC Connectivity Risk Analysis ##### File/s were uploaded successfully");
             }
         });
     }
@@ -145,12 +151,14 @@ class AshCodeAnalysis {
                     .forEach((file) => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
                 analysisResult = yield Promise.all(codeAnalysisPromises);
                 if (!analysisResult || (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.length) == 0) {
+                    this.vcs.steps.analysis = { exitCode: 0, stdout: '', stderr: "- ##### IAC Connectivity Risk Analysis ##### Analysis failed, please contact support." };
                     this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### Code Analysis failed");
                     analysisResult = [];
                 }
                 this.vcs.logger.debug(`::group::##### IAC Connectivity Risk Analysis ##### Risk analysis result:\n${JSON.stringify(analysisResult, null, "\t")}\n::endgroup::`);
             }
             catch (e) {
+                this.vcs.steps.analysis = { exitCode: 0, stdout: '', stderr: "- ##### IAC Connectivity Risk Analysis ##### Analysis failed, please contact support.\n" + e };
                 this.vcs.logger.exit(`- ##### IAC Connectivity Risk Analysis ##### Code Analysis failed due to errors: ${e}`);
                 analysisResult = [];
             }
@@ -843,7 +851,7 @@ class Github {
         var _a;
         let analysisBody = "";
         if (!(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result)) {
-            analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${this.assetsUrl}/failure.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n</details>`;
+            analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${this.assetsUrl}/failure.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n${this.buildCommentReportError(file)}\n</details>`;
         }
         else if (((_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.length) == 0) {
             analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${this.assetsUrl}/success.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n</details>`;
@@ -890,6 +898,19 @@ ${CODE_BLOCK}\n
         const codeAnalysisContent = `<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${this.assetsUrl}/warning.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder +
             (((_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.length) == 0 ? "- No Risks Found" : "")}</b></h3>${((_b = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0 ? severityCount : ""}</summary>\n${risksList}\n`;
         return codeAnalysisContent;
+    }
+    buildCommentReportError(file) {
+        const CODE_BLOCK = "```";
+        const errorsBody = this.steps.upload.stderr.concat(this.steps.analyze.stderr);
+        const errors = `Errors\n
+${CODE_BLOCK}\n
+${errorsBody}\n
+${CODE_BLOCK}\n`;
+        const analysisContent = `\n<details>
+<summary>Analysis Log</summary>
+${errorsBody != '' ? "<br>" + errors + "<br>" : ""}
+</details> <!-- End Format Logs -->\n`;
+        return analysisContent;
     }
     buildCommentFrameworkResult(file) {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
@@ -1000,8 +1021,7 @@ ${risksTableContents}
         const footer = `\n\n---\n\n
 <br>
 Pusher: @${(_a = this._context) === null || _a === void 0 ? void 0 : _a.actor}<br>
-Action: \`${(_b = this._context) === null || _b === void 0 ? void 0 : _b.eventName}\`<br>
-Working Directory: ${this.workspace}<br>
+Action: ${(_b = this._context) === null || _b === void 0 ? void 0 : _b.eventName}<br>
 Workflow: ${(_c = this._context) === null || _c === void 0 ? void 0 : _c.workflow}`;
         const summary = this.buildCommentSummary(filesToUpload, analysisResults);
         const bodyHeading = `\n**Detailed Risks Report**
