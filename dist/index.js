@@ -409,20 +409,20 @@ class Terraform {
         this.fileTypes = [".tf"];
         this.type = "terraform";
     }
-    terraform(options) {
+    terraform(options, vcs) {
         return __awaiter(this, void 0, void 0, function* () {
             let result = { plan: "", log: { stderr: '', stdout: '', exitCode: 0 }, initLog: { stderr: '', stdout: '', exitCode: 0 } };
             const initLog = { stdout: '', stderr: '', exitCode: 0 };
             try {
                 process.chdir(`${options.path}`);
-                this.vcs.logger.info(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`);
-                this.vcs.steps.init = yield (0, exec_1.exec)("terraform", ["init"]);
-                this.vcs.steps.fmt = yield (0, exec_1.exec)("terraform", ["fmt", "-diff"]);
-                this.vcs.steps.validate = yield (0, exec_1.exec)("terraform", ["validate", "-no-color"]);
+                vcs.logger.info(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`);
+                vcs.steps.init = yield (0, exec_1.exec)("terraform", ["init"]);
+                vcs.steps.fmt = yield (0, exec_1.exec)("terraform", ["fmt", "-diff"]);
+                vcs.steps.validate = yield (0, exec_1.exec)("terraform", ["validate", "-no-color"]);
                 if (!(0, fs_1.existsSync)("./tmp")) {
                     yield (0, exec_1.exec)("mkdir", ["tmp"]);
                 }
-                this.vcs.steps.plan = yield (0, exec_1.exec)("terraform", [
+                vcs.steps.plan = yield (0, exec_1.exec)("terraform", [
                     "plan",
                     "-input=false",
                     "-no-color",
@@ -430,11 +430,11 @@ class Terraform {
                 ]);
                 const initLog = {
                     exitCode: 0,
-                    stdout: this.vcs.steps.init.stdout.concat(this.vcs.steps.fmt.stdout, this.vcs.steps.validate.stdout, this.vcs.steps.plan.stdout),
-                    stderr: this.vcs.steps.init.stderr.concat(this.vcs.steps.fmt.stderr, this.vcs.steps.validate.stderr, this.vcs.steps.plan.stderr),
+                    stdout: vcs.steps.init.stdout.concat(vcs.steps.fmt.stdout, vcs.steps.validate.stdout, vcs.steps.plan.stdout),
+                    stderr: vcs.steps.init.stderr.concat(vcs.steps.fmt.stderr, vcs.steps.validate.stderr, vcs.steps.plan.stderr),
                 };
                 let jsonPlan = '';
-                if (this.vcs.steps.plan.stdout != '') {
+                if (vcs.steps.plan.stdout != '') {
                     jsonPlan =
                         (yield (0, exec_1.exec)("terraform", [
                             "show",
@@ -442,13 +442,13 @@ class Terraform {
                             `${process.cwd()}\\tmp\\${options.runFolder}.out`,
                         ])).stdout;
                 }
-                this.vcs.logger.info(`::endgroup::`);
+                vcs.logger.info(`::endgroup::`);
                 process.chdir(options.workDir);
-                result = { plan: jsonPlan, log: this.vcs.steps.plan, initLog };
+                result = { plan: jsonPlan, log: vcs.steps.plan, initLog };
             }
             catch (error) {
                 if (error instanceof Error) {
-                    this.vcs.logger.info(error === null || error === void 0 ? void 0 : error.message); // setFailed(error?.message)
+                    vcs.logger.info(error === null || error === void 0 ? void 0 : error.message); // setFailed(error?.message)
                     result = { plan: '', log: { stderr: error === null || error === void 0 ? void 0 : error.message, stdout: '', exitCode: 0 }, initLog };
                 }
             }
@@ -481,7 +481,7 @@ class Terraform {
             const asyncIterable = (iterable, action) => __awaiter(this, void 0, void 0, function* () {
                 var _a, _b;
                 for (const [index, value] of iterable === null || iterable === void 0 ? void 0 : iterable.entries()) {
-                    const output = yield action({ runFolder: (_a = value === null || value === void 0 ? void 0 : value.split(/([/\\])/g)) === null || _a === void 0 ? void 0 : _a.pop(), workDir, path: value });
+                    const output = yield action({ runFolder: (_a = value === null || value === void 0 ? void 0 : value.split(/([/\\])/g)) === null || _a === void 0 ? void 0 : _a.pop(), workDir, path: value }, this.vcs);
                     const file = {
                         uuid: uuid.v4(),
                         folder: (_b = value === null || value === void 0 ? void 0 : value.split(/([/\\])/g)) === null || _b === void 0 ? void 0 : _b.pop(),

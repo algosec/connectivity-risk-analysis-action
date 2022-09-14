@@ -7,7 +7,7 @@ import {
 } from "./framework.model";
 import { existsSync } from "fs";
 import * as uuid from "uuid";
-import { IVersionControl } from "../vcs/vcs.model";
+import { IVersionControl, VersionControlClassType, VersionControlKeys } from "../vcs/vcs.model";
 import { ExecOutput } from "@actions/exec";
 
 export class Terraform implements IFramework {
@@ -16,19 +16,19 @@ export class Terraform implements IFramework {
   constructor(public vcs: IVersionControl) {
   }
 
-  async terraform(options: FrameworkOptions): Promise<FrameworkResult> {
+  async terraform(options: FrameworkOptions, vcs: VersionControlClassType<VersionControlKeys>): Promise<FrameworkResult> {
     let result: FrameworkResult = {plan: "", log: {stderr: '', stdout: '', exitCode: 0}, initLog: {stderr: '', stdout: '', exitCode: 0}}
     const initLog: ExecOutput = {stdout: '', stderr: '', exitCode: 0};
     try {
       process.chdir(`${options.path}`);
-      this.vcs.logger.info(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`)
-      this.vcs.steps.init = await exec("terraform", ["init"]);
-      this.vcs.steps.fmt = await exec("terraform", ["fmt", "-diff"]);
-      this.vcs.steps.validate = await exec("terraform", ["validate", "-no-color"]);
+      vcs.logger.info(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`)
+      vcs.steps.init = await exec("terraform", ["init"]);
+      vcs.steps.fmt = await exec("terraform", ["fmt", "-diff"]);
+      vcs.steps.validate = await exec("terraform", ["validate", "-no-color"]);
       if (!existsSync("./tmp")) {
         await exec("mkdir", ["tmp"]);
       }
-      this.vcs.steps.plan = await exec("terraform", [
+      vcs.steps.plan = await exec("terraform", [
         "plan",
         "-input=false",
         "-no-color",
@@ -36,19 +36,19 @@ export class Terraform implements IFramework {
       ]);
       const initLog = {
         exitCode: 0,
-        stdout: this.vcs.steps.init.stdout.concat(
-          this.vcs.steps.fmt.stdout,
-          this.vcs.steps.validate.stdout,
-          this.vcs.steps.plan.stdout
+        stdout: vcs.steps.init.stdout.concat(
+          vcs.steps.fmt.stdout,
+          vcs.steps.validate.stdout,
+          vcs.steps.plan.stdout
         ),
-        stderr: this.vcs.steps.init.stderr.concat(
-          this.vcs.steps.fmt.stderr,
-          this.vcs.steps.validate.stderr,
-          this.vcs.steps.plan.stderr
+        stderr: vcs.steps.init.stderr.concat(
+          vcs.steps.fmt.stderr,
+          vcs.steps.validate.stderr,
+          vcs.steps.plan.stderr
         ),
       };
       let jsonPlan = '';
-      if (this.vcs.steps.plan.stdout != '') {
+      if (vcs.steps.plan.stdout != '') {
         jsonPlan = 
           (
             await exec("terraform", [
@@ -58,12 +58,12 @@ export class Terraform implements IFramework {
             ])
           ).stdout
       }
-      this.vcs.logger.info(`::endgroup::`)
+      vcs.logger.info(`::endgroup::`)
       process.chdir(options.workDir);
-      result = { plan: jsonPlan, log: this.vcs.steps.plan, initLog };
+      result = { plan: jsonPlan, log: vcs.steps.plan, initLog };
     } catch (error: any) {
       if (error instanceof Error) {
-        this.vcs.logger.info(error?.message); // setFailed(error?.message)
+        vcs.logger.info(error?.message); // setFailed(error?.message)
         result = { plan: '', log: { stderr: error?.message, stdout: '', exitCode:0  },  initLog };
       }
     }
@@ -98,7 +98,7 @@ export class Terraform implements IFramework {
     const res: AnalysisFile[] = [];
     const asyncIterable = async (iterable, action) => {
       for (const [index, value] of iterable?.entries()) {
-        const output = await action({ runFolder: value?.split(/([/\\])/g)?.pop(), workDir, path: value });
+        const output = await action({ runFolder: value?.split(/([/\\])/g)?.pop(), workDir, path: value }, this.vcs);
         const file: AnalysisFile = {
           uuid: uuid.v4(),
           folder: value?.split(/([/\\])/g)?.pop(),

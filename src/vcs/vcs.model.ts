@@ -84,7 +84,7 @@ export type VersionControlSingleKeys<K> = [K] extends (
   ? K
   : never;
 
-type VersionControlClassType<A extends VersionControlKeys> = Extract<
+export type VersionControlClassType<A extends VersionControlKeys> = Extract<
   VersionControlTuples<VersionControlKeys>,
   [A, any]
 >[1];
