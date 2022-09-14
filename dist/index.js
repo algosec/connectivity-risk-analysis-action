@@ -411,7 +411,7 @@ class Terraform {
                     "plan",
                     "-input=false",
                     "-no-color",
-                    `-out=${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
+                    `-out=${options === null || options === void 0 ? void 0 : options.workDir}\\tmp\\tf-${options.runFolder}.out`,
                 ]);
                 const initLog = {
                     exitCode: 0,
@@ -424,7 +424,7 @@ class Terraform {
                         (yield (0, exec_1.exec)("terraform", [
                             "show",
                             "-json",
-                            `${process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
+                            `${options.workDir}\\tmp\\tf-${options.runFolder}.out`,
                         ])).stdout;
                 }
                 console.log(`::endgroup::`);
@@ -754,15 +754,15 @@ class Github {
             }
             let diffFolders = [];
             try {
+                const allFoldersPaths = yield this.getFoldersList(this.workDir);
                 if (this.firstRun) {
-                    const allFolders = yield this.getFoldersList(this.workDir);
-                    diffFolders = allFolders.filter(folder => this.hasFileType(folder, fileTypes));
+                    diffFolders = allFoldersPaths.filter(folder => this.hasFileType(folder, fileTypes));
                 }
                 else {
                     const diffs = yield this.getDiff(this.octokit);
                     const foldersSet = new Set(diffs
                         .filter((diff) => fileTypes === null || fileTypes === void 0 ? void 0 : fileTypes.some((fileType) => { var _a; return (_a = diff === null || diff === void 0 ? void 0 : diff.filename) === null || _a === void 0 ? void 0 : _a.endsWith(fileType); }))
-                        .map((diff) => diff === null || diff === void 0 ? void 0 : diff.filename.split("/")[0]));
+                        .map((diff) => allFoldersPaths.find(path => path.includes(diff))));
                     diffFolders = [...foldersSet];
                 }
             }

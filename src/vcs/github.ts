@@ -223,9 +223,9 @@ export class Github implements IVersionControl {
     }
     let diffFolders: any[] = [];
     try {
+      const allFoldersPaths = await this.getFoldersList(this.workDir)
       if (this.firstRun){
-        const allFolders = await this.getFoldersList(this.workDir)
-        diffFolders = allFolders.filter(folder => this.hasFileType(folder, fileTypes))
+        diffFolders = allFoldersPaths.filter(folder => this.hasFileType(folder, fileTypes))
       } else {
         const diffs = await this.getDiff(this.octokit);
         const foldersSet: Set<string> = new Set(
@@ -233,7 +233,7 @@ export class Github implements IVersionControl {
             .filter((diff) =>
               fileTypes?.some((fileType) => diff?.filename?.endsWith(fileType))
             )
-            .map((diff) => diff?.filename.split("/")[0])
+            .map((diff) => allFoldersPaths.find(path => path.includes(diff)))
         );
         diffFolders = [...foldersSet];
       }
