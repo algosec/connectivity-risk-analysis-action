@@ -18,7 +18,7 @@ jobs:
      runs-on: ubuntu-latest
      steps:
         - name: Connectivity Risk Analysis
-          uses: algosec/connectivity-risk-analysis-action@v0.0.12
+          uses: algosec/connectivity-risk-analysis-action@v0.0.15
           env:
             # Optional: when using @actions/checkout@v3 to checkout the repo add "USE_CHECKOUT: true" under "env:"
             USE_CHECKOUT: false (default)
@@ -26,10 +26,10 @@ jobs:
             # Optional: run checks on all folders with relevant file type
             FIRST_RUN: false (default)
             
-            # Optional: Fail or Continue on error after action finish
+            # Optional: Fail or Continue if any risks were found after action finish
             STOP_WHEN_FAIL: true (default)
             
-            # Optional: IaS Framework type (terraform, cloudformation, etc...)
+            # Optional: IaC Framework type (terraform, cloudformation, etc...)
             FRAMEWORK: terraform (default)
             
             # Optional: Version Control type (github, gitlab, etc...)
