@@ -401,7 +401,8 @@ class Terraform {
             const initLog = { stdout: '', stderr: '', exitCode: 0 };
             try {
                 process.chdir(`${options.runFolder}`);
-                console.log(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`);
+                const runFolder = (_a = options.runFolder) === null || _a === void 0 ? void 0 : _a.split("/([/\\])\w+/g").pop();
+                console.log(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${runFolder}`);
                 steps.init = yield (0, exec_1.exec)("terraform", ["init"]);
                 steps.fmt = yield (0, exec_1.exec)("terraform", ["fmt", "-diff"]);
                 steps.validate = yield (0, exec_1.exec)("terraform", ["validate", "-no-color"]);
@@ -412,7 +413,7 @@ class Terraform {
                     "plan",
                     "-input=false",
                     "-no-color",
-                    `-out=${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
+                    `-out=${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\tf-${runFolder}.out`,
                 ]);
                 const initLog = {
                     exitCode: 0,
@@ -425,7 +426,7 @@ class Terraform {
                         (yield (0, exec_1.exec)("terraform", [
                             "show",
                             "-json",
-                            `${process.cwd()}\\tmp\\tf-${(_a = options.runFolder) === null || _a === void 0 ? void 0 : _a.split('/').pop()}.out`,
+                            `${process.cwd()}\\tmp\\tf-${runFolder}.out`,
                         ])).stdout;
                 }
                 console.log(`::endgroup::`);

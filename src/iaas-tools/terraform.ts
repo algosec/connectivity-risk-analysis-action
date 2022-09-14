@@ -24,7 +24,8 @@ export class Terraform implements IFramework {
     const initLog: ExecOutput = {stdout: '', stderr: '', exitCode: 0};
     try {
       process.chdir(`${options.runFolder}`);
-      console.log(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`)
+      const runFolder = options.runFolder?.split("/([/\\])\w+/g").pop()
+      console.log(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${runFolder}`)
       steps.init = await exec("terraform", ["init"]);
       steps.fmt = await exec("terraform", ["fmt", "-diff"]);
       steps.validate = await exec("terraform", ["validate", "-no-color"]);
@@ -35,7 +36,7 @@ export class Terraform implements IFramework {
         "plan",
         "-input=false",
         "-no-color",
-        `-out=${process?.cwd()}\\tmp\\tf-${options.runFolder}.out`,
+        `-out=${process?.cwd()}\\tmp\\tf-${runFolder}.out`,
       ]);
       const initLog = {
         exitCode: 0,
@@ -57,7 +58,7 @@ export class Terraform implements IFramework {
             await exec("terraform", [
               "show",
               "-json",
-              `${process.cwd()}\\tmp\\tf-${options.runFolder?.split('/').pop()}.out`,
+              `${process.cwd()}\\tmp\\tf-${runFolder}.out`,
             ])
           ).stdout
       }
