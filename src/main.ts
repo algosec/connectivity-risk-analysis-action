@@ -11,7 +11,6 @@ import { VersionControlService } from "./vcs/vcs.service";
 // } from "../test/mockData.gcp"
 
 export class Main {
-  steps: ExecSteps = {};
   frameworkType: FrameworkKeys;
   vcsType: VersionControlKeys;
 
@@ -22,13 +21,13 @@ export class Main {
 
   async run(): Promise<void> {
     try {
-      const vcs: IVersionControl =
+      const vcs: IVersionControl = await
         new VersionControlService().getInstanceByType(this.vcsType);
-      const framework: IFramework | null = new FrameworkService().getInstanceByType(
+      const framework: IFramework | null = await new FrameworkService().getInstanceByType(
         this.frameworkType,
         vcs
       );
-      const codeAnalyzer = new AshCodeAnalysis(vcs);
+      const codeAnalyzer = await new AshCodeAnalysis(vcs);
       const isInitilizaed = await codeAnalyzer.init();
       if (codeAnalyzer.debugMode) {
         await exec(`rimraf ${vcs.workDir}`);
@@ -54,11 +53,12 @@ export class Main {
             await vcs.parseOutput(filesToAnalyze, codeAnalysisResponses);
           }
         }else {
-          vcs.logger.exit('- ##### IAC Connectivity Risk Analysis ##### NO FILES TO ANALYZE')
+          vcs.logger.exit('- ##### IAC Connectivity Risk Analysis ##### No files to analyze')
         }
       }
     } catch (_e) {
-      console.log(_e);
+      throw new Error(_e);
+      
     }
   }
 }

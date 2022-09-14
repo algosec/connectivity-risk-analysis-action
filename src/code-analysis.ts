@@ -1,11 +1,10 @@
 import "dotenv/config";
 import { IVersionControl } from "./vcs/vcs.model";
-import { ExecSteps, AnalysisFile } from "./common/exec";
+import { AnalysisFile } from "./common/exec";
 import { AnalysisResult } from "./common/risk.model";
 import { writeFileSync } from "fs";
 
 export class AshCodeAnalysis {
-  steps: ExecSteps = {};
   debugMode;
   apiUrl;
   tenantId;
@@ -32,7 +31,7 @@ export class AshCodeAnalysis {
       );
       return false;
     }
-    this.steps.auth = { exitCode: 0, stdout: this.jwt, stderr: "" };
+    this.vcs.steps.auth = { exitCode: 0, stdout: this.jwt, stderr: "" };
     return true;
   }
 
@@ -99,7 +98,7 @@ export class AshCodeAnalysis {
       writeFileSync(credentialsFilePath, gcpCredsString)
       process.env.GOOGLE_APPLICATION_CREDENTIALS = credentialsFilePath
     } catch(e){
-      console.log("Creating GCP Credentials failed: "+e)
+      this.vcs.logger.error("Creating GCP Credentials failed: "+e)
     }
 
   }

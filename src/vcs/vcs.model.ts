@@ -1,7 +1,8 @@
-import { AnalysisFile } from "../common/exec";
+import { AnalysisFile, ExecSteps } from "../common/exec";
 import { Github } from "./github";
 
 export interface IVersionControl {
+  steps: ExecSteps;
   pullRequest: any;
   payload: any;
   repo: any;
@@ -26,6 +27,7 @@ export interface IVersionControl {
 }
 
 export class GitLab implements IVersionControl {
+  steps: ExecSteps;
   pullRequest: any;
   payload: any;
   repo: any;
@@ -101,15 +103,3 @@ export interface Logger {
   debug: Function;
   exit: Function;
 }
-
-// const terraform = VersionControlFactory.getInstance("terraform");
-// const cloudformation = VersionControlFactory.getInstance("cloudformation");
-
-// console.log(
-//   "IaS versionControl type: ",
-//   new VersionControlService().getInstanceByType("cloudformation")
-// );
-// console.log(
-//     "IaS versionControl type: ",
-//     new VersionControlService().getInstanceByType("terraform")
-//   );

@@ -13,25 +13,22 @@ import { ExecOutput } from "@actions/exec";
 export class Terraform implements IFramework {
   fileTypes = [".tf"];
   type: FrameworkKeys = "terraform";
-  steps: ExecSteps = {};
   constructor(public vcs: IVersionControl) {
-    this.steps = {};
   }
 
   async terraform(options: FrameworkOptions): Promise<FrameworkResult> {
     let result: FrameworkResult = {plan: "", log: {stderr: '', stdout: '', exitCode: 0}, initLog: {stderr: '', stdout: '', exitCode: 0}}
-    const steps: ExecSteps = {};
     const initLog: ExecOutput = {stdout: '', stderr: '', exitCode: 0};
     try {
       process.chdir(`${options.path}`);
-      console.log(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`)
-      steps.init = await exec("terraform", ["init"]);
-      steps.fmt = await exec("terraform", ["fmt", "-diff"]);
-      steps.validate = await exec("terraform", ["validate", "-no-color"]);
+      this.vcs.logger.info(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`)
+      this.vcs.steps.init = await exec("terraform", ["init"]);
+      this.vcs.steps.fmt = await exec("terraform", ["fmt", "-diff"]);
+      this.vcs.steps.validate = await exec("terraform", ["validate", "-no-color"]);
       if (!existsSync("./tmp")) {
         await exec("mkdir", ["tmp"]);
       }
-      steps.plan = await exec("terraform", [
+      this.vcs.steps.plan = await exec("terraform", [
         "plan",
         "-input=false",
         "-no-color",
@@ -39,19 +36,19 @@ export class Terraform implements IFramework {
       ]);
       const initLog = {
         exitCode: 0,
-        stdout: steps.init.stdout.concat(
-          steps.fmt.stdout,
-          steps.validate.stdout,
-          steps.plan.stdout
+        stdout: this.vcs.steps.init.stdout.concat(
+          this.vcs.steps.fmt.stdout,
+          this.vcs.steps.validate.stdout,
+          this.vcs.steps.plan.stdout
         ),
-        stderr: steps.init.stderr.concat(
-          steps.fmt.stderr,
-          steps.validate.stderr,
-          steps.plan.stderr
+        stderr: this.vcs.steps.init.stderr.concat(
+          this.vcs.steps.fmt.stderr,
+          this.vcs.steps.validate.stderr,
+          this.vcs.steps.plan.stderr
         ),
       };
       let jsonPlan = '';
-      if (steps.plan.stdout != '') {
+      if (this.vcs.steps.plan.stdout != '') {
         jsonPlan = 
           (
             await exec("terraform", [
@@ -61,12 +58,12 @@ export class Terraform implements IFramework {
             ])
           ).stdout
       }
-      console.log(`::endgroup::`)
+      this.vcs.logger.info(`::endgroup::`)
       process.chdir(options.workDir);
-      result = { plan: jsonPlan, log: steps.plan, initLog };
+      result = { plan: jsonPlan, log: this.vcs.steps.plan, initLog };
     } catch (error: any) {
       if (error instanceof Error) {
-        console.log(error?.message); // setFailed(error?.message)
+        this.vcs.logger.info(error?.message); // setFailed(error?.message)
         result = { plan: '', log: { stderr: error?.message, stdout: '', exitCode:0  },  initLog };
       }
     }
@@ -74,22 +71,22 @@ export class Terraform implements IFramework {
   }
 
   async setVersion(steps: ExecSteps): Promise<void> {
-    steps.setupVersion = await exec("curl", [
+    this.vcs.steps.setupVersion = await exec("curl", [
       "-L",
       "https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh",
       "|",
       "bash",
     ]);
-    console.log("- ##### IAC Connectivity Risk Analysis ##### tfswitch Installed successfully");
+    this.vcs.logger.info("- ##### IAC Connectivity Risk Analysis ##### tfswitch Installed successfully");
     if (
       process?.env?.TF_VERSION == "latest" ||
       process?.env?.TF_VERSION == ""
     ) {
-      steps.switchVersion = await exec("tfswitch", ["--latest"]);
+      this.vcs.steps.switchVersion = await exec("tfswitch", ["--latest"]);
     } else {
-      steps.switchVersion = await exec("tfswitch", []);
+      this.vcs.steps.switchVersion = await exec("tfswitch", []);
     }
-    console.log(
+    this.vcs.logger.info(
       "##### IAC Connectivity Risk Analysis ##### tfswitch version: " + process?.env?.TF_VERSION
     );
   }
@@ -107,17 +104,17 @@ export class Terraform implements IFramework {
           folder: value?.split(/([/\\])/g)?.pop(),
           output,
         };
-        console.log(`- ##### IAC Connectivity Risk Analysis ##### Folder ${file.folder} Action UUID: ${file.uuid}`);
+        this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### Folder ${file.folder} Action UUID: ${file.uuid}`);
         res.push(file);
       }
     };
     try {
       await asyncIterable(foldersToRunCheck, this.terraform);
     } catch (error) {
-      console.log("- ##### IAC Connectivity Risk Analysis ##### Framework check failed: " + error);
+      this.vcs.logger.info("- ##### IAC Connectivity Risk Analysis ##### Framework check failed: " + error);
     }
-    console.log(`- ##### IAC Connectivity Risk Analysis ##### Finished Terraform check`);
-    // console.log(`::group::##### IAC Connectivity Risk Analysis ##### Files To Analyze\n ${JSON.stringify(res, null, "\t")}\n::endgroup::`);
+    this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### Finished Terraform check`);
+    // this.vcs.logger.info(`::group::##### IAC Connectivity Risk Analysis ##### Files To Analyze\n ${JSON.stringify(res, null, "\t")}\n::endgroup::`);
     return res;
   }
 }

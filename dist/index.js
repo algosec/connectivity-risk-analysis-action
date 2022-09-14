@@ -30,7 +30,6 @@ const fs_1 = __nccwpck_require__(5747);
 class AshCodeAnalysis {
     constructor(vcs) {
         this.vcs = vcs;
-        this.steps = {};
     }
     init() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -40,7 +39,7 @@ class AshCodeAnalysis {
                 this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### Not Authenticated");
                 return false;
             }
-            this.steps.auth = { exitCode: 0, stdout: this.jwt, stderr: "" };
+            this.vcs.steps.auth = { exitCode: 0, stdout: this.jwt, stderr: "" };
             return true;
         });
     }
@@ -93,7 +92,7 @@ class AshCodeAnalysis {
                 process.env.GOOGLE_APPLICATION_CREDENTIALS = credentialsFilePath;
             }
             catch (e) {
-                console.log("Creating GCP Credentials failed: " + e);
+                this.vcs.logger.error("Creating GCP Credentials failed: " + e);
             }
         });
     }
@@ -401,24 +400,21 @@ class Terraform {
         this.vcs = vcs;
         this.fileTypes = [".tf"];
         this.type = "terraform";
-        this.steps = {};
-        this.steps = {};
     }
     terraform(options) {
         return __awaiter(this, void 0, void 0, function* () {
             let result = { plan: "", log: { stderr: '', stdout: '', exitCode: 0 }, initLog: { stderr: '', stdout: '', exitCode: 0 } };
-            const steps = {};
             const initLog = { stdout: '', stderr: '', exitCode: 0 };
             try {
                 process.chdir(`${options.path}`);
-                console.log(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`);
-                steps.init = yield (0, exec_1.exec)("terraform", ["init"]);
-                steps.fmt = yield (0, exec_1.exec)("terraform", ["fmt", "-diff"]);
-                steps.validate = yield (0, exec_1.exec)("terraform", ["validate", "-no-color"]);
+                this.vcs.logger.info(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`);
+                this.vcs.steps.init = yield (0, exec_1.exec)("terraform", ["init"]);
+                this.vcs.steps.fmt = yield (0, exec_1.exec)("terraform", ["fmt", "-diff"]);
+                this.vcs.steps.validate = yield (0, exec_1.exec)("terraform", ["validate", "-no-color"]);
                 if (!(0, fs_1.existsSync)("./tmp")) {
                     yield (0, exec_1.exec)("mkdir", ["tmp"]);
                 }
-                steps.plan = yield (0, exec_1.exec)("terraform", [
+                this.vcs.steps.plan = yield (0, exec_1.exec)("terraform", [
                     "plan",
                     "-input=false",
                     "-no-color",
@@ -426,11 +422,11 @@ class Terraform {
                 ]);
                 const initLog = {
                     exitCode: 0,
-                    stdout: steps.init.stdout.concat(steps.fmt.stdout, steps.validate.stdout, steps.plan.stdout),
-                    stderr: steps.init.stderr.concat(steps.fmt.stderr, steps.validate.stderr, steps.plan.stderr),
+                    stdout: this.vcs.steps.init.stdout.concat(this.vcs.steps.fmt.stdout, this.vcs.steps.validate.stdout, this.vcs.steps.plan.stdout),
+                    stderr: this.vcs.steps.init.stderr.concat(this.vcs.steps.fmt.stderr, this.vcs.steps.validate.stderr, this.vcs.steps.plan.stderr),
                 };
                 let jsonPlan = '';
-                if (steps.plan.stdout != '') {
+                if (this.vcs.steps.plan.stdout != '') {
                     jsonPlan =
                         (yield (0, exec_1.exec)("terraform", [
                             "show",
@@ -438,13 +434,13 @@ class Terraform {
                             `${process.cwd()}\\tmp\\${options.runFolder}.out`,
                         ])).stdout;
                 }
-                console.log(`::endgroup::`);
+                this.vcs.logger.info(`::endgroup::`);
                 process.chdir(options.workDir);
-                result = { plan: jsonPlan, log: steps.plan, initLog };
+                result = { plan: jsonPlan, log: this.vcs.steps.plan, initLog };
             }
             catch (error) {
                 if (error instanceof Error) {
-                    console.log(error === null || error === void 0 ? void 0 : error.message); // setFailed(error?.message)
+                    this.vcs.logger.info(error === null || error === void 0 ? void 0 : error.message); // setFailed(error?.message)
                     result = { plan: '', log: { stderr: error === null || error === void 0 ? void 0 : error.message, stdout: '', exitCode: 0 }, initLog };
                 }
             }
@@ -454,21 +450,21 @@ class Terraform {
     setVersion(steps) {
         var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function* () {
-            steps.setupVersion = yield (0, exec_1.exec)("curl", [
+            this.vcs.steps.setupVersion = yield (0, exec_1.exec)("curl", [
                 "-L",
                 "https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh",
                 "|",
                 "bash",
             ]);
-            console.log("- ##### IAC Connectivity Risk Analysis ##### tfswitch Installed successfully");
+            this.vcs.logger.info("- ##### IAC Connectivity Risk Analysis ##### tfswitch Installed successfully");
             if (((_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.TF_VERSION) == "latest" ||
                 ((_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.TF_VERSION) == "") {
-                steps.switchVersion = yield (0, exec_1.exec)("tfswitch", ["--latest"]);
+                this.vcs.steps.switchVersion = yield (0, exec_1.exec)("tfswitch", ["--latest"]);
             }
             else {
-                steps.switchVersion = yield (0, exec_1.exec)("tfswitch", []);
+                this.vcs.steps.switchVersion = yield (0, exec_1.exec)("tfswitch", []);
             }
-            console.log("##### IAC Connectivity Risk Analysis ##### tfswitch version: " + ((_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.TF_VERSION));
+            this.vcs.logger.info("##### IAC Connectivity Risk Analysis ##### tfswitch version: " + ((_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.TF_VERSION));
         });
     }
     check(foldersToRunCheck, workDir) {
@@ -483,7 +479,7 @@ class Terraform {
                         folder: (_b = value === null || value === void 0 ? void 0 : value.split(/([/\\])/g)) === null || _b === void 0 ? void 0 : _b.pop(),
                         output,
                     };
-                    console.log(`- ##### IAC Connectivity Risk Analysis ##### Folder ${file.folder} Action UUID: ${file.uuid}`);
+                    this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### Folder ${file.folder} Action UUID: ${file.uuid}`);
                     res.push(file);
                 }
             });
@@ -491,10 +487,10 @@ class Terraform {
                 yield asyncIterable(foldersToRunCheck, this.terraform);
             }
             catch (error) {
-                console.log("- ##### IAC Connectivity Risk Analysis ##### Framework check failed: " + error);
+                this.vcs.logger.info("- ##### IAC Connectivity Risk Analysis ##### Framework check failed: " + error);
             }
-            console.log(`- ##### IAC Connectivity Risk Analysis ##### Finished Terraform check`);
-            // console.log(`::group::##### IAC Connectivity Risk Analysis ##### Files To Analyze\n ${JSON.stringify(res, null, "\t")}\n::endgroup::`);
+            this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### Finished Terraform check`);
+            // this.vcs.logger.info(`::group::##### IAC Connectivity Risk Analysis ##### Files To Analyze\n ${JSON.stringify(res, null, "\t")}\n::endgroup::`);
             return res;
         });
     }
@@ -531,16 +527,15 @@ const vcs_service_1 = __nccwpck_require__(9701);
 class Main {
     constructor() {
         var _a, _b, _c, _d;
-        this.steps = {};
         this.vcsType = ((_b = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.VCS) !== null && _b !== void 0 ? _b : 'github');
         this.frameworkType = ((_d = (_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.FRAMEWORK) !== null && _d !== void 0 ? _d : 'terraform');
     }
     run() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const vcs = new vcs_service_1.VersionControlService().getInstanceByType(this.vcsType);
-                const framework = new framework_service_1.FrameworkService().getInstanceByType(this.frameworkType, vcs);
-                const codeAnalyzer = new code_analysis_1.AshCodeAnalysis(vcs);
+                const vcs = yield new vcs_service_1.VersionControlService().getInstanceByType(this.vcsType);
+                const framework = yield new framework_service_1.FrameworkService().getInstanceByType(this.frameworkType, vcs);
+                const codeAnalyzer = yield new code_analysis_1.AshCodeAnalysis(vcs);
                 const isInitilizaed = yield codeAnalyzer.init();
                 if (codeAnalyzer.debugMode) {
                     yield (0, child_process_1.exec)(`rimraf ${vcs.workDir}`);
@@ -561,12 +556,12 @@ class Main {
                         }
                     }
                     else {
-                        vcs.logger.exit('- ##### IAC Connectivity Risk Analysis ##### NO FILES TO ANALYZE');
+                        vcs.logger.exit('- ##### IAC Connectivity Risk Analysis ##### No files to analyze');
                     }
                 }
             }
             catch (_e) {
-                console.log(_e);
+                throw new Error(_e);
             }
         });
     }
@@ -815,7 +810,7 @@ class Github {
                 }
             }
             catch (e) {
-                console.log(`::group::##### IAC Connectivity Risk Analysis ##### Upload file failed due to errors:\n${e}\n::endgroup::`);
+                this.logger.error(`::group::##### IAC Connectivity Risk Analysis ##### Upload file failed due to errors:\n${e}\n::endgroup::`);
                 return false;
             }
         });
@@ -1063,16 +1058,6 @@ class VersionControlFactory {
     }
 }
 exports.VersionControlFactory = VersionControlFactory;
-// const terraform = VersionControlFactory.getInstance("terraform");
-// const cloudformation = VersionControlFactory.getInstance("cloudformation");
-// console.log(
-//   "IaS versionControl type: ",
-//   new VersionControlService().getInstanceByType("cloudformation")
-// );
-// console.log(
-//     "IaS versionControl type: ",
-//     new VersionControlService().getInstanceByType("terraform")
-//   );
 
 
 /***/ }),

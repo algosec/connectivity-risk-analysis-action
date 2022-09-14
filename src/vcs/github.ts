@@ -277,7 +277,7 @@ export class Github implements IVersionControl {
         return false;
       }
     } catch(e){
-      console.log(`::group::##### IAC Connectivity Risk Analysis ##### Upload file failed due to errors:\n${e}\n::endgroup::`)
+      this.logger.error(`::group::##### IAC Connectivity Risk Analysis ##### Upload file failed due to errors:\n${e}\n::endgroup::`)
       return false
     }
    
