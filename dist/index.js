@@ -411,7 +411,7 @@ class Terraform {
                     "plan",
                     "-input=false",
                     "-no-color",
-                    `-out=${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
+                    `-out=${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\${options.runFolder}.out`,
                 ]);
                 const initLog = {
                     exitCode: 0,
@@ -424,7 +424,7 @@ class Terraform {
                         (yield (0, exec_1.exec)("terraform", [
                             "show",
                             "-json",
-                            `${process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
+                            `${process.cwd()}\\tmp\\${options.runFolder}.out`,
                         ])).stdout;
                 }
                 console.log(`::endgroup::`);
@@ -466,10 +466,10 @@ class Terraform {
             const asyncIterable = (iterable, action) => __awaiter(this, void 0, void 0, function* () {
                 var _a, _b;
                 for (const [index, value] of iterable === null || iterable === void 0 ? void 0 : iterable.entries()) {
-                    const output = yield action({ runFolder: (_a = value === null || value === void 0 ? void 0 : value.split(/([/\\])\w+/g)) === null || _a === void 0 ? void 0 : _a.pop(), workDir, path: value });
+                    const output = yield action({ runFolder: (_a = value === null || value === void 0 ? void 0 : value.split(/([/\\])/g)) === null || _a === void 0 ? void 0 : _a.pop(), workDir, path: value });
                     const file = {
                         uuid: uuid.v4(),
-                        folder: (_b = value === null || value === void 0 ? void 0 : value.split(/([/\\])\w+/g)) === null || _b === void 0 ? void 0 : _b.pop(),
+                        folder: (_b = value === null || value === void 0 ? void 0 : value.split(/([/\\])/g)) === null || _b === void 0 ? void 0 : _b.pop(),
                         output,
                     };
                     console.log(`- ##### IAC Connectivity Risk Analysis ##### Folder ${file.folder} Action UUID: ${file.uuid}`);
@@ -590,7 +590,7 @@ const risk_model_1 = __nccwpck_require__(7801);
 const uuid_by_string_1 = __importDefault(__nccwpck_require__(7777));
 const fs_1 = __nccwpck_require__(5747);
 // DEBUG LOCALLY
-// import {githubEventPayloadMock } from "../../test/mockData.azure"
+// import {githubEventPayloadMock } from "../../test/mockData.folder-error"
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 class Github {
     constructor() {

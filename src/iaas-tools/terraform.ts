@@ -35,7 +35,7 @@ export class Terraform implements IFramework {
         "plan",
         "-input=false",
         "-no-color",
-        `-out=${process?.cwd()}\\tmp\\tf-${options.runFolder}.out`,
+        `-out=${process?.cwd()}\\tmp\\${options.runFolder}.out`,
       ]);
       const initLog = {
         exitCode: 0,
@@ -57,7 +57,7 @@ export class Terraform implements IFramework {
             await exec("terraform", [
               "show",
               "-json",
-              `${process.cwd()}\\tmp\\tf-${options.runFolder}.out`,
+              `${process.cwd()}\\tmp\\${options.runFolder}.out`,
             ])
           ).stdout
       }
@@ -101,10 +101,10 @@ export class Terraform implements IFramework {
     const res: AnalysisFile[] = [];
     const asyncIterable = async (iterable, action) => {
       for (const [index, value] of iterable?.entries()) {
-        const output = await action({ runFolder: value?.split(/([/\\])\w+/g)?.pop(), workDir, path: value });
+        const output = await action({ runFolder: value?.split(/([/\\])/g)?.pop(), workDir, path: value });
         const file: AnalysisFile = {
           uuid: uuid.v4(),
-          folder: value?.split(/([/\\])\w+/g)?.pop(),
+          folder: value?.split(/([/\\])/g)?.pop(),
           output,
         };
         console.log(`- ##### IAC Connectivity Risk Analysis ##### Folder ${file.folder} Action UUID: ${file.uuid}`);
