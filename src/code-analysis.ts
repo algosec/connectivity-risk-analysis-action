@@ -18,7 +18,7 @@ export class AshCodeAnalysis {
 
   constructor(public vcs: IVersionControl) {}
 
-  async init(): Promise<void> {
+  async init(): Promise<boolean> {
     this.setSecrets();
     this.jwt = await this.auth(
       this.tenantId,
@@ -30,9 +30,10 @@ export class AshCodeAnalysis {
       this.vcs.logger.exit(
         "- ##### IAC Connectivity Risk Analysis ##### Not Authenticated"
       );
-      return;
+      return false;
     }
     this.steps.auth = { exitCode: 0, stdout: this.jwt, stderr: "" };
+    return true;
   }
 
   setSecrets(): void {

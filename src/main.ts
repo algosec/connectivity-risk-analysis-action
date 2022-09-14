@@ -29,13 +29,16 @@ export class Main {
         vcs
       );
       const codeAnalyzer = new AshCodeAnalysis(vcs);
-      await codeAnalyzer.init();
+      const isInitilizaed = await codeAnalyzer.init();
       if (codeAnalyzer.debugMode) {
         await exec(`rimraf ${vcs.workDir}`);
       }
-      const foldersToRunCheck = await vcs.checkForDiffByFileTypes(
-        framework.fileTypes
-      );
+      let foldersToRunCheck = []
+      if (isInitilizaed) {
+        foldersToRunCheck = await vcs.checkForDiffByFileTypes(
+          framework.fileTypes
+        );
+      }
       if (foldersToRunCheck?.length > 0) {
         const filesToAnalyze: AnalysisFile[] = await framework.check(
           foldersToRunCheck,

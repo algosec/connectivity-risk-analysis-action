@@ -38,9 +38,10 @@ class AshCodeAnalysis {
             this.jwt = yield this.auth(this.tenantId, this.clientId, this.clientSecret, this.loginAPI);
             if (!this.jwt || this.jwt == "") {
                 this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### Not Authenticated");
-                return;
+                return false;
             }
             this.steps.auth = { exitCode: 0, stdout: this.jwt, stderr: "" };
+            return true;
         });
     }
     setSecrets() {
@@ -528,11 +529,14 @@ class Main {
                 const vcs = new vcs_service_1.VersionControlService().getInstanceByType(this.vcsType);
                 const framework = new framework_service_1.FrameworkService().getInstanceByType(this.frameworkType, vcs);
                 const codeAnalyzer = new code_analysis_1.AshCodeAnalysis(vcs);
-                yield codeAnalyzer.init();
+                const isInitilizaed = yield codeAnalyzer.init();
                 if (codeAnalyzer.debugMode) {
                     yield (0, child_process_1.exec)(`rimraf ${vcs.workDir}`);
                 }
-                const foldersToRunCheck = yield vcs.checkForDiffByFileTypes(framework.fileTypes);
+                let foldersToRunCheck = [];
+                if (isInitilizaed) {
+                    foldersToRunCheck = yield vcs.checkForDiffByFileTypes(framework.fileTypes);
+                }
                 if ((foldersToRunCheck === null || foldersToRunCheck === void 0 ? void 0 : foldersToRunCheck.length) > 0) {
                     const filesToAnalyze = yield framework.check(foldersToRunCheck, vcs.workDir);
                     if ((filesToAnalyze === null || filesToAnalyze === void 0 ? void 0 : filesToAnalyze.length) > 0) {
