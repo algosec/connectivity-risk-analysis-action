@@ -1,11 +1,12 @@
 <a href="#"><img height="100" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/header.svg" /></a>
-The IaC Connectivity Risk Analysis github action runs on the current repository and return risks analysis for any changes in IaC framework
+The IaC Connectivity Risk Analysis GitHub Action runs on the current repository and return risks analysis for any changes in IaC framework.
 
 ### Basic Configuration
-Here is an example of all possible parameters passed as environment variables to the action, 
-please take in consideration that only the github and cloudflow credentials are mandatory in order to run this action,
-along with the credentials of the used provider/s which you can see in the next section Cloud Providers
+Here is an example of all possible parameters passed as environment variables to the action. 
+Take into consideration that GitHub and AlgoSec CloudFlow credentials are mandatory in order to run this action, along with the credentials of the provider/s used (you can see in the next section, Cloud Providers COnfiguration).
+
 Example usage 
+
 ```yaml
 name: 'Your Repo CI/CD Yaml Workflow'
 on:
@@ -29,16 +30,16 @@ jobs:
             # Optional: Fail or Continue if any risks were found after action finish
             STOP_WHEN_FAIL: true (default)
             
-            # Optional: IaC Framework type (terraform, cloudformation, etc...)
+            # Optional: IaC Framework type (Terraform, Cloudformation, etc...)
             FRAMEWORK: terraform (default)
             
-            # Optional: Version Control type (github, gitlab, etc...)
+            # Optional: Version Control type (GitHub, gitlab, etc...)
             VCS: github (default)
             
             # Github's Private Access Token
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
-            # Cloudflow credentials
+            # CloudFlow credentials
             CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
             CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
             CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
@@ -50,10 +51,10 @@ jobs:
 
 
 ## Cloud Providers configuration
-In order to run IaC on a certain provider, it is required to pass an authenticatation in one of the following options:
+In order to run IaC on a specific provider, it is required to pass an authentication in one of the following options:
 
-- Environment variables - most cloud providers will authenticate automatically using environment varaibles
-- Action - if environment variables isn't an option, try looking for an action for this provider, using github marketplace
+- Environment variables - most cloud providers will authenticate automatically using environment variables
+- Action - if environment variables aren't an option, try looking for an action for this provider, using the GitHub marketplace
 
 ### AWS
 
@@ -76,7 +77,7 @@ jobs:
             CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
             CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}  
             # Use AWS Environment Variables or
-            # An external Action to authenticate with provider
+            # an external Action to authenticate with provider
             # https://github.com/marketplace/actions/configure-aws-credentials-action-for-github-actions
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}   
@@ -105,7 +106,7 @@ jobs:
             CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
             CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
             # Use AWS Environment Variables or
-            # An external Action to authenticate with provider
+            # an external Action to authenticate with provider
             # https://github.com/marketplace/actions/azure-login
             ARM_SUBSCRIPTION_ID: ${{ secrets.AZ_SUBSCRIPTION_ID }}
             ARM_TENANT_ID: ${{ secrets.AZ_TENANT_ID }}
@@ -134,8 +135,8 @@ jobs:
         - name: Checkout Repo
           uses: @actions/checkout@v3
           
-          # Need to use @actions/checkout@v3 before Authenticate to Google Cloud action
-          # Read how to create GCP_CREDENTIALS key from GCP Json File:
+          # Need to use @actions/checkout@v3 before Authenticate Google Cloud action
+          # Read how to create GCP_CREDENTIALS key from GCP Json file:
           # https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
           # Auth Gcp Action 
           # https://github.com/google-github-actions/auth
