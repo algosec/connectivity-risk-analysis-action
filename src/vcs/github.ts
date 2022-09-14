@@ -79,6 +79,20 @@ export class Github implements IVersionControl {
     }
   
 
+   getFoldersList(dirName): string[] {
+      let folders: string[] = [];
+      const items = readdirSync(dirName, { withFileTypes: true });
+  
+      for (const item of items) {
+          if (item.isDirectory()) {
+              folders = [...folders, ...this.getFoldersList(`${dirName}/${item.name}`)];
+              folders.push(`${dirName}/${item.name}`);
+          } 
+      }
+  
+      return folders;
+  };
+
 
   hasFileType(dir:string, fileTypes: string[]): boolean {
     const files = readdirSync(dir);
@@ -210,7 +224,7 @@ export class Github implements IVersionControl {
     let diffFolders: any[] = [];
     try {
       if (this.firstRun){
-        const allFolders = await this.getDirectories(this.workDir)
+        const allFolders = await this.getFoldersList(this.workDir)
         diffFolders = allFolders.filter(folder => this.hasFileType(folder, fileTypes))
       } else {
         const diffs = await this.getDiff(this.octokit);
