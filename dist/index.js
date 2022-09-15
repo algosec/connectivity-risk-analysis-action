@@ -544,7 +544,7 @@ class Github {
         this.firstRun = ((_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.FIRST_RUN) == 'true';
         this.stopWhenFail = ((_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.STOP_WHEN_FAIL) != 'false';
         this.http = new http_client_1.HttpClient();
-        const prefix = (str, group = false, close = true) => (group ? '::group::' : '-') + ' ##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '');
+        const prefix = (str, group = false, close = true) => (group ? '::group::' : '- ') + '##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '');
         this.logger = {
             debug: (str, group = false) => (0, core_1.debug)(prefix(str, group)),
             error: (str, group = false) => (0, core_1.error)(prefix(str, group)),
@@ -832,15 +832,34 @@ class Github {
         const CODE_BLOCK = "```";
         analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result.sort((a, b) => parseInt(risk_model_1.severityOrder[a.riskSeverity]) -
             parseInt(risk_model_1.severityOrder[b.riskSeverity])).forEach((risk) => {
+            var _a;
             risksList += `<details>\n
 <summary><a href="#"><img  width="10" height="10" src="${this.assetsUrl}/${risk.riskSeverity}.svg" /></a>  ${risk.riskId}</summary> \n
 ### **Title:**\n${risk.riskTitle}\n
 ### **Description:**\n${risk.riskDescription}\n
 ### **Recommendation:**\n${risk.riskRecommendation.toString()}\n
-### **Details:**\n
-${CODE_BLOCK}\n
-${JSON.stringify(risk.items, null, "\t")}\n
-${CODE_BLOCK}\n
+### **Details:**\n` +
+                // ${CODE_BLOCK}\n
+                // ${JSON.stringify(risk.items, null, "\t")}\n
+                // ${CODE_BLOCK}\n
+                `<table>
+<thead>\n
+<tr>\n
+<th align="left" scope="col">From Port</th>\n
+<th align="left" scope="col">To Port</th>\n
+<th align="left" scope="col">Ip Protocol</th>\n
+<th align="left" scope="col">Ip Range</th>\n
+</tr>\n
+</thead>\n
+<tbody id="tableBody">\n
+${(_a = risk === null || risk === void 0 ? void 0 : risk.items) === null || _a === void 0 ? void 0 : _a.map(item => `<tr>\n
+  <td>${item.fromPort}</td>\n
+  <td>${item.toPort}</td>\n
+  <td>${item.ipProtocol}</td>\n
+  <td>${item.ipRange.join(", ")}</td>\n
+  </tr>\n`).join('')}                
+</tbody>
+</table>\n
 </details>\n`;
         });
         const severityCount = `<div  align="right">${this.count(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "critical") > 0

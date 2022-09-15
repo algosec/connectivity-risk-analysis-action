@@ -38,7 +38,7 @@ export class Github implements IVersionControl {
     this.firstRun = process?.env?.FIRST_RUN == 'true';
     this.stopWhenFail = process?.env?.STOP_WHEN_FAIL != 'false';
     this.http = new HttpClient();
-    const prefix = (str: string, group = false, close = true) => (group ? '::group::' : '-') + ' ##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '')
+    const prefix = (str: string, group = false, close = true) => (group ? '::group::' : '- ') + '##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '')
     this.logger = { 
             debug: (str: string, group = false) => debug(prefix(str, group)), 
             error: (str: string, group = false) => error(prefix(str, group)), 
@@ -408,10 +408,30 @@ export class Github implements IVersionControl {
 ### **Title:**\n${risk.riskTitle}\n
 ### **Description:**\n${risk.riskDescription}\n
 ### **Recommendation:**\n${risk.riskRecommendation.toString()}\n
-### **Details:**\n
-${CODE_BLOCK}\n
-${JSON.stringify(risk.items, null, "\t")}\n
-${CODE_BLOCK}\n
+### **Details:**\n`+
+// ${CODE_BLOCK}\n
+// ${JSON.stringify(risk.items, null, "\t")}\n
+// ${CODE_BLOCK}\n
+`<table>
+<thead>\n
+<tr>\n
+<th align="left" scope="col">From Port</th>\n
+<th align="left" scope="col">To Port</th>\n
+<th align="left" scope="col">Ip Protocol</th>\n
+<th align="left" scope="col">Ip Range</th>\n
+</tr>\n
+</thead>\n
+<tbody id="tableBody">\n
+${risk?.items?.map(item => 
+  `<tr>\n
+  <td>${item.fromPort}</td>\n
+  <td>${item.toPort}</td>\n
+  <td>${item.ipProtocol}</td>\n
+  <td>${item.ipRange.join(", ")}</td>\n
+  </tr>\n`
+).join('')}                
+</tbody>
+</table>\n
 </details>\n`;
       });
     const severityCount = `<div  align="right">${
