@@ -1,15 +1,10 @@
-import { exec } from "child_process";
+
 import { AshCodeAnalysis } from "./code-analysis";
-import { ExecSteps, AnalysisFile } from "./common/exec";
+import { RiskAnalysisFile } from "./common/risk.model";
 import { FrameworkKeys, IFramework } from "./iaas-tools/framework.model";
 import { FrameworkService } from "./iaas-tools/framework.service";
 import { IVersionControl, VersionControlKeys } from "./vcs/vcs.model";
 import { VersionControlService } from "./vcs/vcs.service";
-// import {
-//     codeAnalysisResponses,
-//     filesToAnalyze
-// } from "../test/mockData.gcp"
-
 export class Main {
   frameworkType: FrameworkKeys;
   vcsType: VersionControlKeys;
@@ -30,7 +25,7 @@ export class Main {
       const codeAnalyzer = await new AshCodeAnalysis(vcs);
       const isInitilizaed = await codeAnalyzer.init();
       if (codeAnalyzer.debugMode) {
-        await exec(`rimraf ${vcs.workDir}`);
+        // await vcs.exec(`rimraf ${vcs.workDir}`);
       }
       let foldersToRunCheck = []
       if (isInitilizaed && framework) {
@@ -41,7 +36,7 @@ export class Main {
         vcs.logger.exit()
       }
       if (foldersToRunCheck?.length > 0) {
-        const filesToAnalyze: AnalysisFile[] = await framework?.check(
+        const filesToAnalyze: RiskAnalysisFile[] = await framework?.check(
           foldersToRunCheck,
           vcs.workDir
         );
@@ -53,7 +48,7 @@ export class Main {
             await vcs.parseOutput(filesToAnalyze, codeAnalysisResponses);
           }
         }else {
-          vcs.logger.exit('- ##### IAC Connectivity Risk Analysis ##### No files to analyze')
+          vcs.logger.exit('- No files to analyze')
         }
       }
     } catch (_e) {

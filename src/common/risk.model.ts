@@ -1,3 +1,5 @@
+import { ExecOutput } from "../vcs/vcs.model";
+
 export enum RiskSeverity {
   "critical" = 0,
   "high" = 1,
@@ -7,7 +9,7 @@ export enum RiskSeverity {
 
 export const severityOrder = RiskSeverity;
 
-export interface AnalysisResult {
+export interface RiskAnalysisResult {
   proceeded_file: string;
   success: boolean;
   additions: AnalysisResultAdditions;
@@ -35,4 +37,11 @@ export interface RiskItem {
   ipProtocol: string;
   ipRange: number[];
   vendor?: string
+}
+
+
+export interface RiskAnalysisFile {
+  uuid: string;
+  output: {plan: string, log: ExecOutput, initLog: ExecOutput};
+  folder: string;
 }

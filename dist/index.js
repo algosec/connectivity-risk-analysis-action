@@ -36,7 +36,7 @@ class AshCodeAnalysis {
             this.setSecrets();
             this.jwt = yield this.auth(this.tenantId, this.clientId, this.clientSecret, this.loginAPI);
             if (!this.jwt || this.jwt == "") {
-                this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### Not Authenticated");
+                this.vcs.logger.exit("Not Authenticated");
                 return false;
             }
             this.vcs.steps.auth = { exitCode: 0, stdout: this.jwt, stderr: "" };
@@ -68,17 +68,17 @@ class AshCodeAnalysis {
                 const res = yield this.vcs.http.post(loginAPI, JSON.stringify(payload), headers);
                 const response_code = res.message.statusCode;
                 const data = JSON.parse(yield res.readBody());
-                this.gcpCredsJson ? yield this.createGcpCredentials(this.gcpCredsJson) : null;
+                // this.gcpCredsJson ? await this.createGcpCredentials(this.gcpCredsJson) : null
                 if (response_code >= 200 && response_code <= 300) {
-                    this.vcs.logger.info("- ##### IAC Connectivity Risk Analysis ##### Passed authentication vs CF's login. new token has been generated.");
+                    this.vcs.logger.info("Passed authentication vs CF's login. new token has been generated.");
                     return data === null || data === void 0 ? void 0 : data.access_token;
                 }
                 else {
-                    this.vcs.logger.exit(`- ##### IAC Connectivity Risk Analysis ##### Failed to generate token.\n Error code ${response_code}, msg: ${JSON.stringify(data, null, "\t")}`);
+                    this.vcs.logger.exit(`Failed to generate token.\n Error code ${response_code}, msg: ${JSON.stringify(data, null, "\t")}`);
                 }
             }
             catch (error) {
-                this.vcs.logger.exit(`- ##### IAC Connectivity Risk Analysis ##### Failed to generate token. Error msg: ${error.toString()}`);
+                this.vcs.logger.exit(`Failed to generate token. Error msg: ${error.toString()}`);
             }
             return "";
         });
@@ -103,18 +103,18 @@ class AshCodeAnalysis {
                 filesToUpload.forEach((file) => fileUploadPromises.push(this.uploadFile(file)));
                 const responses = yield Promise.all(fileUploadPromises);
                 if (responses.filter(response => response).length == 0) {
-                    this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### No files were uploaded, please check logs");
+                    this.vcs.logger.exit("No files were uploaded, please check logs");
                 }
                 else if (responses.some(response => !response)) {
-                    this.vcs.logger.error("- ##### IAC Connectivity Risk Analysis ##### Some files failed to upload, please check logs");
+                    this.vcs.logger.error("Some files failed to upload, please check logs");
                 }
                 else {
-                    this.vcs.logger.info("- ##### IAC Connectivity Risk Analysis ##### File/s were uploaded successfully");
+                    this.vcs.logger.info("File/s were uploaded successfully");
                 }
             }
             catch (e) {
-                this.vcs.steps.upload = { exitCode: 0, stdout: '', stderr: "- ##### IAC Connectivity Risk Analysis ##### Upload Failure: " + e };
-                this.vcs.logger.error("- ##### IAC Connectivity Risk Analysis ##### Some files failed to upload, please check logs");
+                this.vcs.steps.upload = { exitCode: 0, stdout: '', stderr: "Upload Failure: " + e };
+                this.vcs.logger.error("Some files failed to upload, please check logs");
             }
         });
     }
@@ -130,11 +130,11 @@ class AshCodeAnalysis {
                     }
                 }
                 else {
-                    this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### No plan was created for: ${file.folder}, please check terraform logs`);
+                    this.vcs.logger.info(`No plan was created for: ${file.folder}, please check terraform logs`);
                 }
             }
             catch (e) {
-                this.vcs.logger.error(`- ##### IAC Connectivity Risk Analysis ##### File upload for: ${file.folder} failed due to errors:\n ${e}`);
+                this.vcs.logger.error(`File upload for: ${file.folder} failed due to errors:\n ${e}`);
                 res = false;
             }
             return res;
@@ -151,15 +151,15 @@ class AshCodeAnalysis {
                     .forEach((file) => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
                 analysisResult = yield Promise.all(codeAnalysisPromises);
                 if (!analysisResult || (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.length) == 0) {
-                    this.vcs.steps.analysis = { exitCode: 0, stdout: '', stderr: "- ##### IAC Connectivity Risk Analysis ##### Analysis failed, please contact support." };
-                    this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### Code Analysis failed");
+                    this.vcs.steps.analysis = { exitCode: 0, stdout: '', stderr: "Analysis failed, please contact support." };
+                    this.vcs.logger.exit("Code Analysis failed");
                     analysisResult = [];
                 }
-                this.vcs.logger.debug(`::group::##### IAC Connectivity Risk Analysis ##### Risk analysis result:\n${JSON.stringify(analysisResult, null, "\t")}\n::endgroup::`);
+                this.vcs.logger.debug(`Risk analysis result:\n${JSON.stringify(analysisResult, null, "\t")}\n`, true);
             }
             catch (e) {
-                this.vcs.steps.analysis = { exitCode: 0, stdout: '', stderr: "- ##### IAC Connectivity Risk Analysis ##### Analysis failed, please contact support.\n" + e };
-                this.vcs.logger.exit(`- ##### IAC Connectivity Risk Analysis ##### Code Analysis failed due to errors: ${e}`);
+                this.vcs.steps.analysis = { exitCode: 0, stdout: '', stderr: "Analysis failed, please contact support.\n" + e };
+                this.vcs.logger.exit(`Code Analysis failed due to errors: ${e}`);
                 analysisResult = [];
             }
             return analysisResult;
@@ -168,22 +168,22 @@ class AshCodeAnalysis {
     pollCodeAnalysisResponse(file) {
         return __awaiter(this, void 0, void 0, function* () {
             let analysisResult = yield this.checkCodeAnalysisResponse(file);
-            this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response for folder: ${file.folder}`);
+            this.vcs.logger.info(`Waiting for risk analysis response for folder: ${file.folder}`);
             for (let i = 0; i < 60; i++) {
                 yield this.wait(5000);
                 analysisResult = yield this.checkCodeAnalysisResponse(file);
                 if (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.additions) {
                     analysisResult.folder = file === null || file === void 0 ? void 0 : file.folder;
-                    this.vcs.logger.debug("::group::##### IAC Connectivity Risk Analysis ##### Response:\n" + JSON.stringify(analysisResult) + "\n::endgroup::");
+                    this.vcs.logger.debug("Response:\n" + JSON.stringify(analysisResult) + "\n", true);
                     break;
                 }
                 else if (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error) {
-                    this.vcs.logger.error("- ##### IAC Connectivity Risk Analysis ##### Poll Request failed for folder: " + (file === null || file === void 0 ? void 0 : file.folder) + (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error));
+                    this.vcs.logger.error("Poll Request failed for folder: " + (file === null || file === void 0 ? void 0 : file.folder) + (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error));
                     break;
                 }
             }
             if (!analysisResult) {
-                this.vcs.logger.error("- ##### IAC Connectivity Risk Analysis ##### Poll Request has timed out for folder: " + (file === null || file === void 0 ? void 0 : file.folder));
+                this.vcs.logger.error("Poll Request has timed out for folder: " + (file === null || file === void 0 ? void 0 : file.folder));
             }
             return analysisResult;
         });
@@ -229,59 +229,6 @@ exports.AshCodeAnalysis = AshCodeAnalysis;
 
 /***/ }),
 
-/***/ 898:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.count = exports.exec = void 0;
-const exec_1 = __nccwpck_require__(1514);
-const core_1 = __nccwpck_require__(2186);
-function exec(cmd, args) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const res = {
-            stdout: "",
-            stderr: "",
-            exitCode: 0,
-        };
-        try {
-            const code = yield (0, exec_1.exec)(cmd, args, {
-                listeners: {
-                    stdout(data) {
-                        res.stdout += data.toString();
-                    },
-                    stderr(data) {
-                        res.stderr += data.toString();
-                    },
-                },
-            });
-            res.exitCode = code;
-            return res;
-        }
-        catch (err) {
-            const msg = `Command '${cmd}' failed with args '${args.join(" ")}': ${res.stderr}: ${err}`;
-            (0, core_1.debug)(`::group::##### IAC Connectivity Risk Analysis ##### @actions/exec.exec() threw an error: ${msg}::endgroup::`);
-            throw new Error(msg);
-        }
-    });
-}
-exports.exec = exec;
-const count = (array, property, value) => array.filter((obj) => obj[property] === value).length;
-exports.count = count;
-
-
-/***/ }),
-
 /***/ 7801:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -307,20 +254,10 @@ exports.severityOrder = RiskSeverity;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.FrameworkFactory = exports.frameworkMap = exports.CloudFormation = void 0;
+exports.FrameworkFactory = exports.frameworkMap = void 0;
 const terraform_1 = __nccwpck_require__(7039);
-class CloudFormation {
-    constructor(vcs) {
-        this.vcs = vcs;
-        this.type = "cloudformation";
-        this.fileTypes = ["json", "yaml"];
-    }
-    check(foldersToRunCheck, workDir) { }
-}
-exports.CloudFormation = CloudFormation;
 exports.frameworkMap = {
-    terraform: terraform_1.Terraform,
-    cloudformation: CloudFormation,
+    terraform: terraform_1.Terraform
 };
 class FrameworkFactory {
     static getInstance(frameworkKey, vcs) {
@@ -328,7 +265,7 @@ class FrameworkFactory {
             return new exports.frameworkMap[frameworkKey](vcs);
         }
         catch (error) {
-            throw new Error("- ##### IAC Connectivity Risk Analysis ##### Unsupported framework type: " + frameworkKey);
+            throw new Error("Unsupported framework type: " + frameworkKey);
         }
     }
 }
@@ -400,7 +337,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Terraform = void 0;
-const exec_1 = __nccwpck_require__(898);
 const fs_1 = __nccwpck_require__(5747);
 const uuid = __importStar(__nccwpck_require__(5840));
 class Terraform {
@@ -415,14 +351,14 @@ class Terraform {
             const initLog = { stdout: '', stderr: '', exitCode: 0 };
             try {
                 process.chdir(`${options.path}`);
-                vcs.logger.info(`::group::##### IAC Connectivity Risk Analysis ##### Run Terraform on folder ${options.runFolder}`);
-                vcs.steps.init = yield (0, exec_1.exec)("terraform", ["init"]);
-                vcs.steps.fmt = yield (0, exec_1.exec)("terraform", ["fmt", "-diff"]);
-                vcs.steps.validate = yield (0, exec_1.exec)("terraform", ["validate", "-no-color"]);
+                vcs.logger.info(`Run Terraform on folder ${options.runFolder}`);
+                vcs.steps.init = yield vcs.exec("terraform", ["init"]);
+                vcs.steps.fmt = yield vcs.exec("terraform", ["fmt", "-diff"]);
+                vcs.steps.validate = yield vcs.exec("terraform", ["validate", "-no-color"]);
                 if (!(0, fs_1.existsSync)("./tmp")) {
-                    yield (0, exec_1.exec)("mkdir", ["tmp"]);
+                    yield vcs.exec("mkdir", ["tmp"]);
                 }
-                vcs.steps.plan = yield (0, exec_1.exec)("terraform", [
+                vcs.steps.plan = yield vcs.exec("terraform", [
                     "plan",
                     "-input=false",
                     "-no-color",
@@ -436,13 +372,13 @@ class Terraform {
                 let jsonPlan = '';
                 if (vcs.steps.plan.stdout != '') {
                     jsonPlan =
-                        (yield (0, exec_1.exec)("terraform", [
+                        (yield vcs.exec("terraform", [
                             "show",
                             "-json",
                             `${process.cwd()}\\tmp\\${options.runFolder}.out`,
                         ])).stdout;
                 }
-                vcs.logger.info(`::endgroup::`);
+                vcs.logger.info(``);
                 process.chdir(options.workDir);
                 result = { plan: jsonPlan, log: vcs.steps.plan, initLog };
             }
@@ -455,24 +391,24 @@ class Terraform {
             return result;
         });
     }
-    setVersion(steps) {
+    setVersion() {
         var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function* () {
-            this.vcs.steps.setupVersion = yield (0, exec_1.exec)("curl", [
+            this.vcs.steps.setupVersion = yield this.vcs.exec("curl", [
                 "-L",
                 "https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh",
                 "|",
                 "bash",
             ]);
-            this.vcs.logger.info("- ##### IAC Connectivity Risk Analysis ##### tfswitch Installed successfully");
+            this.vcs.logger.info("tfswitch Installed successfully");
             if (((_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.TF_VERSION) == "latest" ||
                 ((_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.TF_VERSION) == "") {
-                this.vcs.steps.switchVersion = yield (0, exec_1.exec)("tfswitch", ["--latest"]);
+                this.vcs.steps.switchVersion = yield this.vcs.exec("tfswitch", ["--latest"]);
             }
             else {
-                this.vcs.steps.switchVersion = yield (0, exec_1.exec)("tfswitch", []);
+                this.vcs.steps.switchVersion = yield this.vcs.exec("tfswitch", []);
             }
-            this.vcs.logger.info("##### IAC Connectivity Risk Analysis ##### tfswitch version: " + ((_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.TF_VERSION));
+            this.vcs.logger.info("tfswitch version: " + ((_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.TF_VERSION));
         });
     }
     check(foldersToRunCheck, workDir) {
@@ -487,7 +423,7 @@ class Terraform {
                         folder: (_b = value === null || value === void 0 ? void 0 : value.split(/([/\\])/g)) === null || _b === void 0 ? void 0 : _b.pop(),
                         output,
                     };
-                    this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### Folder ${file.folder} Action UUID: ${file.uuid}`);
+                    this.vcs.logger.info(`Folder ${file.folder} Action UUID: ${file.uuid}`);
                     res.push(file);
                 }
             });
@@ -495,10 +431,10 @@ class Terraform {
                 yield asyncIterable(foldersToRunCheck, this.terraform);
             }
             catch (error) {
-                this.vcs.logger.info("- ##### IAC Connectivity Risk Analysis ##### Framework check failed: " + error);
+                this.vcs.logger.info("Framework check failed: " + error);
             }
-            this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### Finished Terraform check`);
-            // this.vcs.logger.info(`::group::##### IAC Connectivity Risk Analysis ##### Files To Analyze\n ${JSON.stringify(res, null, "\t")}\n::endgroup::`);
+            this.vcs.logger.info(`Finished Terraform check`);
+            // this.vcs.logger.info(`Files To Analyze\n ${JSON.stringify(res, null, "\t")}\n`);
             return res;
         });
     }
@@ -524,14 +460,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Main = void 0;
-const child_process_1 = __nccwpck_require__(3129);
 const code_analysis_1 = __nccwpck_require__(1153);
 const framework_service_1 = __nccwpck_require__(2162);
 const vcs_service_1 = __nccwpck_require__(9701);
-// import {
-//     codeAnalysisResponses,
-//     filesToAnalyze
-// } from "../test/mockData.gcp"
 class Main {
     constructor() {
         var _a, _b, _c, _d;
@@ -546,7 +477,7 @@ class Main {
                 const codeAnalyzer = yield new code_analysis_1.AshCodeAnalysis(vcs);
                 const isInitilizaed = yield codeAnalyzer.init();
                 if (codeAnalyzer.debugMode) {
-                    yield (0, child_process_1.exec)(`rimraf ${vcs.workDir}`);
+                    // await vcs.exec(`rimraf ${vcs.workDir}`);
                 }
                 let foldersToRunCheck = [];
                 if (isInitilizaed && framework) {
@@ -564,7 +495,7 @@ class Main {
                         }
                     }
                     else {
-                        vcs.logger.exit('- ##### IAC Connectivity Risk Analysis ##### No files to analyze');
+                        vcs.logger.exit('- No files to analyze');
                     }
                 }
             }
@@ -602,13 +533,9 @@ const github_1 = __nccwpck_require__(5438);
 const core_1 = __nccwpck_require__(2186);
 const http_client_1 = __nccwpck_require__(6255);
 const exec_1 = __nccwpck_require__(1514);
-const exec_2 = __nccwpck_require__(898);
-const risk_model_1 = __nccwpck_require__(7801);
 const uuid_by_string_1 = __importDefault(__nccwpck_require__(7777));
 const fs_1 = __nccwpck_require__(5747);
-// DEBUG LOCALLY
-// import {githubEventPayloadMock } from "../../test/mockData.folder-error"
-// context.payload = githubEventPayloadMock as WebhookPayload & any
+const risk_model_1 = __nccwpck_require__(7801);
 class Github {
     constructor() {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t;
@@ -618,7 +545,13 @@ class Github {
         this.firstRun = ((_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.FIRST_RUN) == 'true';
         this.stopWhenFail = ((_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.STOP_WHEN_FAIL) != 'false';
         this.http = new http_client_1.HttpClient();
-        this.logger = { debug: core_1.debug, error: core_1.error, exit: core_1.setFailed, info: core_1.info };
+        const prefix = (str, group = false) => group ? '::group::' : '-' + ' ##### IAC Connectivity Risk Analysis ##### ' + str + group ? '::endgroup::' : 0;
+        this.logger = {
+            debug: (str, group = false) => (0, core_1.debug)(prefix(str, group)),
+            error: (str, group = false) => (0, core_1.error)(prefix(str, group)),
+            exit: (str, group = false) => (0, core_1.setFailed)(prefix(str, group)),
+            info: (str, group = false) => (0, core_1.info)(prefix(str, group))
+        };
         this.workspace = (_d = (_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.GITHUB_WORKSPACE) !== null && _d !== void 0 ? _d : "";
         this.token = (_f = (_e = process === null || process === void 0 ? void 0 : process.env) === null || _e === void 0 ? void 0 : _e.GITHUB_TOKEN) !== null && _f !== void 0 ? _f : "";
         this.sha = (_h = (_g = process === null || process === void 0 ? void 0 : process.env) === null || _g === void 0 ? void 0 : _g.GITHUB_SHA) !== null && _h !== void 0 ? _h : "";
@@ -633,6 +566,37 @@ class Github {
         this.assetsUrl =
             "https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons";
         this.cfApiUrl = (_t = (_s = process === null || process === void 0 ? void 0 : process.env) === null || _s === void 0 ? void 0 : _s.CF_API_URL) !== null && _t !== void 0 ? _t : "https://api-feature-cs-0015342.dev.cloudflow.algosec.com/cloudflow/api/devsecops/v1";
+    }
+    exec(cmd, args) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const res = {
+                stdout: "",
+                stderr: "",
+                exitCode: 0,
+            };
+            try {
+                const code = yield (0, exec_1.exec)(cmd, args, {
+                    listeners: {
+                        stdout(data) {
+                            res.stdout += data.toString();
+                        },
+                        stderr(data) {
+                            res.stderr += data.toString();
+                        },
+                    },
+                });
+                res.exitCode = code;
+                return res;
+            }
+            catch (err) {
+                const msg = `Command '${cmd}' failed with args '${args.join(" ")}': ${res.stderr}: ${err}`;
+                (0, core_1.debug)(`@actions/exec.exec() threw an error: ${msg}`);
+                throw new Error(msg);
+            }
+        });
+    }
+    count(array, property, value) {
+        return array.filter((obj) => obj[property] === value).length;
     }
     getDiff(octokit) {
         var _a, _b, _c, _d, _e, _f, _g, _h;
@@ -755,13 +719,13 @@ class Github {
     }
     prepareRepo() {
         return __awaiter(this, void 0, void 0, function* () {
-            this.steps.gitClone = yield this.clone(this.workDir); // await exec('git' , ['clone', this.getRepoRemoteUrl(), this.workDir])
+            this.steps.gitClone = yield this.clone(this.workDir); // await this.exec('git' , ['clone', this.getRepoRemoteUrl(), this.workDir])
             process.chdir(this.workDir);
             this.steps.gitFetch = yield this.fetch([
                 "origin",
                 `pull/${this.pullRequest}/head:${this.actionUuid}`,
-            ]); // await exec('git' , ['fetch', 'origin', `pull/${this.pullRequest}/head:${this.actionUuid}`])
-            this.steps.gitCheckout = yield this.checkout(this.actionUuid); // await exec('git' , ['checkout', this.actionUuid])
+            ]); // await this.exec('git' , ['fetch', 'origin', `pull/${this.pullRequest}/head:${this.actionUuid}`])
+            this.steps.gitCheckout = yield this.checkout(this.actionUuid); // await this.exec('git' , ['checkout', this.actionUuid])
         });
     }
     checkForDiffByFileTypes(fileTypes) {
@@ -789,10 +753,10 @@ class Github {
                     this.logger.exit(error === null || error === void 0 ? void 0 : error.message);
             }
             if ((diffFolders === null || diffFolders === void 0 ? void 0 : diffFolders.length) == 0) {
-                this.logger.info("- ##### IAC Connectivity Risk Analysis ##### No changes were found");
+                this.logger.info("No changes were found");
                 return [];
             }
-            this.logger.info(`- ##### IAC Connectivity Risk Analysis ##### Running IaC on folders:\n ${diffFolders.join(',\n')}`);
+            this.logger.info(`Running IaC on folders:\n ${diffFolders.join(',\n')}`);
             return diffFolders;
         });
     }
@@ -818,7 +782,7 @@ class Github {
                 }
             }
             catch (e) {
-                this.logger.error(`::group::##### IAC Connectivity Risk Analysis ##### Upload file failed due to errors:\n${e}\n::endgroup::`);
+                this.logger.error(`Upload file failed due to errors:\n${e}\n`);
                 return false;
             }
         });
@@ -831,18 +795,18 @@ class Github {
             if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => !(response === null || response === void 0 ? void 0 : response.success))) {
                 let errors = "";
                 Object.keys(this.steps).forEach(step => { var _a, _b; return errors += ((_a = this === null || this === void 0 ? void 0 : this.steps[step]) === null || _a === void 0 ? void 0 : _a.stderr) != '' ? (_b = this === null || this === void 0 ? void 0 : this.steps[step]) === null || _b === void 0 ? void 0 : _b.stderr : ''; });
-                this.logger.exit("- ##### IAC Connectivity Risk Analysis ##### The risks analysis process failed.\n" + errors);
+                this.logger.exit("The risks analysis process failed.\n" + errors);
             }
             else {
-                this.logger.info("- ##### IAC Connectivity Risk Analysis ##### Creating Risks Report");
+                this.logger.info("Creating Risks Report");
                 if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => { var _a, _b; return ((_b = (_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })) {
                     if (this.stopWhenFail)
-                        this.logger.exit("- ##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report");
+                        this.logger.exit("The risks analysis process completed successfully with risks, please check report");
                     else
-                        this.logger.info("- ##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report");
+                        this.logger.info("The risks analysis process completed successfully with risks, please check report");
                 }
                 else {
-                    this.logger.info("- ##### IAC Connectivity Risk Analysis ##### Analysis process completed successfully without any risks");
+                    this.logger.info("Analysis process completed successfully without any risks");
                 }
             }
         });
@@ -878,25 +842,25 @@ ${JSON.stringify(risk.items, null, "\t")}\n
 ${CODE_BLOCK}\n
 </details>\n`;
         });
-        const severityCount = `<div  align="right">${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "critical") > 0
+        const severityCount = `<div  align="right">${this.count(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "critical") > 0
             ? `<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/critical.svg" /></a>&nbsp;` +
-                (0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "critical") +
+                this.count(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "critical") +
                 "&nbsp;Critical"
-            : ""}${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "high") > 0
+            : ""}${this.count(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "high") > 0
             ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/high.svg" /></a>&nbsp;` +
-                (0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "high") +
+                this.count(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "high") +
                 "&nbsp;High"
-            : ""}${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "medium") > 0
+            : ""}${this.count(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "medium") > 0
             ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/medium.svg" /></a>&nbsp;` +
-                (0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "medium") +
+                this.count(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "medium") +
                 "&nbsp;Medium"
-            : ""}${(0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "low") > 0
+            : ""}${this.count(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "low") > 0
             ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/low.svg" /></a>&nbsp;` +
-                (0, exec_2.count)(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "low") +
+                this.count(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "low") +
                 "&nbsp;Low"
             : ""}</div>`;
         const codeAnalysisContent = `<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${this.assetsUrl}/warning.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder +
-            (((_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.length) == 0 ? "- No Risks Found" : "")}</b></h3>${((_b = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0 ? severityCount : ""}</summary>\n${risksList}\n`;
+            (((_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.length) == 0 ? "No Risks Found" : "")}</b></h3>${((_b = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0 ? severityCount : ""}</summary>\n${risksList}\n`;
         return codeAnalysisContent;
     }
     buildCommentReportError(file) {
@@ -979,21 +943,21 @@ ${((_l = (_k = file === null || file === void 0 ? void 0 : file.output) === null
         });
         const risksSummary = `
 \n
-<div align="right">${(0, exec_2.count)(mergedRisks, "riskSeverity", "critical") > 0
+<div align="right">${this.count(mergedRisks, "riskSeverity", "critical") > 0
             ? `<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/critical.svg" /></a>&nbsp;` +
-                (0, exec_2.count)(mergedRisks, "riskSeverity", "critical") +
+                this.count(mergedRisks, "riskSeverity", "critical") +
                 "&nbsp;Critical"
-            : ""}${(0, exec_2.count)(mergedRisks, "riskSeverity", "high") > 0
+            : ""}${this.count(mergedRisks, "riskSeverity", "high") > 0
             ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/high.svg" /></a>&nbsp;` +
-                (0, exec_2.count)(mergedRisks, "riskSeverity", "high") +
+                this.count(mergedRisks, "riskSeverity", "high") +
                 "&nbsp;High"
-            : ""}${(0, exec_2.count)(mergedRisks, "riskSeverity", "medium") > 0
+            : ""}${this.count(mergedRisks, "riskSeverity", "medium") > 0
             ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/medium.svg" /></a>&nbsp;` +
-                (0, exec_2.count)(mergedRisks, "riskSeverity", "medium") +
+                this.count(mergedRisks, "riskSeverity", "medium") +
                 "&nbsp;Medium"
-            : ""}${(0, exec_2.count)(mergedRisks, "riskSeverity", "low") > 0
+            : ""}${this.count(mergedRisks, "riskSeverity", "low") > 0
             ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/low.svg" /></a>&nbsp;` +
-                (0, exec_2.count)(mergedRisks, "riskSeverity", "low") +
+                this.count(mergedRisks, "riskSeverity", "low") +
                 "&nbsp;Low"
             : ""}</div><br>
 \n`;
@@ -1048,30 +1012,10 @@ exports.Github = Github;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.VersionControlFactory = exports.versionControlMap = exports.GitLab = void 0;
+exports.VersionControlFactory = exports.versionControlMap = void 0;
 const github_1 = __nccwpck_require__(8237);
-class GitLab {
-    constructor() {
-        var _a, _b, _c, _d, _e, _f;
-        this.workspace = (_b = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.GITLAB_WORKSPACE) !== null && _b !== void 0 ? _b : "";
-        this.token = (_d = (_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.GITLAB_TOKEN) !== null && _d !== void 0 ? _d : "";
-        this.sha = (_f = (_e = process === null || process === void 0 ? void 0 : process.env) === null || _e === void 0 ? void 0 : _e.GITLAB_SHA) !== null && _f !== void 0 ? _f : "";
-    }
-    getInputs() { }
-    getDiff(client) { }
-    createComment(options) { }
-    parseCodeAnalysis(analysis, VersionControl) { }
-    getRepoRemoteUrl() {
-        return "";
-    }
-    checkForDiffByFileTypes(fileTypes) { }
-    parseOutput(filesToUpload, analysisResult) { }
-    uploadAnalysisFile(file, jwt) { }
-}
-exports.GitLab = GitLab;
 exports.versionControlMap = {
-    github: github_1.Github,
-    gitlab: GitLab,
+    github: github_1.Github
 };
 class VersionControlFactory {
     static getInstance(versionControlKey) {
@@ -1106,7 +1050,7 @@ exports.VersionControlService = VersionControlService;
 
 /***/ }),
 
-/***/ 5241:
+/***/ 7351:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -1240,7 +1184,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getIDToken = exports.getState = exports.saveState = exports.group = exports.endGroup = exports.startGroup = exports.info = exports.notice = exports.warning = exports.error = exports.debug = exports.isDebug = exports.setFailed = exports.setCommandEcho = exports.setOutput = exports.getBooleanInput = exports.getMultilineInput = exports.getInput = exports.addPath = exports.setSecret = exports.exportVariable = exports.ExitCode = void 0;
-const command_1 = __nccwpck_require__(5241);
+const command_1 = __nccwpck_require__(7351);
 const file_command_1 = __nccwpck_require__(717);
 const utils_1 = __nccwpck_require__(5278);
 const os = __importStar(__nccwpck_require__(2087));
@@ -2233,7 +2177,7 @@ const os = __importStar(__nccwpck_require__(2087));
 const events = __importStar(__nccwpck_require__(8614));
 const child = __importStar(__nccwpck_require__(3129));
 const path = __importStar(__nccwpck_require__(5622));
-const io = __importStar(__nccwpck_require__(7351));
+const io = __importStar(__nccwpck_require__(7436));
 const ioUtil = __importStar(__nccwpck_require__(1962));
 const timers_1 = __nccwpck_require__(8213);
 /* eslint-disable @typescript-eslint/unbound-method */
@@ -3986,7 +3930,7 @@ exports.getCmdPath = getCmdPath;
 
 /***/ }),
 
-/***/ 7351:
+/***/ 7436:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";

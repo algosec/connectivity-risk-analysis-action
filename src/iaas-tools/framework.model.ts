@@ -1,5 +1,4 @@
-import { ExecOutput } from "@actions/exec";
-import { IVersionControl } from "../vcs/vcs.model";
+import { IVersionControl, ExecOutput } from "../vcs/vcs.model";
 import { Terraform } from "./terraform";
 
 export interface IFramework {
@@ -8,17 +7,8 @@ export interface IFramework {
   check: (foldersToRunCheck: string[], workDir: string) => any;
 }
 
-export class CloudFormation implements IFramework {
-  type: FrameworkKeys = "cloudformation";
-  fileTypes = ["json", "yaml"];
-  check(foldersToRunCheck: string[], workDir: string) {}
-
-  constructor(public vcs: IVersionControl) {}
-}
-
 export const frameworkMap = {
-  terraform: Terraform,
-  cloudformation: CloudFormation,
+  terraform: Terraform
 };
 
 export interface FrameworkOptions {
@@ -59,7 +49,7 @@ export class FrameworkFactory {
       try {
         return new frameworkMap[frameworkKey](vcs);
       } catch (error) {
-        throw new Error("- ##### IAC Connectivity Risk Analysis ##### Unsupported framework type: " + frameworkKey);
+        throw new Error("Unsupported framework type: " + frameworkKey);
       }
   }
 }

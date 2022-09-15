@@ -1,12 +1,16 @@
-import { AnalysisFile, ExecSteps } from "../common/exec";
+import { RiskAnalysisFile } from "../common/risk.model";
 import { Github } from "./github";
 
+export interface ExecSteps {
+  [name: string]: ExecOutput;
+}
 export interface IVersionControl {
+  exec;
   steps: ExecSteps;
   pullRequest: any;
   payload: any;
   repo: any;
-  logger: any;
+  logger: Logger;
   http: any;
   workspace: string;
   workDir: string;
@@ -21,54 +25,15 @@ export interface IVersionControl {
   parseCodeAnalysis: (analysis, VersionControl) => any;
   getDiff: (vcsObject) => any;
   checkForDiffByFileTypes: (fileTypes: string[]) => any;
-  parseOutput: (filesToUpload: AnalysisFile[], analysisResult) => any;
-  uploadAnalysisFile: (file: AnalysisFile, jwt: string) => any;
+  parseOutput: (filesToUpload: RiskAnalysisFile[], analysisResult) => any;
+  uploadAnalysisFile: (file: RiskAnalysisFile, jwt: string) => any;
   getInputs: () => any;
 }
 
-export class GitLab implements IVersionControl {
-  steps: ExecSteps;
-  pullRequest: any;
-  payload: any;
-  repo: any;
-  logger: Logger;
-  http: any;
-  workspace: string;
-  token: string;
-  sha: string;
-  workDir: string;
-  fileTypes: string[];
-  cfApiUrl: string;
-  actionUuid: string
 
-  constructor() {
-    this.workspace = process?.env?.GITLAB_WORKSPACE ?? "";
-    this.token = process?.env?.GITLAB_TOKEN ?? "";
-    this.sha = process?.env?.GITLAB_SHA ?? "";
-  }
-
-  getInputs(): void {}
-
-  getDiff(client): void {}
-
-  createComment(options): void {}
-
-  parseCodeAnalysis(analysis: any, VersionControl: any): void {}
-
-  getRepoRemoteUrl(): string {
-    return "";
-  }
-
-  checkForDiffByFileTypes(fileTypes: string[]): void {}
-
-  parseOutput(filesToUpload, analysisResult): void {}
-
-  uploadAnalysisFile(file: AnalysisFile, jwt: string): any {}
-}
 
 export const versionControlMap = {
-  github: Github,
-  gitlab: GitLab,
+  github: Github
 };
 export type VersionControlMap = typeof versionControlMap;
 
@@ -102,4 +67,13 @@ export interface Logger {
   error: Function;
   debug: Function;
   exit: Function;
+}
+
+export interface ExecOutput {
+  /**The exit code of the process */
+  exitCode: number;
+  /**The entire stdout of the process as a string */
+  stdout: string;
+  /**The entire stderr of the process as a string */
+  stderr: string;
 }

@@ -2,20 +2,16 @@ import { GitHub } from "@actions/github/lib/utils";
 import { context, getOctokit } from "@actions/github";
 import { info, error, debug, setFailed as exit } from "@actions/core";
 import { HttpClient } from "@actions/http-client";
-import { IVersionControl, Logger } from "./vcs.model";
+import { exec as actionsExec, exec } from "@actions/exec";
 import { WebhookPayload } from "@actions/github/lib/interfaces";
-import { exec, ExecOutput } from "@actions/exec";
-import { ExecSteps, AnalysisFile, count } from "../common/exec";
-import { AnalysisResult, AnalysisResultAdditions, severityOrder } from "../common/risk.model";
 import getUuid from "uuid-by-string";
 import { readdirSync } from "fs";
+import { ExecOutput, ExecSteps, IVersionControl, Logger } from "./vcs.model";
+import { RiskAnalysisResult, RiskAnalysisFile, AnalysisResultAdditions, severityOrder } from "../common/risk.model";
 
-
-export type GithubContext = typeof context;
-
-// DEBUG LOCALLY
 // import {githubEventPayloadMock } from "../../test/mockData.folder-error"
 // context.payload = githubEventPayloadMock as WebhookPayload & any
+export type GithubContext = typeof context;
 
 export class Github implements IVersionControl {
   workspace: string;
@@ -42,7 +38,13 @@ export class Github implements IVersionControl {
     this.firstRun = process?.env?.FIRST_RUN == 'true';
     this.stopWhenFail = process?.env?.STOP_WHEN_FAIL != 'false';
     this.http = new HttpClient();
-    this.logger = { debug, error, exit, info };
+    const prefix = (str: string, group = false) => group ? '::group::' : '-' + ' ##### IAC Connectivity Risk Analysis ##### ' + str + group ? '::endgroup::' : ''
+    this.logger = { 
+            debug: (str: string, group = false) => debug(prefix(str, group)), 
+            error: (str: string, group = false) => error(prefix(str, group)), 
+            exit: (str: string, group = false) => exit(prefix(str, group)), 
+            info: (str: string, group = false) => info(prefix(str, group)) 
+          };
     this.workspace = process?.env?.GITHUB_WORKSPACE ?? "";
     this.token = process?.env?.GITHUB_TOKEN ?? "";
     this.sha = process?.env?.GITHUB_SHA ?? "";
@@ -58,6 +60,40 @@ export class Github implements IVersionControl {
       "https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons";
     this.cfApiUrl = process?.env?.CF_API_URL ?? "https://api-feature-cs-0015342.dev.cloudflow.algosec.com/cloudflow/api/devsecops/v1";
 
+  }
+
+  async exec(cmd: string, args: string[]): Promise<ExecOutput> {
+    const res: ExecOutput = {
+      stdout: "",
+      stderr: "",
+      exitCode: 0,
+    };
+  
+    try {
+      const code = await actionsExec(cmd, args, {
+        listeners: {
+          stdout(data) {
+            res.stdout += data.toString();
+          },
+          stderr(data) {
+            res.stderr += data.toString();
+          },
+        },
+      });
+  
+      res.exitCode = code;
+      return res;
+    } catch (err) {
+      const msg = `Command '${cmd}' failed with args '${args.join(" ")}': ${
+        res.stderr
+      }: ${err}`;
+      debug(`@actions/exec.exec() threw an error: ${msg}`);
+      throw new Error(msg);
+    }
+  }
+  
+  count(array, property, value) {
+    return array.filter((obj) => obj[property] === value).length;
   }
 
   async getDiff(octokit: InstanceType<typeof GitHub>): Promise<any> {
@@ -208,13 +244,13 @@ export class Github implements IVersionControl {
   }
 
   async prepareRepo(): Promise<void> {
-    this.steps.gitClone = await this.clone(this.workDir); // await exec('git' , ['clone', this.getRepoRemoteUrl(), this.workDir])
+    this.steps.gitClone = await this.clone(this.workDir); // await this.exec('git' , ['clone', this.getRepoRemoteUrl(), this.workDir])
     process.chdir(this.workDir);
     this.steps.gitFetch = await this.fetch([
       "origin",
       `pull/${this.pullRequest}/head:${this.actionUuid}`,
-    ]); // await exec('git' , ['fetch', 'origin', `pull/${this.pullRequest}/head:${this.actionUuid}`])
-    this.steps.gitCheckout = await this.checkout(this.actionUuid); // await exec('git' , ['checkout', this.actionUuid])
+    ]); // await this.exec('git' , ['fetch', 'origin', `pull/${this.pullRequest}/head:${this.actionUuid}`])
+    this.steps.gitCheckout = await this.checkout(this.actionUuid); // await this.exec('git' , ['checkout', this.actionUuid])
   }
 
   async checkForDiffByFileTypes(fileTypes: string[]): Promise<string[]> {
@@ -244,12 +280,12 @@ export class Github implements IVersionControl {
     }
     if (diffFolders?.length == 0) {
       this.logger.info(
-        "- ##### IAC Connectivity Risk Analysis ##### No changes were found"
+        "No changes were found"
       );
       return []
     }
     this.logger.info(
-      `- ##### IAC Connectivity Risk Analysis ##### Running IaC on folders:\n ${diffFolders.join(',\n')}`
+      `Running IaC on folders:\n ${diffFolders.join(',\n')}`
     );
     return diffFolders;
   }
@@ -258,7 +294,7 @@ export class Github implements IVersionControl {
     return process.env;
   }
 
-  async uploadAnalysisFile(file: AnalysisFile, jwt: string): Promise<boolean> {
+  async uploadAnalysisFile(file: RiskAnalysisFile, jwt: string): Promise<boolean> {
     try {
       const http = new HttpClient();
       const body = file?.output?.plan;
@@ -277,7 +313,7 @@ export class Github implements IVersionControl {
         return false;
       }
     } catch(e){
-      this.logger.error(`::group::##### IAC Connectivity Risk Analysis ##### Upload file failed due to errors:\n${e}\n::endgroup::`)
+      this.logger.error(`Upload file failed due to errors:\n${e}\n`)
       return false
     }
    
@@ -285,8 +321,8 @@ export class Github implements IVersionControl {
 
 
   async parseOutput(
-    filesToUpload: AnalysisFile[],
-    analysisResults: AnalysisResult[]
+    filesToUpload: RiskAnalysisFile[],
+    analysisResults: RiskAnalysisResult[]
   ): Promise<void> {
     const body = this.parseCodeAnalysis(filesToUpload, analysisResults);
     if (body && body != "") this.steps.comment = await this.createComment(body);
@@ -294,10 +330,10 @@ export class Github implements IVersionControl {
       let errors = "";
       Object.keys(this.steps).forEach(step => errors += this?.steps[step]?.stderr != '' ? this?.steps[step]?.stderr : '')
       this.logger.exit(
-        "- ##### IAC Connectivity Risk Analysis ##### The risks analysis process failed.\n" + errors
+        "The risks analysis process failed.\n" + errors
       );
     } else {
-      this.logger.info("- ##### IAC Connectivity Risk Analysis ##### Creating Risks Report");
+      this.logger.info("Creating Risks Report");
       if (
         analysisResults?.some(
           (response) => response?.additions?.analysis_result?.length > 0
@@ -305,15 +341,15 @@ export class Github implements IVersionControl {
       ) {
         if (this.stopWhenFail)
           this.logger.exit(
-            "- ##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report"
+            "The risks analysis process completed successfully with risks, please check report"
           );
         else
           this.logger.info(
-            "- ##### IAC Connectivity Risk Analysis ##### The risks analysis process completed successfully with risks, please check report"
+            "The risks analysis process completed successfully with risks, please check report"
           );
       } else {
         this.logger.info(
-          "- ##### IAC Connectivity Risk Analysis ##### Analysis process completed successfully without any risks"
+          "Analysis process completed successfully without any risks"
         );
       }
     }
@@ -321,7 +357,7 @@ export class Github implements IVersionControl {
 
   buildCommentAnalysisBody(
     analysis: AnalysisResultAdditions | undefined,
-    file: AnalysisFile
+    file: RiskAnalysisFile
   ): string {
     let analysisBody = "";
 
@@ -354,7 +390,7 @@ export class Github implements IVersionControl {
 
   buildCommentReportResult(
     analysis: AnalysisResultAdditions,
-    file: AnalysisFile
+    file: RiskAnalysisFile
   ): string {
     let risksList = "";
     const CODE_BLOCK = "```";
@@ -379,27 +415,27 @@ ${CODE_BLOCK}\n
 </details>\n`;
       });
     const severityCount = `<div  align="right">${
-      count(analysis?.analysis_result, "riskSeverity", "critical") > 0
+      this.count(analysis?.analysis_result, "riskSeverity", "critical") > 0
         ? `<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/critical.svg" /></a>&nbsp;` +
-          count(analysis?.analysis_result, "riskSeverity", "critical") +
+          this.count(analysis?.analysis_result, "riskSeverity", "critical") +
           "&nbsp;Critical"
         : ""
     }${
-      count(analysis?.analysis_result, "riskSeverity", "high") > 0
+      this.count(analysis?.analysis_result, "riskSeverity", "high") > 0
         ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/high.svg" /></a>&nbsp;` +
-          count(analysis?.analysis_result, "riskSeverity", "high") +
+          this.count(analysis?.analysis_result, "riskSeverity", "high") +
           "&nbsp;High"
         : ""
     }${
-      count(analysis?.analysis_result, "riskSeverity", "medium") > 0
+      this.count(analysis?.analysis_result, "riskSeverity", "medium") > 0
         ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/medium.svg" /></a>&nbsp;` +
-          count(analysis?.analysis_result, "riskSeverity", "medium") +
+          this.count(analysis?.analysis_result, "riskSeverity", "medium") +
           "&nbsp;Medium"
         : ""
     }${
-      count(analysis?.analysis_result, "riskSeverity", "low") > 0
+      this.count(analysis?.analysis_result, "riskSeverity", "low") > 0
         ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/low.svg" /></a>&nbsp;` +
-          count(analysis?.analysis_result, "riskSeverity", "low") +
+          this.count(analysis?.analysis_result, "riskSeverity", "low") +
           "&nbsp;Low"
         : ""
     }</div>`;
@@ -407,14 +443,14 @@ ${CODE_BLOCK}\n
       this.assetsUrl
     }/warning.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${
       file.folder +
-      (analysis?.analysis_result?.length == 0 ? "- No Risks Found" : "")
+      (analysis?.analysis_result?.length == 0 ? "No Risks Found" : "")
     }</b></h3>${
       analysis?.analysis_result?.length > 0 ? severityCount : ""
     }</summary>\n${risksList}\n`;
     return codeAnalysisContent;
   }
 
-  buildCommentReportError(file: AnalysisFile): string {
+  buildCommentReportError(file: RiskAnalysisFile): string {
     const CODE_BLOCK = "```";
     const errorsBody = (this.steps?.upload?.stderr ?? '').concat(this.steps?.analyze?.stderr ?? '')
     const errors = `Errors\n
@@ -428,7 +464,7 @@ ${errorsBody != '' ? "<br>" + errors + "<br>" : ""}
     return analysisContent;
   }
 
-  buildCommentFrameworkResult(file: AnalysisFile): string {
+  buildCommentFrameworkResult(file: RiskAnalysisFile): string {
     const CODE_BLOCK = "```";
     const errors = `Errors\n
 ${CODE_BLOCK}\n
@@ -447,8 +483,8 @@ ${file?.output?.log?.stderr ? "<br>" + errors + "<br>" : ""}
   }
 
   buildCommentSummary(
-    filesToUpload: AnalysisFile[],
-    results: AnalysisResult[]
+    filesToUpload: RiskAnalysisFile[],
+    results: RiskAnalysisResult[]
   ): string {
     let risksTableContents = "";
     const riskArrays = results
@@ -507,27 +543,27 @@ ${file?.output?.log?.stderr ? "<br>" + errors + "<br>" : ""}
     const risksSummary = `
 \n
 <div align="right">${
-      count(mergedRisks, "riskSeverity", "critical") > 0
+      this.count(mergedRisks, "riskSeverity", "critical") > 0
         ? `<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/critical.svg" /></a>&nbsp;` +
-          count(mergedRisks, "riskSeverity", "critical") +
+          this.count(mergedRisks, "riskSeverity", "critical") +
           "&nbsp;Critical"
         : ""
     }${
-      count(mergedRisks, "riskSeverity", "high") > 0
+      this.count(mergedRisks, "riskSeverity", "high") > 0
         ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/high.svg" /></a>&nbsp;` +
-          count(mergedRisks, "riskSeverity", "high") +
+          this.count(mergedRisks, "riskSeverity", "high") +
           "&nbsp;High"
         : ""
     }${
-      count(mergedRisks, "riskSeverity", "medium") > 0
+      this.count(mergedRisks, "riskSeverity", "medium") > 0
         ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/medium.svg" /></a>&nbsp;` +
-          count(mergedRisks, "riskSeverity", "medium") +
+          this.count(mergedRisks, "riskSeverity", "medium") +
           "&nbsp;Medium"
         : ""
     }${
-      count(mergedRisks, "riskSeverity", "low") > 0
+      this.count(mergedRisks, "riskSeverity", "low") > 0
         ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/low.svg" /></a>&nbsp;` +
-          count(mergedRisks, "riskSeverity", "low") +
+          this.count(mergedRisks, "riskSeverity", "low") +
           "&nbsp;Low"
         : ""
     }</div><br>
@@ -554,8 +590,8 @@ ${risksTableContents}
   }
 
   parseCodeAnalysis(
-    filesToUpload: AnalysisFile[],
-    analysisResults: AnalysisResult[]
+    filesToUpload: RiskAnalysisFile[],
+    analysisResults: RiskAnalysisResult[]
   ): string {
     const commentBodyArray: any[] = [];
     const header = `<a href="#"><img  height="50" src="${this.assetsUrl}/header.svg" /></a> \n`;

@@ -1,7 +1,6 @@
 import "dotenv/config";
 import { IVersionControl } from "./vcs/vcs.model";
-import { AnalysisFile } from "./common/exec";
-import { AnalysisResult } from "./common/risk.model";
+import { RiskAnalysisFile, RiskAnalysisResult } from "./common/risk.model";
 import { writeFileSync } from "fs";
 
 export class AshCodeAnalysis {
@@ -27,7 +26,7 @@ export class AshCodeAnalysis {
     );
     if (!this.jwt || this.jwt == "") {
       this.vcs.logger.exit(
-        "- ##### IAC Connectivity Risk Analysis ##### Not Authenticated"
+        "Not Authenticated"
       );
       return false;
     }
@@ -70,22 +69,22 @@ export class AshCodeAnalysis {
 
       const response_code = res.message.statusCode;
       const data = JSON.parse(await res.readBody());
-      this.gcpCredsJson ? await this.createGcpCredentials(this.gcpCredsJson) : null
+      // this.gcpCredsJson ? await this.createGcpCredentials(this.gcpCredsJson) : null
       if (response_code >= 200 && response_code <= 300) {
         this.vcs.logger.info(
-          "- ##### IAC Connectivity Risk Analysis ##### Passed authentication vs CF's login. new token has been generated."
+          "Passed authentication vs CF's login. new token has been generated."
         );
         return data?.access_token;
       } else {
         this.vcs.logger.exit(
-          `- ##### IAC Connectivity Risk Analysis ##### Failed to generate token.\n Error code ${response_code}, msg: ${JSON.stringify(
+          `Failed to generate token.\n Error code ${response_code}, msg: ${JSON.stringify(
             data, null, "\t"
           )}`
         );
       }
     } catch (error: any) {
       this.vcs.logger.exit(
-        `- ##### IAC Connectivity Risk Analysis ##### Failed to generate token. Error msg: ${error.toString()}`
+        `Failed to generate token. Error msg: ${error.toString()}`
       );
     }
     return "";
@@ -103,7 +102,7 @@ export class AshCodeAnalysis {
 
   }
 
-  async triggerCodeAnalysis(filesToUpload: AnalysisFile[]): Promise<void> {
+  async triggerCodeAnalysis(filesToUpload: RiskAnalysisFile[]): Promise<void> {
     try {
       const fileUploadPromises: Array<Promise<boolean>> = [];
       filesToUpload.forEach((file) =>
@@ -114,28 +113,28 @@ export class AshCodeAnalysis {
   
       if (responses.filter(response => response).length == 0) {
         this.vcs.logger.exit(
-          "- ##### IAC Connectivity Risk Analysis ##### No files were uploaded, please check logs"
+          "No files were uploaded, please check logs"
         );
       } else if (responses.some(response => !response)) {
         this.vcs.logger.error(
-          "- ##### IAC Connectivity Risk Analysis ##### Some files failed to upload, please check logs"
+          "Some files failed to upload, please check logs"
         );
       } else {
         this.vcs.logger.info(
-          "- ##### IAC Connectivity Risk Analysis ##### File/s were uploaded successfully"
+          "File/s were uploaded successfully"
         );
       }
     } catch(e){
-      this.vcs.steps.upload = {exitCode: 0, stdout: '', stderr: "- ##### IAC Connectivity Risk Analysis ##### Upload Failure: " + e}
+      this.vcs.steps.upload = {exitCode: 0, stdout: '', stderr: "Upload Failure: " + e}
       this.vcs.logger.error(
-        "- ##### IAC Connectivity Risk Analysis ##### Some files failed to upload, please check logs"
+        "Some files failed to upload, please check logs"
       );
       
     }
 
   }
 
-  async uploadFile(file: AnalysisFile): Promise<boolean> {
+  async uploadFile(file: RiskAnalysisFile): Promise<boolean> {
     let res = false;
     try {
       if (file?.output?.plan != '') {
@@ -144,20 +143,20 @@ export class AshCodeAnalysis {
           res = true;
         }
       } else {
-        this.vcs.logger.info(`- ##### IAC Connectivity Risk Analysis ##### No plan was created for: ${file.folder}, please check terraform logs`)
+        this.vcs.logger.info(`No plan was created for: ${file.folder}, please check terraform logs`)
       }
     } catch (e) {
-      this.vcs.logger.error(`- ##### IAC Connectivity Risk Analysis ##### File upload for: ${file.folder} failed due to errors:\n ${e}`)
+      this.vcs.logger.error(`File upload for: ${file.folder} failed due to errors:\n ${e}`)
       res = false;
     }
     return res;
   }
 
-  async analyze(filesToUpload: AnalysisFile[]): Promise<Array<AnalysisResult | null>> {
-    let analysisResult: Array<AnalysisResult | null> = [];
+  async analyze(filesToUpload: RiskAnalysisFile[]): Promise<Array<RiskAnalysisResult | null>> {
+    let analysisResult: Array<RiskAnalysisResult | null> = [];
     try {
       await this.triggerCodeAnalysis(filesToUpload);
-      const codeAnalysisPromises: Array<Promise<AnalysisResult | null>> = [];
+      const codeAnalysisPromises: Array<Promise<RiskAnalysisResult | null>> = [];
       filesToUpload
         .filter((file) => file?.output?.plan != '')
         .forEach((file) =>
@@ -165,16 +164,16 @@ export class AshCodeAnalysis {
         );
       analysisResult = await Promise.all(codeAnalysisPromises);
       if (!analysisResult || analysisResult?.length == 0) {
-        this.vcs.steps.analysis = {exitCode: 0, stdout: '', stderr: "- ##### IAC Connectivity Risk Analysis ##### Analysis failed, please contact support."}
-        this.vcs.logger.exit("- ##### IAC Connectivity Risk Analysis ##### Code Analysis failed");
+        this.vcs.steps.analysis = {exitCode: 0, stdout: '', stderr: "Analysis failed, please contact support."}
+        this.vcs.logger.exit("Code Analysis failed");
         analysisResult = []
       }
       this.vcs.logger.debug(
-        `::group::##### IAC Connectivity Risk Analysis ##### Risk analysis result:\n${JSON.stringify(analysisResult, null, "\t")}\n::endgroup::`
+        `Risk analysis result:\n${JSON.stringify(analysisResult, null, "\t")}\n`, true
       );
     } catch(e){
-      this.vcs.steps.analysis = {exitCode: 0, stdout: '', stderr: "- ##### IAC Connectivity Risk Analysis ##### Analysis failed, please contact support.\n" + e}
-      this.vcs.logger.exit(`- ##### IAC Connectivity Risk Analysis ##### Code Analysis failed due to errors: ${e}`);
+      this.vcs.steps.analysis = {exitCode: 0, stdout: '', stderr: "Analysis failed, please contact support.\n" + e}
+      this.vcs.logger.exit(`Code Analysis failed due to errors: ${e}`);
       analysisResult = []
     }
    
@@ -182,11 +181,11 @@ export class AshCodeAnalysis {
   }
 
   async pollCodeAnalysisResponse(
-    file: AnalysisFile
-  ): Promise<AnalysisResult | null> {
+    file: RiskAnalysisFile
+  ): Promise<RiskAnalysisResult | null> {
     let analysisResult = await this.checkCodeAnalysisResponse(file);
     this.vcs.logger.info(
-      `- ##### IAC Connectivity Risk Analysis ##### Waiting for risk analysis response for folder: ${file.folder}`
+      `Waiting for risk analysis response for folder: ${file.folder}`
     );
     for (let i = 0; i < 60; i++) {
       await this.wait(5000);
@@ -194,19 +193,19 @@ export class AshCodeAnalysis {
       if (analysisResult?.additions) {
         analysisResult.folder = file?.folder;
         this.vcs.logger.debug(
-          "::group::##### IAC Connectivity Risk Analysis ##### Response:\n" + JSON.stringify(analysisResult) + "\n::endgroup::"
+          "Response:\n" + JSON.stringify(analysisResult) + "\n", true
         );
         break;
       } else if (analysisResult?.error) {
         this.vcs.logger.error(
-          "- ##### IAC Connectivity Risk Analysis ##### Poll Request failed for folder: " + file?.folder + analysisResult?.error
+          "Poll Request failed for folder: " + file?.folder + analysisResult?.error
         );
         break;
       }
     }
     if (!analysisResult){
       this.vcs.logger.error(
-        "- ##### IAC Connectivity Risk Analysis ##### Poll Request has timed out for folder: "+ file?.folder
+        "Poll Request has timed out for folder: "+ file?.folder
       );
     }
     return analysisResult;
@@ -219,8 +218,8 @@ export class AshCodeAnalysis {
   }
 
   async checkCodeAnalysisResponse(
-    file: AnalysisFile
-  ): Promise<AnalysisResult | null> {
+    file: RiskAnalysisFile
+  ): Promise<RiskAnalysisResult | null> {
     const pollUrl = `${this.apiUrl}/analysis_result?customer=${this.vcs.repo.owner}&action_id=${file.uuid}`;
     const response = await this.vcs.http.get(pollUrl, {
       Authorization: "Bearer " + this.jwt,
