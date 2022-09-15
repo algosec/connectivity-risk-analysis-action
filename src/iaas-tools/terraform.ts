@@ -21,8 +21,7 @@ export class Terraform implements IFramework {
     const initLog: ExecOutput = {stdout: '', stderr: '', exitCode: 0};
     try {
       process.chdir(`${options.path}`);
-      console.log('::group::')
-      vcs.logger.info(`Run Terraform on folder ${options.runFolder}`)
+      vcs.logger.info(`Run Terraform on folder ${options.runFolder}`, true, false)
       vcs.steps.init = await vcs.exec("terraform", ["init"]);
       vcs.steps.fmt = await vcs.exec("terraform", ["fmt", "-diff"]);
       vcs.steps.validate = await vcs.exec("terraform", ["validate", "-no-color"]);

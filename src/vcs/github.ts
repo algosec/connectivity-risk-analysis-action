@@ -38,12 +38,12 @@ export class Github implements IVersionControl {
     this.firstRun = process?.env?.FIRST_RUN == 'true';
     this.stopWhenFail = process?.env?.STOP_WHEN_FAIL != 'false';
     this.http = new HttpClient();
-    const prefix = (str: string, group = false) => (group ? '::group::' : '-') + ' ##### IAC Connectivity Risk Analysis ##### ' + str + (group ? '\n::endgroup::\n' : '\n')
+    const prefix = (str: string, group = false, close = true) => (group ? '::group::' : '-') + ' ##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '')
     this.logger = { 
             debug: (str: string, group = false) => debug(prefix(str, group)), 
             error: (str: string, group = false) => error(prefix(str, group)), 
             exit: (str: string, group = false) => exit(prefix(str, group)), 
-            info: (str: string, group = false) => info(prefix(str, group)) 
+            info: (str: string, group = false, close = true) => info(prefix(str, group, close)) 
           };
     this.workspace = process?.env?.GITHUB_WORKSPACE ?? "";
     this.token = process?.env?.GITHUB_TOKEN ?? "";
@@ -284,9 +284,9 @@ export class Github implements IVersionControl {
       );
       return []
     }
-    this.logger.info(
-      `Running IaC on folders:\n ${diffFolders.join(',\n')}`
-    );
+    // this.logger.info(
+      // `Running IaC on folders:\n ${diffFolders.join(',\n')}`
+    // );
     return diffFolders;
   }
 

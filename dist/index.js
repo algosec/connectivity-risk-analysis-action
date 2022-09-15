@@ -351,8 +351,7 @@ class Terraform {
             const initLog = { stdout: '', stderr: '', exitCode: 0 };
             try {
                 process.chdir(`${options.path}`);
-                console.log('::group::');
-                vcs.logger.info(`Run Terraform on folder ${options.runFolder}`);
+                vcs.logger.info(`Run Terraform on folder ${options.runFolder}`, true, false);
                 vcs.steps.init = yield vcs.exec("terraform", ["init"]);
                 vcs.steps.fmt = yield vcs.exec("terraform", ["fmt", "-diff"]);
                 vcs.steps.validate = yield vcs.exec("terraform", ["validate", "-no-color"]);
@@ -545,12 +544,12 @@ class Github {
         this.firstRun = ((_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.FIRST_RUN) == 'true';
         this.stopWhenFail = ((_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.STOP_WHEN_FAIL) != 'false';
         this.http = new http_client_1.HttpClient();
-        const prefix = (str, group = false) => (group ? '::group::' : '-') + ' ##### IAC Connectivity Risk Analysis ##### ' + str + (group ? '\n::endgroup::\n' : '\n');
+        const prefix = (str, group = false, close = true) => (group ? '::group::' : '-') + ' ##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '');
         this.logger = {
             debug: (str, group = false) => (0, core_1.debug)(prefix(str, group)),
             error: (str, group = false) => (0, core_1.error)(prefix(str, group)),
             exit: (str, group = false) => (0, core_1.setFailed)(prefix(str, group)),
-            info: (str, group = false) => (0, core_1.info)(prefix(str, group))
+            info: (str, group = false, close = true) => (0, core_1.info)(prefix(str, group, close))
         };
         this.workspace = (_d = (_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.GITHUB_WORKSPACE) !== null && _d !== void 0 ? _d : "";
         this.token = (_f = (_e = process === null || process === void 0 ? void 0 : process.env) === null || _e === void 0 ? void 0 : _e.GITHUB_TOKEN) !== null && _f !== void 0 ? _f : "";
@@ -756,7 +755,9 @@ class Github {
                 this.logger.info("No changes were found");
                 return [];
             }
-            this.logger.info(`Running IaC on folders:\n ${diffFolders.join(',\n')}`);
+            // this.logger.info(
+            // `Running IaC on folders:\n ${diffFolders.join(',\n')}`
+            // );
             return diffFolders;
         });
     }
