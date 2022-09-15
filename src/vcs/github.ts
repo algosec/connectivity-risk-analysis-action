@@ -427,9 +427,9 @@ ${risk?.items?.map(item =>
   <td>${item?.fromPort}</td>\n
   <td>${item?.toPort}</td>\n
   <td>${item?.ipProtocol}</td>\n
-  <td>${item?.ipRange?.join(", ")}</td>\n
+  <td>${item?.ipRange}</td>\n
   </tr>\n`
-).join('')}                
+)?.join('')}                
 </tbody>
 </table>\n
 </details>\n`;
