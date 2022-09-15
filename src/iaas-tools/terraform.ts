@@ -21,6 +21,7 @@ export class Terraform implements IFramework {
     const initLog: ExecOutput = {stdout: '', stderr: '', exitCode: 0};
     try {
       process.chdir(`${options.path}`);
+      console.log('::group::')
       vcs.logger.info(`Run Terraform on folder ${options.runFolder}`)
       vcs.steps.init = await vcs.exec("terraform", ["init"]);
       vcs.steps.fmt = await vcs.exec("terraform", ["fmt", "-diff"]);
@@ -58,7 +59,7 @@ export class Terraform implements IFramework {
             ])
           ).stdout
       }
-      vcs.logger.info(``)
+      console.log('::endgroup::')
       process.chdir(options.workDir);
       result = { plan: jsonPlan, log: vcs.steps.plan, initLog };
     } catch (error: any) {
@@ -114,7 +115,6 @@ export class Terraform implements IFramework {
       this.vcs.logger.info("Framework check failed: " + error);
     }
     this.vcs.logger.info(`Finished Terraform check`);
-    // this.vcs.logger.info(`Files To Analyze\n ${JSON.stringify(res, null, "\t")}\n`);
     return res;
   }
 }

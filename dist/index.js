@@ -351,6 +351,7 @@ class Terraform {
             const initLog = { stdout: '', stderr: '', exitCode: 0 };
             try {
                 process.chdir(`${options.path}`);
+                console.log('::group::');
                 vcs.logger.info(`Run Terraform on folder ${options.runFolder}`);
                 vcs.steps.init = yield vcs.exec("terraform", ["init"]);
                 vcs.steps.fmt = yield vcs.exec("terraform", ["fmt", "-diff"]);
@@ -378,7 +379,7 @@ class Terraform {
                             `${process.cwd()}\\tmp\\${options.runFolder}.out`,
                         ])).stdout;
                 }
-                vcs.logger.info(``);
+                console.log('::endgroup::');
                 process.chdir(options.workDir);
                 result = { plan: jsonPlan, log: vcs.steps.plan, initLog };
             }
@@ -434,7 +435,6 @@ class Terraform {
                 this.vcs.logger.info("Framework check failed: " + error);
             }
             this.vcs.logger.info(`Finished Terraform check`);
-            // this.vcs.logger.info(`Files To Analyze\n ${JSON.stringify(res, null, "\t")}\n`);
             return res;
         });
     }
@@ -545,7 +545,7 @@ class Github {
         this.firstRun = ((_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.FIRST_RUN) == 'true';
         this.stopWhenFail = ((_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.STOP_WHEN_FAIL) != 'false';
         this.http = new http_client_1.HttpClient();
-        const prefix = (str, group = false) => group ? '::group::' : '-' + ' ##### IAC Connectivity Risk Analysis ##### ' + str + group ? '::endgroup::' : 0;
+        const prefix = (str, group = false) => (group ? '::group::' : '-') + ' ##### IAC Connectivity Risk Analysis ##### ' + str + (group ? '\n::endgroup::\n' : '\n');
         this.logger = {
             debug: (str, group = false) => (0, core_1.debug)(prefix(str, group)),
             error: (str, group = false) => (0, core_1.error)(prefix(str, group)),
