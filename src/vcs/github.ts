@@ -424,10 +424,10 @@ export class Github implements IVersionControl {
 <tbody id="tableBody">\n
 ${risk?.items?.map(item => 
   `<tr>\n
-  <td>${item.fromPort}</td>\n
-  <td>${item.toPort}</td>\n
-  <td>${item.ipProtocol}</td>\n
-  <td>${item.ipRange.join(", ")}</td>\n
+  <td>${item?.fromPort}</td>\n
+  <td>${item?.toPort}</td>\n
+  <td>${item?.ipProtocol}</td>\n
+  <td>${item?.ipRange?.join(", ")}</td>\n
   </tr>\n`
 ).join('')}                
 </tbody>

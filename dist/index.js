@@ -852,12 +852,15 @@ class Github {
 </tr>\n
 </thead>\n
 <tbody id="tableBody">\n
-${(_a = risk === null || risk === void 0 ? void 0 : risk.items) === null || _a === void 0 ? void 0 : _a.map(item => `<tr>\n
-  <td>${item.fromPort}</td>\n
-  <td>${item.toPort}</td>\n
-  <td>${item.ipProtocol}</td>\n
-  <td>${item.ipRange.join(", ")}</td>\n
-  </tr>\n`).join('')}                
+${(_a = risk === null || risk === void 0 ? void 0 : risk.items) === null || _a === void 0 ? void 0 : _a.map(item => {
+                    var _a;
+                    return `<tr>\n
+  <td>${item === null || item === void 0 ? void 0 : item.fromPort}</td>\n
+  <td>${item === null || item === void 0 ? void 0 : item.toPort}</td>\n
+  <td>${item === null || item === void 0 ? void 0 : item.ipProtocol}</td>\n
+  <td>${(_a = item === null || item === void 0 ? void 0 : item.ipRange) === null || _a === void 0 ? void 0 : _a.join(", ")}</td>\n
+  </tr>\n`;
+                }).join('')}                
 </tbody>
 </table>\n
 </details>\n`;
