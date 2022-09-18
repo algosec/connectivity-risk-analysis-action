@@ -15,8 +15,8 @@ export class Main {
   vcsType: VersionControlKeys;
 
   constructor() {
-    this.vcsType = 'github' as VersionControlKeys//(process?.env?.VCS ?? 'github') as VersionControlKeys;
-    this.frameworkType = 'terraform' as FrameworkKeys //(process?.env?.FRAMEWORK ?? 'terraform') as FrameworkKeys;
+    this.vcsType = 'github' as VersionControlKeys // Add when supported (process?.env?.VCS ?? 'github') as VersionControlKeys;
+    this.frameworkType = 'terraform' as FrameworkKeys // Add when supported (process?.env?.FRAMEWORK ?? 'terraform') as FrameworkKeys;
   }
 
   async run(): Promise<void> {
@@ -38,7 +38,8 @@ export class Main {
           framework.fileTypes
         );
       } else {
-        vcs.logger.exit()
+        await vcs.parseOutput([], [], "Not Authenticated, please check action's logs");
+        vcs.logger.exit("Analysis process completed with issues, please check logs.")
       }
       if (foldersToRunCheck?.length > 0) {
         const filesToAnalyze: RiskAnalysisFile[] = await framework?.check(
@@ -49,9 +50,9 @@ export class Main {
           const codeAnalysisResponses = await codeAnalyzer.analyze(
             filesToAnalyze
           );
-          // if (codeAnalysisResponses?.length > 0) {
+          if (codeAnalysisResponses?.length > 0) {
             await vcs.parseOutput(filesToAnalyze as any, codeAnalysisResponses);
-          // }
+          }
         }else {
           vcs.logger.exit('No files to analyze')
         }

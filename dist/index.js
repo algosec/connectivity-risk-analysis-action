@@ -474,8 +474,8 @@ const vcs_service_1 = __nccwpck_require__(9701);
 // } from "../test/mockData.folder-error"
 class Main {
     constructor() {
-        this.vcsType = 'github'; //(process?.env?.VCS ?? 'github') as VersionControlKeys;
-        this.frameworkType = 'terraform'; //(process?.env?.FRAMEWORK ?? 'terraform') as FrameworkKeys;
+        this.vcsType = 'github'; // Add when supported (process?.env?.VCS ?? 'github') as VersionControlKeys;
+        this.frameworkType = 'terraform'; // Add when supported (process?.env?.FRAMEWORK ?? 'terraform') as FrameworkKeys;
     }
     run() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -492,15 +492,16 @@ class Main {
                     foldersToRunCheck = yield vcs.checkForDiffByFileTypes(framework.fileTypes);
                 }
                 else {
-                    vcs.logger.exit();
+                    yield vcs.parseOutput([], [], "Not Authenticated, please check action's logs");
+                    vcs.logger.exit("Analysis process completed with issues, please check logs.");
                 }
                 if ((foldersToRunCheck === null || foldersToRunCheck === void 0 ? void 0 : foldersToRunCheck.length) > 0) {
                     const filesToAnalyze = yield (framework === null || framework === void 0 ? void 0 : framework.check(foldersToRunCheck, vcs.workDir));
                     if ((filesToAnalyze === null || filesToAnalyze === void 0 ? void 0 : filesToAnalyze.length) > 0) {
                         const codeAnalysisResponses = yield codeAnalyzer.analyze(filesToAnalyze);
-                        // if (codeAnalysisResponses?.length > 0) {
-                        yield vcs.parseOutput(filesToAnalyze, codeAnalysisResponses);
-                        // }
+                        if ((codeAnalysisResponses === null || codeAnalysisResponses === void 0 ? void 0 : codeAnalysisResponses.length) > 0) {
+                            yield vcs.parseOutput(filesToAnalyze, codeAnalysisResponses);
+                        }
                     }
                     else {
                         vcs.logger.exit('No files to analyze');
@@ -738,6 +739,7 @@ class Github {
         });
     }
     checkForDiffByFileTypes(fileTypes) {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
             if (!this.useCheckoutAction) {
                 yield this.prepareRepo();
@@ -759,7 +761,7 @@ class Github {
             }
             catch (error) {
                 if (error instanceof Error)
-                    this.logger.exit(error === null || error === void 0 ? void 0 : error.message);
+                    this.logger.exit((_a = error === null || error === void 0 ? void 0 : error.message) !== null && _a !== void 0 ? _a : error === null || error === void 0 ? void 0 : error.toString());
             }
             if ((diffFolders === null || diffFolders === void 0 ? void 0 : diffFolders.length) == 0) {
                 this.logger.info("No changes were found");
@@ -798,10 +800,10 @@ class Github {
             }
         });
     }
-    parseOutput(filesToUpload, analysisResults) {
+    parseOutput(filesToUpload, analysisResults, errorMessage) {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            const body = this.parseCodeAnalysis(filesToUpload, analysisResults);
+            const body = this.parseCodeAnalysis(filesToUpload, analysisResults, errorMessage);
             if (body && body != "")
                 this.steps.comment = yield this.createComment(body);
             let commentUrl = "";
@@ -819,7 +821,7 @@ class Github {
                     this.logger.info("The risks analysis process completed successfully with risks, please check report: " + commentUrl);
             }
             else {
-                this.logger.info("Analysis process completed with issues or without any risks");
+                this.logger.info("Analysis process completed with issues or without any risks, please check action's logs: " + commentUrl);
             }
         });
     }
@@ -1013,7 +1015,7 @@ ${risksTableContents}
             ? risksSummary + risksTable
             : "";
     }
-    parseCodeAnalysis(filesToUpload, analysisResults) {
+    parseCodeAnalysis(filesToUpload, analysisResults, errMsg) {
         var _a, _b, _c;
         const commentBodyArray = [];
         const header = `<a href="#"><img  height="50" src="${this.assetsUrl}/header.svg" /></a> \n`;
@@ -1032,6 +1034,9 @@ Workflow: ${(_c = this._context) === null || _c === void 0 ? void 0 : _c.workflo
         const analysisByFolder = (commentBodyArray === null || commentBodyArray === void 0 ? void 0 : commentBodyArray.length) > 0
             ? bodyHeading + commentBodyArray.join("\n\n---\n\n")
             : "\n\n<h4>No risks were found.</h4>\n\n";
+        if ((filesToUpload === null || filesToUpload === void 0 ? void 0 : filesToUpload.length) == 0 && (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.length) == 0) {
+            return header + "\n" + errMsg + "\n" + footer;
+        }
         return header + summary + analysisByFolder + footer;
     }
 }

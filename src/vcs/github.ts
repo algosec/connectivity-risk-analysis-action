@@ -277,7 +277,7 @@ export class Github implements IVersionControl {
       }
     
     } catch (error: unknown) {
-      if (error instanceof Error) this.logger.exit(error?.message);
+      if (error instanceof Error) this.logger.exit(error?.message ?? error?.toString());
     }
     if (diffFolders?.length == 0) {
       this.logger.info(
@@ -323,9 +323,10 @@ export class Github implements IVersionControl {
 
   async parseOutput(
     filesToUpload: RiskAnalysisFile[],
-    analysisResults: RiskAnalysisResult[]
+    analysisResults: RiskAnalysisResult[],
+    errorMessage: string
   ): Promise<void> {
-    const body = this.parseCodeAnalysis(filesToUpload, analysisResults);
+    const body = this.parseCodeAnalysis(filesToUpload, analysisResults, errorMessage);
     if (body && body != "") this.steps.comment = await this.createComment(body);
       let commentUrl = ""
       try {
@@ -334,11 +335,7 @@ export class Github implements IVersionControl {
         this.logger.error("Failed to create report: " + e);
       }
       this.logger.info("Creating Risks Report");
-      if (
-        analysisResults?.some(
-          (response) => response?.additions && response?.additions?.analysis_result?.length > 0
-        )
-      ) {
+      if ( analysisResults?.some((response) => response?.additions && response?.additions?.analysis_result?.length > 0) ) {
         if (this.stopWhenFail)
           this.logger.exit(
             "The risks analysis process completed successfully with risks, please check report: " + commentUrl
@@ -349,7 +346,7 @@ export class Github implements IVersionControl {
           );
       } else {
         this.logger.info(
-          "Analysis process completed with issues or without any risks"
+          "Analysis process completed with issues or without any risks, please check action's logs: " + commentUrl
         );
       }
   }
@@ -609,7 +606,8 @@ ${risksTableContents}
 
   parseCodeAnalysis(
     filesToUpload: RiskAnalysisFile[],
-    analysisResults: RiskAnalysisResult[]
+    analysisResults: RiskAnalysisResult[],
+    errMsg?: string
   ): string {
     const commentBodyArray: any[] = [];
     const header = `<a href="#"><img  height="50" src="${this.assetsUrl}/header.svg" /></a> \n`;
@@ -636,7 +634,12 @@ Workflow: ${this._context?.workflow}`;
       commentBodyArray?.length > 0
         ? bodyHeading + commentBodyArray.join("\n\n---\n\n")
         : "\n\n<h4>No risks were found.</h4>\n\n";
+    
+    if (filesToUpload?.length == 0 && analysisResults?.length == 0){
+      return header + "\n" + errMsg + "\n" + footer
+    }
 
     return header + summary + analysisByFolder + footer;
+
   }
 }

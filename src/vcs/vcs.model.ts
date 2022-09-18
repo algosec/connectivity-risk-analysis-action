@@ -25,7 +25,7 @@ export interface IVersionControl {
   parseCodeAnalysis: (analysis, VersionControl) => any;
   getDiff: (vcsObject) => any;
   checkForDiffByFileTypes: (fileTypes: string[]) => any;
-  parseOutput: (filesToUpload: RiskAnalysisFile[], analysisResult) => any;
+  parseOutput: (filesToUpload: RiskAnalysisFile[], analysisResult, error?: string) => any;
   uploadAnalysisFile: (file: RiskAnalysisFile, jwt: string) => any;
   getInputs: () => any;
 }
