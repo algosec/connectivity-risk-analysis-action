@@ -361,7 +361,7 @@ export class Github implements IVersionControl {
   ): string {
     let analysisBody = "";
 
-    if (!analysis?.additions?.analysis_result) {
+    if (!analysis?.additions?.analysis_result || (analysis?.error && analysis?.error != '')) {
       analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${
         this.assetsUrl
       }/failure.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${
@@ -480,7 +480,7 @@ ${result?.error}\n
 ${CODE_BLOCK}\n`;
     const analysisContent = `\n<details>
 <summary>Analysis Log</summary>
-${result?.error != '' ? "<br>" + errors + "<br>" : ""}
+${!result?.error || result?.error == '' ? "" : "<br>" + errors + "<br>" }
 </details> <!-- End Format Logs -->\n`;
     return analysisContent;
   }

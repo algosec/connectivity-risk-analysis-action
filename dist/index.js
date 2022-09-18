@@ -817,7 +817,7 @@ class Github {
     buildCommentAnalysisBody(analysis, file) {
         var _a, _b, _c;
         let analysisBody = "";
-        if (!((_a = analysis === null || analysis === void 0 ? void 0 : analysis.additions) === null || _a === void 0 ? void 0 : _a.analysis_result)) {
+        if (!((_a = analysis === null || analysis === void 0 ? void 0 : analysis.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) || ((analysis === null || analysis === void 0 ? void 0 : analysis.error) && (analysis === null || analysis === void 0 ? void 0 : analysis.error) != '')) {
             analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${this.assetsUrl}/failure.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n${this.buildCommentReportError(analysis)}\n</details>`;
         }
         else if (((_c = (_b = analysis === null || analysis === void 0 ? void 0 : analysis.additions) === null || _b === void 0 ? void 0 : _b.analysis_result) === null || _c === void 0 ? void 0 : _c.length) == 0) {
@@ -898,7 +898,7 @@ ${result === null || result === void 0 ? void 0 : result.error}\n
 ${CODE_BLOCK}\n`;
         const analysisContent = `\n<details>
 <summary>Analysis Log</summary>
-${(result === null || result === void 0 ? void 0 : result.error) != '' ? "<br>" + errors + "<br>" : ""}
+${!(result === null || result === void 0 ? void 0 : result.error) || (result === null || result === void 0 ? void 0 : result.error) == '' ? "" : "<br>" + errors + "<br>"}
 </details> <!-- End Format Logs -->\n`;
         return analysisContent;
     }
