@@ -326,13 +326,12 @@ export class Github implements IVersionControl {
   ): Promise<void> {
     const body = this.parseCodeAnalysis(filesToUpload, analysisResults);
     if (body && body != "") this.steps.comment = await this.createComment(body);
-    // if (analysisResults?.some((response) => !response?.success)) {
-    //   let errors = "";
-    //   Object.keys(this.steps).forEach(step => errors += this?.steps[step]?.stderr != '' ? this?.steps[step]?.stderr : '')
-    //   this.logger.exit(
-    //     "The risks analysis process failed.\n"
-    //   );
-    // } else {
+      let commentUrl = ""
+      try {
+        commentUrl = JSON.parse(this.steps.comment.stdout)?.html_url
+      } catch(e){
+        this.logger.error("Failed to create report: " + e);
+      }
       this.logger.info("Creating Risks Report");
       if (
         analysisResults?.some(
@@ -341,18 +340,17 @@ export class Github implements IVersionControl {
       ) {
         if (this.stopWhenFail)
           this.logger.exit(
-            "The risks analysis process completed successfully with risks, please check report"
+            "The risks analysis process completed successfully with risks, please check report" + JSON.parse(this.steps.comment.stdout)?.html_url
           );
         else
           this.logger.info(
-            "The risks analysis process completed successfully with risks, please check report"
+            "The risks analysis process completed successfully with risks, please check report" + JSON.parse(this.steps.comment.stdout)?.html_url
           );
       } else {
         this.logger.info(
           "Analysis process completed successfully without any risks"
         );
       }
-    // }
   }
 
   buildCommentAnalysisBody(

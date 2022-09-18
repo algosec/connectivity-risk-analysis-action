@@ -173,7 +173,7 @@ export class AshCodeAnalysis {
       }
       this.vcs.logger.debug( `Risk analysis result:\n${JSON.stringify(analysisResults, null, "\t")}\n`, true);
     } catch(e){
-      this.vcs.logger.error(`"Analysis failed, please contact support.\n": ${e}`);
+      this.vcs.logger.error(`Analysis failed, please contact support.\n: ${e}`);
       analysisResults = []
     }
    
@@ -183,19 +183,26 @@ export class AshCodeAnalysis {
   async pollCodeAnalysisResponse(
     file: RiskAnalysisFile
   ): Promise<RiskAnalysisResult> {
-    let analysisResult = await this.checkCodeAnalysisResponse(file);
+    let analysisResult: RiskAnalysisResult | null = await this.checkCodeAnalysisResponse(file);
     this.vcs.logger.info(`Waiting for risk analysis response for folder: ${file.folder}`);
     for (let i = 0; i < 60; i++) {
       await this.wait(5000);
       analysisResult = await this.checkCodeAnalysisResponse(file);
-      if (analysisResult?.additions?.analysis_result?.length > 0) {
+      if (analysisResult) {
         analysisResult.folder = file?.folder;
         this.vcs.logger.debug(`Response for folder: ${file?.folder}\n` + JSON.stringify(analysisResult) + "\n", true);
         break;
-      } else if (analysisResult?.error && analysisResult?.error != '') {
+      } 
+    }
+    if (!analysisResult){
+      analysisResult = {
+        folder: file?.folder,
+        error: "Analysis has timed out for folder: " + file?.folder + ", please contact support.",
+        proceeded_file: "",
+        additions: { analysis_result: [], analysis_state: false },
+        success: false,
+      };
         this.vcs.logger.error("Failed to get analysis result for folder: " + file?.folder + "\n" + analysisResult?.error);
-        break;
-      }
     }
     return analysisResult;
   }
@@ -208,7 +215,7 @@ export class AshCodeAnalysis {
 
   async checkCodeAnalysisResponse(
     file: RiskAnalysisFile
-  ): Promise<RiskAnalysisResult> {
+  ): Promise<RiskAnalysisResult | null> {
     const pollUrl = `${this.apiUrl}/analysis_result?customer=${this.vcs.repo.owner}&action_id=${file.uuid}`;
     const response = await this.vcs.http.get(pollUrl, {
       Authorization: "Bearer " + this.jwt,
@@ -220,16 +227,11 @@ export class AshCodeAnalysis {
         const result = message?.result ? JSON.parse(message?.result) : null;
         return result;
       } else {
-        return {
-          error: "No message has been Found, polling was timedout after 5 minutes, please try to run the action again, if the issue continues, contact support.",
-          proceeded_file: "",
-          additions: { analysis_result: [], analysis_state: false },
-          success: false,
-        };
+        return null;
       }
     } else {
       return {
-        error: response.message.statusMessage,
+        error: response?.message?.statusMessage,
         proceeded_file: "",
         additions: { analysis_result: [], analysis_state: false },
         success: false,
