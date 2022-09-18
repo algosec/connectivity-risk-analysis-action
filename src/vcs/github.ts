@@ -341,15 +341,15 @@ export class Github implements IVersionControl {
       ) {
         if (this.stopWhenFail)
           this.logger.exit(
-            "The risks analysis process completed successfully with risks, please check report" + commentUrl
+            "The risks analysis process completed successfully with risks, please check report: " + commentUrl
           );
         else
           this.logger.info(
-            "The risks analysis process completed successfully with risks, please check report" + commentUrl
+            "The risks analysis process completed successfully with risks, please check report: " + commentUrl
           );
       } else {
         this.logger.info(
-          "Analysis process completed successfully without any risks"
+          "Analysis process completed with issues or without any risks"
         );
       }
   }
@@ -360,7 +360,7 @@ export class Github implements IVersionControl {
   ): string {
     let analysisBody = "";
 
-    if (!analysis?.additions?.analysis_result) {
+    if (!analysis?.additions) {
       analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${
         this.assetsUrl
       }/failure.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${

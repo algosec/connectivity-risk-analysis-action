@@ -77,9 +77,7 @@ export class AshCodeAnalysis {
         return data?.access_token;
       } else {
         this.vcs.logger.exit(
-          `Failed to generate token.\n Error code ${response_code}, msg: ${JSON.stringify(
-            data, null, "\t"
-          )}`
+          `Failed to generate token, ${data.errorCode == "TENANT_NOT_FOUND" ? "Tenant not found" : data.message}`
         );
       }
     } catch (error: any) {
@@ -199,8 +197,8 @@ export class AshCodeAnalysis {
       analysisResult = {
         folder: file?.folder,
         error: "Analysis has timed out for folder: " + file?.folder + ", please contact support.",
-        proceeded_file: "",
-        additions: { analysis_result: [], analysis_state: false },
+        proceeded_file: file?.uuid,
+        additions: undefined,
         success: false,
       };
         this.vcs.logger.error("Failed to get analysis result for folder: " + file?.folder + "\n" + analysisResult?.error);
@@ -233,7 +231,7 @@ export class AshCodeAnalysis {
     } else {
       return {
         error: response?.message?.statusMessage,
-        proceeded_file: "",
+        proceeded_file: file?.uuid,
         additions: undefined,
         success: false,
       };
