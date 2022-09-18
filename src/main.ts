@@ -5,6 +5,11 @@ import { FrameworkKeys, IFramework } from "./iaas-tools/framework.model";
 import { FrameworkService } from "./iaas-tools/framework.service";
 import { IVersionControl, VersionControlKeys } from "./vcs/vcs.model";
 import { VersionControlService } from "./vcs/vcs.service";
+
+// import {
+//     codeAnalysisResponses,
+//     filesToAnalyze
+// } from "../test/mockData.folder-error"
 export class Main {
   frameworkType: FrameworkKeys;
   vcsType: VersionControlKeys;
@@ -45,7 +50,7 @@ export class Main {
             filesToAnalyze
           );
           // if (codeAnalysisResponses?.length > 0) {
-            await vcs.parseOutput(filesToAnalyze, codeAnalysisResponses);
+            await vcs.parseOutput(filesToAnalyze as any, codeAnalysisResponses);
           // }
         }else {
           vcs.logger.exit('No files to analyze')

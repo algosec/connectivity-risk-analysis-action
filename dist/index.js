@@ -468,6 +468,10 @@ exports.Main = void 0;
 const code_analysis_1 = __nccwpck_require__(1153);
 const framework_service_1 = __nccwpck_require__(2162);
 const vcs_service_1 = __nccwpck_require__(9701);
+// import {
+//     codeAnalysisResponses,
+//     filesToAnalyze
+// } from "../test/mockData.folder-error"
 class Main {
     constructor() {
         this.vcsType = 'github'; //(process?.env?.VCS ?? 'github') as VersionControlKeys;
@@ -645,13 +649,14 @@ class Github {
         }
     }
     createComment(body) {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d, _e, _f;
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield this.octokit.rest.issues.createComment(Object.assign(Object.assign({}, this._context.repo), { issue_number: this._context.issue.number, body }));
             return {
                 exitCode: ((_a = result === null || result === void 0 ? void 0 : result.data) === null || _a === void 0 ? void 0 : _a.body) ? 0 : 1,
                 stdout: ((_b = result === null || result === void 0 ? void 0 : result.data) === null || _b === void 0 ? void 0 : _b.body) ? (_c = result === null || result === void 0 ? void 0 : result.data) === null || _c === void 0 ? void 0 : _c.body : null,
                 stderr: ((_d = result === null || result === void 0 ? void 0 : result.data) === null || _d === void 0 ? void 0 : _d.body) ? null : (_e = result === null || result === void 0 ? void 0 : result.data) === null || _e === void 0 ? void 0 : _e.body,
+                url: (_f = result === null || result === void 0 ? void 0 : result.data) === null || _f === void 0 ? void 0 : _f.html_url
             };
         });
     }
@@ -794,14 +799,14 @@ class Github {
         });
     }
     parseOutput(filesToUpload, analysisResults) {
-        var _a, _b, _c;
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
             const body = this.parseCodeAnalysis(filesToUpload, analysisResults);
             if (body && body != "")
                 this.steps.comment = yield this.createComment(body);
             let commentUrl = "";
             try {
-                commentUrl = (_a = JSON.parse(this.steps.comment.stdout)) === null || _a === void 0 ? void 0 : _a.html_url;
+                commentUrl = (_a = this.steps) === null || _a === void 0 ? void 0 : _a.comment["url"];
             }
             catch (e) {
                 this.logger.error("Failed to create report: " + e);
@@ -809,9 +814,9 @@ class Github {
             this.logger.info("Creating Risks Report");
             if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => { var _a, _b; return (response === null || response === void 0 ? void 0 : response.additions) && ((_b = (_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })) {
                 if (this.stopWhenFail)
-                    this.logger.exit("The risks analysis process completed successfully with risks, please check report" + ((_b = JSON.parse(this.steps.comment.stdout)) === null || _b === void 0 ? void 0 : _b.html_url));
+                    this.logger.exit("The risks analysis process completed successfully with risks, please check report" + commentUrl);
                 else
-                    this.logger.info("The risks analysis process completed successfully with risks, please check report" + ((_c = JSON.parse(this.steps.comment.stdout)) === null || _c === void 0 ? void 0 : _c.html_url));
+                    this.logger.info("The risks analysis process completed successfully with risks, please check report" + commentUrl);
             }
             else {
                 this.logger.info("Analysis process completed successfully without any risks");
@@ -961,11 +966,11 @@ ${((_l = (_k = file === null || file === void 0 ? void 0 : file.output) === null
             return accumulator;
         }, {});
         Object.values(groupedRisksById).forEach((risk) => {
-            var _a;
+            var _a, _b;
             risksTableContents += `<tr>\n
 <td>${risk.riskId}</td>\n
-<td align="center"><a href="#"><img  width="10" height="10" src="${this.assetsUrl}/${risk.riskSeverity}.svg" /></a></td>\n
-<td align="center"><sub><a href="#"><img  width="24" height="24" src="${this.assetsUrl}/${(_a = risk === null || risk === void 0 ? void 0 : risk.vendor.toLowerCase()) !== null && _a !== void 0 ? _a : "aws"}.svg" /></a></sub></td>\n
+<td align="center"><a href="#"><img  width="10" height="10" src="${this.assetsUrl}/${risk === null || risk === void 0 ? void 0 : risk.riskSeverity}.svg" /></a></td>\n
+<td align="center"><sub><a href="#"><img  width="24" height="24" src="${this.assetsUrl}/${(_b = (_a = risk === null || risk === void 0 ? void 0 : risk.vendor) === null || _a === void 0 ? void 0 : _a.toLowerCase()) !== null && _b !== void 0 ? _b : "aws"}.svg" /></a></sub></td>\n
 <td>${Array.isArray(risk.folder) ? risk.folder.join(", ") : risk.folder}</td>\n
 <td>${risk.riskTitle}</td>\n
 </tr>\n`;

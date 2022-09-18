@@ -153,6 +153,7 @@ export class Github implements IVersionControl {
       exitCode: result?.data?.body ? 0 : 1,
       stdout: result?.data?.body ? result?.data?.body : null,
       stderr: result?.data?.body ? null : result?.data?.body,
+      url: result?.data?.html_url 
     } as ExecOutput;
   }
 
@@ -328,7 +329,7 @@ export class Github implements IVersionControl {
     if (body && body != "") this.steps.comment = await this.createComment(body);
       let commentUrl = ""
       try {
-        commentUrl = JSON.parse(this.steps.comment.stdout)?.html_url
+        commentUrl = this.steps?.comment["url"]
       } catch(e){
         this.logger.error("Failed to create report: " + e);
       }
@@ -340,11 +341,11 @@ export class Github implements IVersionControl {
       ) {
         if (this.stopWhenFail)
           this.logger.exit(
-            "The risks analysis process completed successfully with risks, please check report" + JSON.parse(this.steps.comment.stdout)?.html_url
+            "The risks analysis process completed successfully with risks, please check report" + commentUrl
           );
         else
           this.logger.info(
-            "The risks analysis process completed successfully with risks, please check report" + JSON.parse(this.steps.comment.stdout)?.html_url
+            "The risks analysis process completed successfully with risks, please check report" + commentUrl
           );
       } else {
         this.logger.info(
@@ -548,10 +549,10 @@ ${file?.output?.log?.stderr ? "<br>" + errors + "<br>" : ""}
       risksTableContents += `<tr>\n
 <td>${risk.riskId}</td>\n
 <td align="center"><a href="#"><img  width="10" height="10" src="${this.assetsUrl}/${
-        risk.riskSeverity
+        risk?.riskSeverity
       }.svg" /></a></td>\n
 <td align="center"><sub><a href="#"><img  width="24" height="24" src="${this.assetsUrl}/${
-        risk?.vendor.toLowerCase() ?? "aws"
+        risk?.vendor?.toLowerCase() ?? "aws"
       }.svg" /></a></sub></td>\n
 <td>${Array.isArray(risk.folder) ? risk.folder.join(", ") : risk.folder}</td>\n
 <td>${risk.riskTitle}</td>\n
