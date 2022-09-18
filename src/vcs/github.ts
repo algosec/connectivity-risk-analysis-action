@@ -636,7 +636,7 @@ Workflow: ${this._context?.workflow}`;
         : "\n\n<h4>No risks were found.</h4>\n\n";
     
     if (filesToUpload?.length == 0 && analysisResults?.length == 0){
-      return header + "\n" + errMsg + "\n" + footer
+      return header + `<br><br><sub><sub><sub><a href="#"><img  height="20" width="20" src="${this.assetsUrl}/failure.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<b>` + errMsg + "</b><br><br>" + footer
     }
 
     return header + summary + analysisByFolder + footer;

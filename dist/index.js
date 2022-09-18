@@ -1035,7 +1035,7 @@ Workflow: ${(_c = this._context) === null || _c === void 0 ? void 0 : _c.workflo
             ? bodyHeading + commentBodyArray.join("\n\n---\n\n")
             : "\n\n<h4>No risks were found.</h4>\n\n";
         if ((filesToUpload === null || filesToUpload === void 0 ? void 0 : filesToUpload.length) == 0 && (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.length) == 0) {
-            return header + "\n" + errMsg + "\n" + footer;
+            return header + `<br><br><sub><sub><sub><a href="#"><img  height="20" width="20" src="${this.assetsUrl}/failure.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<b>` + errMsg + "</b><br><br>" + footer;
         }
         return header + summary + analysisByFolder + footer;
     }
