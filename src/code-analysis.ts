@@ -156,11 +156,11 @@ export class AshCodeAnalysis {
     return res;
   }
 
-  async analyze(filesToUpload: RiskAnalysisFile[]): Promise<Array<RiskAnalysisResult | null>> {
-    let analysisResults: Array<RiskAnalysisResult | null> = [];
+  async analyze(filesToUpload: RiskAnalysisFile[]): Promise<Array<RiskAnalysisResult>> {
+    let analysisResults: Array<RiskAnalysisResult> = [];
     try {
       await this.triggerCodeAnalysis(filesToUpload);
-      const codeAnalysisPromises: Array<Promise<RiskAnalysisResult | null>> = [];
+      const codeAnalysisPromises: Array<Promise<RiskAnalysisResult>> = [];
       filesToUpload
         .filter((file) => file?.output?.plan != '')
         .forEach((file) =>
@@ -182,24 +182,20 @@ export class AshCodeAnalysis {
 
   async pollCodeAnalysisResponse(
     file: RiskAnalysisFile
-  ): Promise<RiskAnalysisResult | null> {
+  ): Promise<RiskAnalysisResult> {
     let analysisResult = await this.checkCodeAnalysisResponse(file);
     this.vcs.logger.info(`Waiting for risk analysis response for folder: ${file.folder}`);
     for (let i = 0; i < 60; i++) {
       await this.wait(5000);
       analysisResult = await this.checkCodeAnalysisResponse(file);
-      if (analysisResult?.additions) {
+      if (analysisResult?.additions?.analysis_result?.length > 0) {
         analysisResult.folder = file?.folder;
-        this.vcs.logger.debug("Response:\n" + JSON.stringify(analysisResult) + "\n", true);
+        this.vcs.logger.debug(`Response for folder: ${file?.folder}\n` + JSON.stringify(analysisResult) + "\n", true);
         break;
       } else if (analysisResult?.error && analysisResult?.error != '') {
         this.vcs.logger.error("Failed to get analysis result for folder: " + file?.folder + "\n" + analysisResult?.error);
         break;
       }
-    }
-    if (!analysisResult){
-      analysisResult = {error: "Poll Request has timed out for folder: "+ file?.folder, proceeded_file: "", success: false, additions: {analysis_result: [], analysis_state: false}};
-      this.vcs.logger.error( "Poll Request has timed out for folder: "+ file?.folder);
     }
     return analysisResult;
   }
@@ -212,7 +208,7 @@ export class AshCodeAnalysis {
 
   async checkCodeAnalysisResponse(
     file: RiskAnalysisFile
-  ): Promise<RiskAnalysisResult | null> {
+  ): Promise<RiskAnalysisResult> {
     const pollUrl = `${this.apiUrl}/analysis_result?customer=${this.vcs.repo.owner}&action_id=${file.uuid}`;
     const response = await this.vcs.http.get(pollUrl, {
       Authorization: "Bearer " + this.jwt,
@@ -224,7 +220,12 @@ export class AshCodeAnalysis {
         const result = message?.result ? JSON.parse(message?.result) : null;
         return result;
       } else {
-        return null;
+        return {
+          error: "No message has been Found, polling was timedout after 5 minutes, please try to run the action again, if the issue continues, contact support.",
+          proceeded_file: "",
+          additions: { analysis_result: [], analysis_state: false },
+          success: false,
+        };
       }
     } else {
       return {
