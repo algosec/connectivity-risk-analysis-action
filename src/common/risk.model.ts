@@ -44,4 +44,6 @@ export interface RiskAnalysisFile {
   uuid: string;
   output: {plan: string, log: ExecOutput, initLog: ExecOutput};
   folder: string;
+  upload?: ExecOutput
+  analyze?: ExecOutput
 }

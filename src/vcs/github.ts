@@ -38,7 +38,7 @@ export class Github implements IVersionControl {
     this.firstRun = process?.env?.FIRST_RUN == 'true';
     this.stopWhenFail = process?.env?.STOP_WHEN_FAIL != 'false';
     this.http = new HttpClient();
-    const prefix = (str: string, group = false, close = true) => (group ? '::group::' : '- ') + '##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '')
+    const prefix = (str: string, group = false, close = true) => (group ? '::group::' : '- ') + Date.now() +'##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '')
     this.logger = { 
             debug: (str: string, group = false) => debug(prefix(str, group)), 
             error: (str: string, group = false) => error(prefix(str, group)), 
@@ -356,12 +356,12 @@ export class Github implements IVersionControl {
   }
 
   buildCommentAnalysisBody(
-    analysis: AnalysisResultAdditions | undefined,
+    analysis: RiskAnalysisResult | undefined,
     file: RiskAnalysisFile
   ): string {
     let analysisBody = "";
 
-    if (!analysis?.analysis_result) {
+    if (!analysis?.additions?.analysis_result) {
       analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${
         this.assetsUrl
       }/failure.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${
@@ -369,9 +369,9 @@ export class Github implements IVersionControl {
       }</b></h3></summary>\n${this.buildCommentFrameworkResult(
         file
       )}\n${this.buildCommentReportError(
-        file
+        analysis
       )}\n</details>`;
-    } else if (analysis?.analysis_result?.length == 0) {
+    } else if (analysis?.additions?.analysis_result?.length == 0) {
       analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${
         this.assetsUrl
       }/success.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${
@@ -381,7 +381,7 @@ export class Github implements IVersionControl {
       )}\n</details>`;
     } else {
       analysisBody = `<details>\n${this.buildCommentReportResult(
-        analysis,
+        analysis?.additions,
         file
       )}\n${this.buildCommentFrameworkResult(file)}\n</details>`;
     }
@@ -472,16 +472,15 @@ ${risk?.items?.map(item =>
     return codeAnalysisContent;
   }
 
-  buildCommentReportError(file: RiskAnalysisFile): string {
+  buildCommentReportError(result: RiskAnalysisResult | undefined): string {
     const CODE_BLOCK = "```";
-    const errorsBody = (this.steps?.upload?.stderr ?? '').concat(this.steps?.analyze?.stderr ?? '')
     const errors = `Errors\n
 ${CODE_BLOCK}\n
-${errorsBody}\n
+${result?.error}\n
 ${CODE_BLOCK}\n`;
     const analysisContent = `\n<details>
 <summary>Analysis Log</summary>
-${errorsBody != '' ? "<br>" + errors + "<br>" : ""}
+${result?.error != '' ? "<br>" + errors + "<br>" : ""}
 </details> <!-- End Format Logs -->\n`;
     return analysisContent;
   }
@@ -632,7 +631,7 @@ Workflow: ${this._context?.workflow}`;
         _fileAnalysis?.proceeded_file?.includes(file.uuid)
       );
       commentBodyArray.push(
-        this.buildCommentAnalysisBody(fileAnalysis?.additions, file)
+        this.buildCommentAnalysisBody(fileAnalysis, file)
       );
     });
 

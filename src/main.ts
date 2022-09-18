@@ -10,8 +10,8 @@ export class Main {
   vcsType: VersionControlKeys;
 
   constructor() {
-    this.vcsType = (process?.env?.VCS ?? 'github') as VersionControlKeys;
-    this.frameworkType = (process?.env?.FRAMEWORK ?? 'terraform') as FrameworkKeys;
+    this.vcsType = 'github' as VersionControlKeys//(process?.env?.VCS ?? 'github') as VersionControlKeys;
+    this.frameworkType = 'terraform' as FrameworkKeys //(process?.env?.FRAMEWORK ?? 'terraform') as FrameworkKeys;
   }
 
   async run(): Promise<void> {
@@ -44,12 +44,14 @@ export class Main {
           const codeAnalysisResponses = await codeAnalyzer.analyze(
             filesToAnalyze
           );
-          if (codeAnalysisResponses?.length > 0) {
+          // if (codeAnalysisResponses?.length > 0) {
             await vcs.parseOutput(filesToAnalyze, codeAnalysisResponses);
-          }
+          // }
         }else {
           vcs.logger.exit('- No files to analyze')
         }
+      } else {
+        vcs.logger.exit('- No changes were found in infrastructure')
       }
     } catch (_e) {
       throw new Error(_e);

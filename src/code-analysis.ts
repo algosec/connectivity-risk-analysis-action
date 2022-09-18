@@ -112,10 +112,12 @@ export class AshCodeAnalysis {
       const responses = await Promise.all(fileUploadPromises);
   
       if (responses.filter(response => response).length == 0) {
+        this.vcs.steps.upload = {exitCode: 0, stdout: '', stderr: "No files to upload"}
         this.vcs.logger.exit(
           "No files were uploaded, please check logs"
         );
       } else if (responses.some(response => !response)) {
+        this.vcs.steps.upload = {exitCode: 0, stdout: '', stderr: "Some files failed to upload"}
         this.vcs.logger.error(
           "Some files failed to upload, please check logs"
         );
@@ -143,9 +145,11 @@ export class AshCodeAnalysis {
           res = true;
         }
       } else {
+        file.upload = {stderr: `No plan was created for: ${file.folder}, please check terraform logs`, stdout: '', exitCode: 0}
         this.vcs.logger.info(`No plan was created for: ${file.folder}, please check terraform logs`)
       }
     } catch (e) {
+      file.upload = {stderr: e, stdout: '', exitCode: 0}
       this.vcs.logger.error(`File upload for: ${file.folder} failed due to errors:\n ${e}`)
       res = false;
     }
@@ -153,7 +157,7 @@ export class AshCodeAnalysis {
   }
 
   async analyze(filesToUpload: RiskAnalysisFile[]): Promise<Array<RiskAnalysisResult | null>> {
-    let analysisResult: Array<RiskAnalysisResult | null> = [];
+    let analysisResults: Array<RiskAnalysisResult | null> = [];
     try {
       await this.triggerCodeAnalysis(filesToUpload);
       const codeAnalysisPromises: Array<Promise<RiskAnalysisResult | null>> = [];
@@ -162,51 +166,40 @@ export class AshCodeAnalysis {
         .forEach((file) =>
           codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file))
         );
-      analysisResult = await Promise.all(codeAnalysisPromises);
-      if (!analysisResult || analysisResult?.length == 0) {
-        this.vcs.steps.analysis = {exitCode: 0, stdout: '', stderr: "Analysis failed, please contact support."}
-        this.vcs.logger.exit("Code Analysis failed");
-        analysisResult = []
+      analysisResults = await Promise.all(codeAnalysisPromises);
+      if (!analysisResults || analysisResults?.length == 0) {
+        this.vcs.logger.error("Analysis failed, please contact support.");
+        analysisResults = []
       }
-      this.vcs.logger.debug(
-        `Risk analysis result:\n${JSON.stringify(analysisResult, null, "\t")}\n`, true
-      );
+      this.vcs.logger.debug( `Risk analysis result:\n${JSON.stringify(analysisResults, null, "\t")}\n`, true);
     } catch(e){
-      this.vcs.steps.analysis = {exitCode: 0, stdout: '', stderr: "Analysis failed, please contact support.\n" + e}
-      this.vcs.logger.exit(`Code Analysis failed due to errors: ${e}`);
-      analysisResult = []
+      this.vcs.logger.error(`"Analysis failed, please contact support.\n": ${e}`);
+      analysisResults = []
     }
    
-    return analysisResult;
+    return analysisResults;
   }
 
   async pollCodeAnalysisResponse(
     file: RiskAnalysisFile
   ): Promise<RiskAnalysisResult | null> {
     let analysisResult = await this.checkCodeAnalysisResponse(file);
-    this.vcs.logger.info(
-      `Waiting for risk analysis response for folder: ${file.folder}`
-    );
+    this.vcs.logger.info(`Waiting for risk analysis response for folder: ${file.folder}`);
     for (let i = 0; i < 60; i++) {
       await this.wait(5000);
       analysisResult = await this.checkCodeAnalysisResponse(file);
       if (analysisResult?.additions) {
         analysisResult.folder = file?.folder;
-        this.vcs.logger.debug(
-          "Response:\n" + JSON.stringify(analysisResult) + "\n", true
-        );
+        this.vcs.logger.debug("Response:\n" + JSON.stringify(analysisResult) + "\n", true);
         break;
-      } else if (analysisResult?.error) {
-        this.vcs.logger.error(
-          "Poll Request failed for folder: " + file?.folder + analysisResult?.error
-        );
+      } else if (analysisResult?.error && analysisResult?.error != '') {
+        this.vcs.logger.error("Failed to get analysis result for folder: " + file?.folder + "\n" + analysisResult?.error);
         break;
       }
     }
     if (!analysisResult){
-      this.vcs.logger.error(
-        "Poll Request has timed out for folder: "+ file?.folder
-      );
+      analysisResult = {error: "Poll Request has timed out for folder: "+ file?.folder, proceeded_file: "", success: false, additions: {analysis_result: [], analysis_state: false}};
+      this.vcs.logger.error( "Poll Request has timed out for folder: "+ file?.folder);
     }
     return analysisResult;
   }

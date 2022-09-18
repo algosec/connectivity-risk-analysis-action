@@ -103,9 +103,11 @@ class AshCodeAnalysis {
                 filesToUpload.forEach((file) => fileUploadPromises.push(this.uploadFile(file)));
                 const responses = yield Promise.all(fileUploadPromises);
                 if (responses.filter(response => response).length == 0) {
+                    this.vcs.steps.upload = { exitCode: 0, stdout: '', stderr: "No files to upload" };
                     this.vcs.logger.exit("No files were uploaded, please check logs");
                 }
                 else if (responses.some(response => !response)) {
+                    this.vcs.steps.upload = { exitCode: 0, stdout: '', stderr: "Some files failed to upload" };
                     this.vcs.logger.error("Some files failed to upload, please check logs");
                 }
                 else {
@@ -130,10 +132,12 @@ class AshCodeAnalysis {
                     }
                 }
                 else {
+                    file.upload = { stderr: `No plan was created for: ${file.folder}, please check terraform logs`, stdout: '', exitCode: 0 };
                     this.vcs.logger.info(`No plan was created for: ${file.folder}, please check terraform logs`);
                 }
             }
             catch (e) {
+                file.upload = { stderr: e, stdout: '', exitCode: 0 };
                 this.vcs.logger.error(`File upload for: ${file.folder} failed due to errors:\n ${e}`);
                 res = false;
             }
@@ -142,27 +146,25 @@ class AshCodeAnalysis {
     }
     analyze(filesToUpload) {
         return __awaiter(this, void 0, void 0, function* () {
-            let analysisResult = [];
+            let analysisResults = [];
             try {
                 yield this.triggerCodeAnalysis(filesToUpload);
                 const codeAnalysisPromises = [];
                 filesToUpload
                     .filter((file) => { var _a; return ((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan) != ''; })
                     .forEach((file) => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
-                analysisResult = yield Promise.all(codeAnalysisPromises);
-                if (!analysisResult || (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.length) == 0) {
-                    this.vcs.steps.analysis = { exitCode: 0, stdout: '', stderr: "Analysis failed, please contact support." };
-                    this.vcs.logger.exit("Code Analysis failed");
-                    analysisResult = [];
+                analysisResults = yield Promise.all(codeAnalysisPromises);
+                if (!analysisResults || (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.length) == 0) {
+                    this.vcs.logger.error("Analysis failed, please contact support.");
+                    analysisResults = [];
                 }
-                this.vcs.logger.debug(`Risk analysis result:\n${JSON.stringify(analysisResult, null, "\t")}\n`, true);
+                this.vcs.logger.debug(`Risk analysis result:\n${JSON.stringify(analysisResults, null, "\t")}\n`, true);
             }
             catch (e) {
-                this.vcs.steps.analysis = { exitCode: 0, stdout: '', stderr: "Analysis failed, please contact support.\n" + e };
-                this.vcs.logger.exit(`Code Analysis failed due to errors: ${e}`);
-                analysisResult = [];
+                this.vcs.logger.error(`"Analysis failed, please contact support.\n": ${e}`);
+                analysisResults = [];
             }
-            return analysisResult;
+            return analysisResults;
         });
     }
     pollCodeAnalysisResponse(file) {
@@ -177,12 +179,13 @@ class AshCodeAnalysis {
                     this.vcs.logger.debug("Response:\n" + JSON.stringify(analysisResult) + "\n", true);
                     break;
                 }
-                else if (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error) {
-                    this.vcs.logger.error("Poll Request failed for folder: " + (file === null || file === void 0 ? void 0 : file.folder) + (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error));
+                else if ((analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error) && (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error) != '') {
+                    this.vcs.logger.error("Failed to get analysis result for folder: " + (file === null || file === void 0 ? void 0 : file.folder) + "\n" + (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error));
                     break;
                 }
             }
             if (!analysisResult) {
+                analysisResult = { error: "Poll Request has timed out for folder: " + (file === null || file === void 0 ? void 0 : file.folder), proceeded_file: "", success: false, additions: { analysis_result: [], analysis_state: false } };
                 this.vcs.logger.error("Poll Request has timed out for folder: " + (file === null || file === void 0 ? void 0 : file.folder));
             }
             return analysisResult;
@@ -464,9 +467,8 @@ const framework_service_1 = __nccwpck_require__(2162);
 const vcs_service_1 = __nccwpck_require__(9701);
 class Main {
     constructor() {
-        var _a, _b, _c, _d;
-        this.vcsType = ((_b = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.VCS) !== null && _b !== void 0 ? _b : 'github');
-        this.frameworkType = ((_d = (_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c.FRAMEWORK) !== null && _d !== void 0 ? _d : 'terraform');
+        this.vcsType = 'github'; //(process?.env?.VCS ?? 'github') as VersionControlKeys;
+        this.frameworkType = 'terraform'; //(process?.env?.FRAMEWORK ?? 'terraform') as FrameworkKeys;
     }
     run() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -489,13 +491,16 @@ class Main {
                     const filesToAnalyze = yield (framework === null || framework === void 0 ? void 0 : framework.check(foldersToRunCheck, vcs.workDir));
                     if ((filesToAnalyze === null || filesToAnalyze === void 0 ? void 0 : filesToAnalyze.length) > 0) {
                         const codeAnalysisResponses = yield codeAnalyzer.analyze(filesToAnalyze);
-                        if ((codeAnalysisResponses === null || codeAnalysisResponses === void 0 ? void 0 : codeAnalysisResponses.length) > 0) {
-                            yield vcs.parseOutput(filesToAnalyze, codeAnalysisResponses);
-                        }
+                        // if (codeAnalysisResponses?.length > 0) {
+                        yield vcs.parseOutput(filesToAnalyze, codeAnalysisResponses);
+                        // }
                     }
                     else {
                         vcs.logger.exit('- No files to analyze');
                     }
+                }
+                else {
+                    vcs.logger.exit('- No changes were found in infrastructure');
                 }
             }
             catch (_e) {
@@ -544,7 +549,7 @@ class Github {
         this.firstRun = ((_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.FIRST_RUN) == 'true';
         this.stopWhenFail = ((_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.STOP_WHEN_FAIL) != 'false';
         this.http = new http_client_1.HttpClient();
-        const prefix = (str, group = false, close = true) => (group ? '::group::' : '- ') + '##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '');
+        const prefix = (str, group = false, close = true) => (group ? '::group::' : '- ') + Date.now() + '##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '');
         this.logger = {
             debug: (str, group = false) => (0, core_1.debug)(prefix(str, group)),
             error: (str, group = false) => (0, core_1.error)(prefix(str, group)),
@@ -813,16 +818,16 @@ class Github {
         });
     }
     buildCommentAnalysisBody(analysis, file) {
-        var _a;
+        var _a, _b, _c;
         let analysisBody = "";
-        if (!(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result)) {
-            analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${this.assetsUrl}/failure.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n${this.buildCommentReportError(file)}\n</details>`;
+        if (!((_a = analysis === null || analysis === void 0 ? void 0 : analysis.additions) === null || _a === void 0 ? void 0 : _a.analysis_result)) {
+            analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${this.assetsUrl}/failure.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n${this.buildCommentReportError(analysis)}\n</details>`;
         }
-        else if (((_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.length) == 0) {
+        else if (((_c = (_b = analysis === null || analysis === void 0 ? void 0 : analysis.additions) === null || _b === void 0 ? void 0 : _b.analysis_result) === null || _c === void 0 ? void 0 : _c.length) == 0) {
             analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${this.assetsUrl}/success.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n</details>`;
         }
         else {
-            analysisBody = `<details>\n${this.buildCommentReportResult(analysis, file)}\n${this.buildCommentFrameworkResult(file)}\n</details>`;
+            analysisBody = `<details>\n${this.buildCommentReportResult(analysis === null || analysis === void 0 ? void 0 : analysis.additions, file)}\n${this.buildCommentFrameworkResult(file)}\n</details>`;
         }
         return analysisBody;
     }
@@ -888,17 +893,15 @@ ${(_b = (_a = risk === null || risk === void 0 ? void 0 : risk.items) === null |
             (((_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.length) == 0 ? "No Risks Found" : "")}</b></h3>${((_b = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0 ? severityCount : ""}</summary>\n${risksList}\n`;
         return codeAnalysisContent;
     }
-    buildCommentReportError(file) {
-        var _a, _b, _c, _d, _e, _f;
+    buildCommentReportError(result) {
         const CODE_BLOCK = "```";
-        const errorsBody = ((_c = (_b = (_a = this.steps) === null || _a === void 0 ? void 0 : _a.upload) === null || _b === void 0 ? void 0 : _b.stderr) !== null && _c !== void 0 ? _c : '').concat((_f = (_e = (_d = this.steps) === null || _d === void 0 ? void 0 : _d.analyze) === null || _e === void 0 ? void 0 : _e.stderr) !== null && _f !== void 0 ? _f : '');
         const errors = `Errors\n
 ${CODE_BLOCK}\n
-${errorsBody}\n
+${result === null || result === void 0 ? void 0 : result.error}\n
 ${CODE_BLOCK}\n`;
         const analysisContent = `\n<details>
 <summary>Analysis Log</summary>
-${errorsBody != '' ? "<br>" + errors + "<br>" : ""}
+${(result === null || result === void 0 ? void 0 : result.error) != '' ? "<br>" + errors + "<br>" : ""}
 </details> <!-- End Format Logs -->\n`;
         return analysisContent;
     }
@@ -1018,7 +1021,7 @@ Workflow: ${(_c = this._context) === null || _c === void 0 ? void 0 : _c.workflo
 ---\n`;
         filesToUpload.forEach((file) => {
             const fileAnalysis = analysisResults.find((_fileAnalysis) => { var _a; return (_a = _fileAnalysis === null || _fileAnalysis === void 0 ? void 0 : _fileAnalysis.proceeded_file) === null || _a === void 0 ? void 0 : _a.includes(file.uuid); });
-            commentBodyArray.push(this.buildCommentAnalysisBody(fileAnalysis === null || fileAnalysis === void 0 ? void 0 : fileAnalysis.additions, file));
+            commentBodyArray.push(this.buildCommentAnalysisBody(fileAnalysis, file));
         });
         const analysisByFolder = (commentBodyArray === null || commentBodyArray === void 0 ? void 0 : commentBodyArray.length) > 0
             ? bodyHeading + commentBodyArray.join("\n\n---\n\n")
