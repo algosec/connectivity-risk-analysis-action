@@ -30,12 +30,6 @@ jobs:
             # Optional: Fail or Continue if any risks were found after action finish
             STOP_WHEN_FAIL: true (default)
             
-            # Optional: IaC Framework type (Terraform, Cloudformation, etc...)
-            FRAMEWORK: terraform (default)
-            
-            # Optional: Version Control type (GitHub, gitlab, etc...)
-            VCS: github (default)
-            
             # Github's Private Access Token
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
