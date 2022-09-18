@@ -795,30 +795,31 @@ class Github {
             const body = this.parseCodeAnalysis(filesToUpload, analysisResults);
             if (body && body != "")
                 this.steps.comment = yield this.createComment(body);
-            if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => !(response === null || response === void 0 ? void 0 : response.success))) {
-                let errors = "";
-                Object.keys(this.steps).forEach(step => { var _a, _b; return errors += ((_a = this === null || this === void 0 ? void 0 : this.steps[step]) === null || _a === void 0 ? void 0 : _a.stderr) != '' ? (_b = this === null || this === void 0 ? void 0 : this.steps[step]) === null || _b === void 0 ? void 0 : _b.stderr : ''; });
-                this.logger.exit("The risks analysis process failed.\n" + errors);
+            // if (analysisResults?.some((response) => !response?.success)) {
+            //   let errors = "";
+            //   Object.keys(this.steps).forEach(step => errors += this?.steps[step]?.stderr != '' ? this?.steps[step]?.stderr : '')
+            //   this.logger.exit(
+            //     "The risks analysis process failed.\n"
+            //   );
+            // } else {
+            this.logger.info("Creating Risks Report");
+            if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => { var _a, _b; return ((_b = (_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })) {
+                if (this.stopWhenFail)
+                    this.logger.exit("The risks analysis process completed successfully with risks, please check report");
+                else
+                    this.logger.info("The risks analysis process completed successfully with risks, please check report");
             }
             else {
-                this.logger.info("Creating Risks Report");
-                if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => { var _a, _b; return ((_b = (_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })) {
-                    if (this.stopWhenFail)
-                        this.logger.exit("The risks analysis process completed successfully with risks, please check report");
-                    else
-                        this.logger.info("The risks analysis process completed successfully with risks, please check report");
-                }
-                else {
-                    this.logger.info("Analysis process completed successfully without any risks");
-                }
+                this.logger.info("Analysis process completed successfully without any risks");
             }
+            // }
         });
     }
     buildCommentAnalysisBody(analysis, file) {
         var _a, _b, _c;
         let analysisBody = "";
-        if (!((_a = analysis === null || analysis === void 0 ? void 0 : analysis.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) || ((analysis === null || analysis === void 0 ? void 0 : analysis.error) && (analysis === null || analysis === void 0 ? void 0 : analysis.error) != '')) {
-            analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${this.assetsUrl}/failure.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n${this.buildCommentReportError(analysis)}\n</details>`;
+        if (!((_a = analysis === null || analysis === void 0 ? void 0 : analysis.additions) === null || _a === void 0 ? void 0 : _a.analysis_result)) {
+            analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${this.assetsUrl}/failure.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n${(!(analysis === null || analysis === void 0 ? void 0 : analysis.error) || (analysis === null || analysis === void 0 ? void 0 : analysis.error) == '') ? "" : this.buildCommentReportError(analysis)}\n</details>`;
         }
         else if (((_c = (_b = analysis === null || analysis === void 0 ? void 0 : analysis.additions) === null || _b === void 0 ? void 0 : _b.analysis_result) === null || _c === void 0 ? void 0 : _c.length) == 0) {
             analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${this.assetsUrl}/success.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n</details>`;
@@ -898,7 +899,7 @@ ${result === null || result === void 0 ? void 0 : result.error}\n
 ${CODE_BLOCK}\n`;
         const analysisContent = `\n<details>
 <summary>Analysis Log</summary>
-${!(result === null || result === void 0 ? void 0 : result.error) || (result === null || result === void 0 ? void 0 : result.error) == '' ? "" : "<br>" + errors + "<br>"}
+${!(result === null || result === void 0 ? void 0 : result.error) || (result === null || result === void 0 ? void 0 : result.error) == '' ? "Analysis Failed, check action logs" : "<br>" + errors + "<br>"}
 </details> <!-- End Format Logs -->\n`;
         return analysisContent;
     }

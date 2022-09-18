@@ -326,13 +326,13 @@ export class Github implements IVersionControl {
   ): Promise<void> {
     const body = this.parseCodeAnalysis(filesToUpload, analysisResults);
     if (body && body != "") this.steps.comment = await this.createComment(body);
-    if (analysisResults?.some((response) => !response?.success)) {
-      let errors = "";
-      Object.keys(this.steps).forEach(step => errors += this?.steps[step]?.stderr != '' ? this?.steps[step]?.stderr : '')
-      this.logger.exit(
-        "The risks analysis process failed.\n" + errors
-      );
-    } else {
+    // if (analysisResults?.some((response) => !response?.success)) {
+    //   let errors = "";
+    //   Object.keys(this.steps).forEach(step => errors += this?.steps[step]?.stderr != '' ? this?.steps[step]?.stderr : '')
+    //   this.logger.exit(
+    //     "The risks analysis process failed.\n"
+    //   );
+    // } else {
       this.logger.info("Creating Risks Report");
       if (
         analysisResults?.some(
@@ -352,7 +352,7 @@ export class Github implements IVersionControl {
           "Analysis process completed successfully without any risks"
         );
       }
-    }
+    // }
   }
 
   buildCommentAnalysisBody(
@@ -361,16 +361,14 @@ export class Github implements IVersionControl {
   ): string {
     let analysisBody = "";
 
-    if (!analysis?.additions?.analysis_result || (analysis?.error && analysis?.error != '')) {
+    if (!analysis?.additions?.analysis_result) {
       analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${
         this.assetsUrl
       }/failure.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${
         file.folder
       }</b></h3></summary>\n${this.buildCommentFrameworkResult(
         file
-      )}\n${this.buildCommentReportError(
-        analysis
-      )}\n</details>`;
+      )}\n${(!analysis?.error || analysis?.error == '') ? "" : this.buildCommentReportError(analysis)}\n</details>`;
     } else if (analysis?.additions?.analysis_result?.length == 0) {
       analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${
         this.assetsUrl
@@ -480,7 +478,7 @@ ${result?.error}\n
 ${CODE_BLOCK}\n`;
     const analysisContent = `\n<details>
 <summary>Analysis Log</summary>
-${!result?.error || result?.error == '' ? "" : "<br>" + errors + "<br>" }
+${!result?.error || result?.error == '' ? "Analysis Failed, check action logs" : "<br>" + errors + "<br>" }
 </details> <!-- End Format Logs -->\n`;
     return analysisContent;
   }
