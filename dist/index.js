@@ -496,11 +496,8 @@ class Main {
                         // }
                     }
                     else {
-                        vcs.logger.exit('- No files to analyze');
+                        vcs.logger.exit('No files to analyze');
                     }
-                }
-                else {
-                    vcs.logger.exit('- No changes were found in infrastructure');
                 }
             }
             catch (_e) {
@@ -549,7 +546,7 @@ class Github {
         this.firstRun = ((_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.FIRST_RUN) == 'true';
         this.stopWhenFail = ((_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.STOP_WHEN_FAIL) != 'false';
         this.http = new http_client_1.HttpClient();
-        const prefix = (str, group = false, close = true) => (group ? '::group::' : '- ') + Date.now() + '##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '');
+        const prefix = (str, group = false, close = true) => (group ? '::group::' : '- ') + Date.now() + ' ##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '');
         this.logger = {
             debug: (str, group = false) => (0, core_1.debug)(prefix(str, group)),
             error: (str, group = false) => (0, core_1.error)(prefix(str, group)),

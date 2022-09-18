@@ -38,7 +38,7 @@ export class Github implements IVersionControl {
     this.firstRun = process?.env?.FIRST_RUN == 'true';
     this.stopWhenFail = process?.env?.STOP_WHEN_FAIL != 'false';
     this.http = new HttpClient();
-    const prefix = (str: string, group = false, close = true) => (group ? '::group::' : '- ') + Date.now() +'##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '')
+    const prefix = (str: string, group = false, close = true) => (group ? '::group::' : '- ') + Date.now() +' ##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '')
     this.logger = { 
             debug: (str: string, group = false) => debug(prefix(str, group)), 
             error: (str: string, group = false) => error(prefix(str, group)), 

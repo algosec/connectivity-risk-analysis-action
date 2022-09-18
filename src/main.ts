@@ -48,10 +48,8 @@ export class Main {
             await vcs.parseOutput(filesToAnalyze, codeAnalysisResponses);
           // }
         }else {
-          vcs.logger.exit('- No files to analyze')
+          vcs.logger.exit('No files to analyze')
         }
-      } else {
-        vcs.logger.exit('- No changes were found in infrastructure')
       }
     } catch (_e) {
       throw new Error(_e);
