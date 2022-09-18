@@ -12,7 +12,7 @@ export const severityOrder = RiskSeverity;
 export interface RiskAnalysisResult {
   proceeded_file: string;
   success: boolean;
-  additions: AnalysisResultAdditions;
+  additions: AnalysisResultAdditions | undefined;
   error?: string;
   folder?: string;
 }

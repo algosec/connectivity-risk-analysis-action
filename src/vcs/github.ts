@@ -335,7 +335,7 @@ export class Github implements IVersionControl {
       this.logger.info("Creating Risks Report");
       if (
         analysisResults?.some(
-          (response) => response?.additions?.analysis_result?.length > 0
+          (response) => response?.additions && response?.additions?.analysis_result?.length > 0
         )
       ) {
         if (this.stopWhenFail)
@@ -505,7 +505,7 @@ ${file?.output?.log?.stderr ? "<br>" + errors + "<br>" : ""}
   ): string {
     let risksTableContents = "";
     const riskArrays = results
-      .filter((result) => result?.additions?.analysis_result?.length > 0)
+      .filter((result) => result?.additions && result?.additions?.analysis_result?.length > 0)
       .map((result) => {
         const folder = filesToUpload.find((file) =>
           result?.proceeded_file?.includes(file.uuid)
@@ -600,7 +600,7 @@ ${risksTableContents}
 </tbody>
 </table>\n`;
     return results.some(
-      (result) => result?.additions?.analysis_result?.length > 0
+      (result) => result?.additions && result?.additions?.analysis_result?.length > 0
     )
       ? risksSummary + risksTable
       : "";

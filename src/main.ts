@@ -24,9 +24,9 @@ export class Main {
       );
       const codeAnalyzer = await new AshCodeAnalysis(vcs);
       const isInitilizaed = await codeAnalyzer.init();
-      if (codeAnalyzer.debugMode) {
+      // if (codeAnalyzer.debugMode) {
         // await vcs.exec(`rimraf ${vcs.workDir}`);
-      }
+      // }
       let foldersToRunCheck = []
       if (isInitilizaed && framework) {
         foldersToRunCheck = await vcs.checkForDiffByFileTypes(

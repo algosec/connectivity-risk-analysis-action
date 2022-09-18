@@ -78,7 +78,8 @@ class AshCodeAnalysis {
                 }
             }
             catch (error) {
-                this.vcs.logger.exit(`Failed to generate token. Error msg: ${error.toString()}`);
+                const errMsg = JSON.parse(error);
+                this.vcs.logger.exit(`Failed to generate token. Error msg: ${(errMsg === null || errMsg === void 0 ? void 0 : errMsg.message) != "" ? errMsg === null || errMsg === void 0 ? void 0 : errMsg.message : (errMsg === null || errMsg === void 0 ? void 0 : errMsg.errorCode) == "TENANT_NOT_FOUND" ? "Tenant not found" : error.toString()}`);
             }
             return "";
         });
@@ -174,7 +175,7 @@ class AshCodeAnalysis {
             for (let i = 0; i < 60; i++) {
                 yield this.wait(5000);
                 analysisResult = yield this.checkCodeAnalysisResponse(file);
-                if (analysisResult) {
+                if (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.additions) {
                     analysisResult.folder = file === null || file === void 0 ? void 0 : file.folder;
                     this.vcs.logger.debug(`Response for folder: ${file === null || file === void 0 ? void 0 : file.folder}\n` + JSON.stringify(analysisResult) + "\n", true);
                     break;
@@ -222,7 +223,7 @@ class AshCodeAnalysis {
                 return {
                     error: (_b = response === null || response === void 0 ? void 0 : response.message) === null || _b === void 0 ? void 0 : _b.statusMessage,
                     proceeded_file: "",
-                    additions: { analysis_result: [], analysis_state: false },
+                    additions: undefined,
                     success: false,
                 };
             }
@@ -479,9 +480,9 @@ class Main {
                 const framework = yield new framework_service_1.FrameworkService().getInstanceByType(this.frameworkType, vcs);
                 const codeAnalyzer = yield new code_analysis_1.AshCodeAnalysis(vcs);
                 const isInitilizaed = yield codeAnalyzer.init();
-                if (codeAnalyzer.debugMode) {
-                    // await vcs.exec(`rimraf ${vcs.workDir}`);
-                }
+                // if (codeAnalyzer.debugMode) {
+                // await vcs.exec(`rimraf ${vcs.workDir}`);
+                // }
                 let foldersToRunCheck = [];
                 if (isInitilizaed && framework) {
                     foldersToRunCheck = yield vcs.checkForDiffByFileTypes(framework.fileTypes);
@@ -798,13 +799,6 @@ class Github {
             const body = this.parseCodeAnalysis(filesToUpload, analysisResults);
             if (body && body != "")
                 this.steps.comment = yield this.createComment(body);
-            // if (analysisResults?.some((response) => !response?.success)) {
-            //   let errors = "";
-            //   Object.keys(this.steps).forEach(step => errors += this?.steps[step]?.stderr != '' ? this?.steps[step]?.stderr : '')
-            //   this.logger.exit(
-            //     "The risks analysis process failed.\n"
-            //   );
-            // } else {
             let commentUrl = "";
             try {
                 commentUrl = (_a = JSON.parse(this.steps.comment.stdout)) === null || _a === void 0 ? void 0 : _a.html_url;
@@ -813,7 +807,7 @@ class Github {
                 this.logger.error("Failed to create report: " + e);
             }
             this.logger.info("Creating Risks Report");
-            if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => { var _a, _b; return ((_b = (_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })) {
+            if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => { var _a, _b; return (response === null || response === void 0 ? void 0 : response.additions) && ((_b = (_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })) {
                 if (this.stopWhenFail)
                     this.logger.exit("The risks analysis process completed successfully with risks, please check report" + ((_b = JSON.parse(this.steps.comment.stdout)) === null || _b === void 0 ? void 0 : _b.html_url));
                 else
@@ -933,7 +927,7 @@ ${((_l = (_k = file === null || file === void 0 ? void 0 : file.output) === null
     buildCommentSummary(filesToUpload, results) {
         let risksTableContents = "";
         const riskArrays = results
-            .filter((result) => { var _a, _b; return ((_b = (_a = result === null || result === void 0 ? void 0 : result.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })
+            .filter((result) => { var _a, _b; return (result === null || result === void 0 ? void 0 : result.additions) && ((_b = (_a = result === null || result === void 0 ? void 0 : result.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })
             .map((result) => {
             var _a, _b;
             const folder = (_a = filesToUpload.find((file) => { var _a; return (_a = result === null || result === void 0 ? void 0 : result.proceeded_file) === null || _a === void 0 ? void 0 : _a.includes(file.uuid); })) === null || _a === void 0 ? void 0 : _a.folder;
@@ -1010,7 +1004,7 @@ ${((_l = (_k = file === null || file === void 0 ? void 0 : file.output) === null
 ${risksTableContents}                 
 </tbody>
 </table>\n`;
-        return results.some((result) => { var _a, _b; return ((_b = (_a = result === null || result === void 0 ? void 0 : result.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })
+        return results.some((result) => { var _a, _b; return (result === null || result === void 0 ? void 0 : result.additions) && ((_b = (_a = result === null || result === void 0 ? void 0 : result.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })
             ? risksSummary + risksTable
             : "";
     }

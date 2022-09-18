@@ -83,8 +83,9 @@ export class AshCodeAnalysis {
         );
       }
     } catch (error: any) {
+      const errMsg = JSON.parse(error)
       this.vcs.logger.exit(
-        `Failed to generate token. Error msg: ${error.toString()}`
+        `Failed to generate token. Error msg: ${errMsg?.message != "" ? errMsg?.message : errMsg?.errorCode == "TENANT_NOT_FOUND" ? "Tenant not found" : error.toString()}`
       );
     }
     return "";
@@ -188,7 +189,7 @@ export class AshCodeAnalysis {
     for (let i = 0; i < 60; i++) {
       await this.wait(5000);
       analysisResult = await this.checkCodeAnalysisResponse(file);
-      if (analysisResult) {
+      if (analysisResult?.additions) {
         analysisResult.folder = file?.folder;
         this.vcs.logger.debug(`Response for folder: ${file?.folder}\n` + JSON.stringify(analysisResult) + "\n", true);
         break;
@@ -233,7 +234,7 @@ export class AshCodeAnalysis {
       return {
         error: response?.message?.statusMessage,
         proceeded_file: "",
-        additions: { analysis_result: [], analysis_state: false },
+        additions: undefined,
         success: false,
       };
     }
