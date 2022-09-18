@@ -161,29 +161,34 @@ class AshCodeAnalysis {
                 this.vcs.logger.debug(`Risk analysis result:\n${JSON.stringify(analysisResults, null, "\t")}\n`, true);
             }
             catch (e) {
-                this.vcs.logger.error(`"Analysis failed, please contact support.\n": ${e}`);
+                this.vcs.logger.error(`Analysis failed, please contact support.\n: ${e}`);
                 analysisResults = [];
             }
             return analysisResults;
         });
     }
     pollCodeAnalysisResponse(file) {
-        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             let analysisResult = yield this.checkCodeAnalysisResponse(file);
             this.vcs.logger.info(`Waiting for risk analysis response for folder: ${file.folder}`);
             for (let i = 0; i < 60; i++) {
                 yield this.wait(5000);
                 analysisResult = yield this.checkCodeAnalysisResponse(file);
-                if (((_b = (_a = analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0) {
+                if (analysisResult) {
                     analysisResult.folder = file === null || file === void 0 ? void 0 : file.folder;
                     this.vcs.logger.debug(`Response for folder: ${file === null || file === void 0 ? void 0 : file.folder}\n` + JSON.stringify(analysisResult) + "\n", true);
                     break;
                 }
-                else if ((analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error) && (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error) != '') {
-                    this.vcs.logger.error("Failed to get analysis result for folder: " + (file === null || file === void 0 ? void 0 : file.folder) + "\n" + (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error));
-                    break;
-                }
+            }
+            if (!analysisResult) {
+                analysisResult = {
+                    folder: file === null || file === void 0 ? void 0 : file.folder,
+                    error: "Analysis has timed out for folder: " + (file === null || file === void 0 ? void 0 : file.folder) + ", please contact support.",
+                    proceeded_file: "",
+                    additions: { analysis_result: [], analysis_state: false },
+                    success: false,
+                };
+                this.vcs.logger.error("Failed to get analysis result for folder: " + (file === null || file === void 0 ? void 0 : file.folder) + "\n" + (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error));
             }
             return analysisResult;
         });
@@ -196,7 +201,7 @@ class AshCodeAnalysis {
         });
     }
     checkCodeAnalysisResponse(file) {
-        var _a;
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             const pollUrl = `${this.apiUrl}/analysis_result?customer=${this.vcs.repo.owner}&action_id=${file.uuid}`;
             const response = yield this.vcs.http.get(pollUrl, {
@@ -210,17 +215,12 @@ class AshCodeAnalysis {
                     return result;
                 }
                 else {
-                    return {
-                        error: "No message has been Found, polling was timedout after 5 minutes, please try to run the action again, if the issue continues, contact support.",
-                        proceeded_file: "",
-                        additions: { analysis_result: [], analysis_state: false },
-                        success: false,
-                    };
+                    return null;
                 }
             }
             else {
                 return {
-                    error: response.message.statusMessage,
+                    error: (_b = response === null || response === void 0 ? void 0 : response.message) === null || _b === void 0 ? void 0 : _b.statusMessage,
                     proceeded_file: "",
                     additions: { analysis_result: [], analysis_state: false },
                     success: false,
@@ -793,6 +793,7 @@ class Github {
         });
     }
     parseOutput(filesToUpload, analysisResults) {
+        var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function* () {
             const body = this.parseCodeAnalysis(filesToUpload, analysisResults);
             if (body && body != "")
@@ -804,17 +805,23 @@ class Github {
             //     "The risks analysis process failed.\n"
             //   );
             // } else {
+            let commentUrl = "";
+            try {
+                commentUrl = (_a = JSON.parse(this.steps.comment.stdout)) === null || _a === void 0 ? void 0 : _a.html_url;
+            }
+            catch (e) {
+                this.logger.error("Failed to create report: " + e);
+            }
             this.logger.info("Creating Risks Report");
             if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => { var _a, _b; return ((_b = (_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })) {
                 if (this.stopWhenFail)
-                    this.logger.exit("The risks analysis process completed successfully with risks, please check report");
+                    this.logger.exit("The risks analysis process completed successfully with risks, please check report" + ((_b = JSON.parse(this.steps.comment.stdout)) === null || _b === void 0 ? void 0 : _b.html_url));
                 else
-                    this.logger.info("The risks analysis process completed successfully with risks, please check report");
+                    this.logger.info("The risks analysis process completed successfully with risks, please check report" + ((_c = JSON.parse(this.steps.comment.stdout)) === null || _c === void 0 ? void 0 : _c.html_url));
             }
             else {
                 this.logger.info("Analysis process completed successfully without any risks");
             }
-            // }
         });
     }
     buildCommentAnalysisBody(analysis, file) {
