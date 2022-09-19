@@ -550,7 +550,8 @@ class Github {
         this.firstRun = ((_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.FIRST_RUN) == 'true';
         this.stopWhenFail = ((_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.STOP_WHEN_FAIL) != 'false';
         this.http = new http_client_1.HttpClient();
-        const prefix = (str, group = false, close = true) => (group ? '::group::' : '- ') + Date.now() + ' ##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '');
+        const dateFormatter = (isoDate) => (isoDate === null || isoDate === void 0 ? void 0 : isoDate.split("T")[0].split("-").reverse().join("/")) + " " + isoDate.split("T")[1].replace("Z", "");
+        const prefix = (str, group = false, close = true) => (group ? '::group::' : '- ') + dateFormatter(new Date().toISOString()) + ' ##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '');
         this.logger = {
             debug: (str, group = false) => (0, core_1.debug)(prefix(str, group)),
             error: (str, group = false) => (0, core_1.error)(prefix(str, group)),
