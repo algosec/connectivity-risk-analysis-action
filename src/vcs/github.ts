@@ -94,7 +94,7 @@ export class Github implements IVersionControl {
   }
   
   count(array, property, value) {
-    return array.filter((obj) => obj[property] === value).length;
+    return array?.filter((obj) => obj[property] === value).length;
   }
 
   async getDiff(octokit: InstanceType<typeof GitHub>): Promise<any> {

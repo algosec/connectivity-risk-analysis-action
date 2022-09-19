@@ -110,7 +110,7 @@ export class AshCodeAnalysis {
   
       const responses = await Promise.all(fileUploadPromises);
   
-      if (responses.filter(response => response).length == 0) {
+      if (responses?.filter(response => response).length == 0) {
         this.vcs.steps.upload = {exitCode: 0, stdout: '', stderr: "No files to upload"}
         this.vcs.logger.exit(
           "No files were uploaded, please check logs"
@@ -160,8 +160,7 @@ export class AshCodeAnalysis {
     try {
       await this.triggerCodeAnalysis(filesToUpload);
       const codeAnalysisPromises: Array<Promise<RiskAnalysisResult>> = [];
-      filesToUpload
-        .filter((file) => file?.output?.plan != '')
+      filesToUpload?.filter((file) => file?.output?.plan != '')
         .forEach((file) =>
           codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file))
         );

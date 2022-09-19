@@ -103,7 +103,7 @@ class AshCodeAnalysis {
                 const fileUploadPromises = [];
                 filesToUpload.forEach((file) => fileUploadPromises.push(this.uploadFile(file)));
                 const responses = yield Promise.all(fileUploadPromises);
-                if (responses.filter(response => response).length == 0) {
+                if ((responses === null || responses === void 0 ? void 0 : responses.filter(response => response).length) == 0) {
                     this.vcs.steps.upload = { exitCode: 0, stdout: '', stderr: "No files to upload" };
                     this.vcs.logger.exit("No files were uploaded, please check logs");
                 }
@@ -151,9 +151,7 @@ class AshCodeAnalysis {
             try {
                 yield this.triggerCodeAnalysis(filesToUpload);
                 const codeAnalysisPromises = [];
-                filesToUpload
-                    .filter((file) => { var _a; return ((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan) != ''; })
-                    .forEach((file) => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
+                filesToUpload === null || filesToUpload === void 0 ? void 0 : filesToUpload.filter((file) => { var _a; return ((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan) != ''; }).forEach((file) => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
                 analysisResults = yield Promise.all(codeAnalysisPromises);
                 if (!analysisResults || (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.length) == 0) {
                     this.vcs.logger.error("Analysis failed, please contact support.");
@@ -602,7 +600,7 @@ class Github {
         });
     }
     count(array, property, value) {
-        return array.filter((obj) => obj[property] === value).length;
+        return array === null || array === void 0 ? void 0 : array.filter((obj) => obj[property] === value).length;
     }
     getDiff(octokit) {
         var _a, _b, _c, _d, _e, _f, _g, _h;
