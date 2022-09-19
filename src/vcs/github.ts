@@ -334,7 +334,6 @@ export class Github implements IVersionControl {
       } catch(e){
         this.logger.error("Failed to create report: " + e);
       }
-      this.logger.info("Creating Risks Report");
       if ( analysisResults?.some((response) => response?.additions && response?.additions?.analysis_result?.length > 0) ) {
         if (this.stopWhenFail)
           this.logger.exit(
@@ -388,8 +387,7 @@ export class Github implements IVersionControl {
   ): string {
     let risksList = "";
     const CODE_BLOCK = "```";
-    analysis?.analysis_result
-      .sort(
+    analysis?.analysis_result?.sort(
         (a, b) =>
           parseInt(severityOrder[a.riskSeverity]) -
           parseInt(severityOrder[b.riskSeverity])
@@ -519,9 +517,7 @@ ${file?.output?.log?.stderr ? "<br>" + errors + "<br>" : ""}
         });
       });
 
-    const mergedRisks = [].concat
-      .apply([], riskArrays)
-      .sort(
+    const mergedRisks = [].concat.apply([], riskArrays)?.sort(
         (a, b) =>
           parseInt(severityOrder[a.riskSeverity]) -
           parseInt(severityOrder[b.riskSeverity])

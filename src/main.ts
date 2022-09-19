@@ -21,42 +21,34 @@ export class Main {
 
   async run(): Promise<void> {
     try {
-      const vcs: IVersionControl = await
-        new VersionControlService().getInstanceByType(this.vcsType);
+      const vcs: IVersionControl = await new VersionControlService().getInstanceByType(this.vcsType);
       const framework: IFramework | null = await new FrameworkService().getInstanceByType(
         this.frameworkType,
         vcs
       );
       const codeAnalyzer = await new AshCodeAnalysis(vcs);
       const isInitilizaed = await codeAnalyzer.init();
-      // if (codeAnalyzer.debugMode) {
-        // await vcs.exec(`rimraf ${vcs.workDir}`);
-      // }
-      let foldersToRunCheck = []
       if (isInitilizaed && framework) {
-        foldersToRunCheck = await vcs.checkForDiffByFileTypes(
-          framework.fileTypes
-        );
+        let foldersToRunCheck = []
+        foldersToRunCheck = await vcs.checkForDiffByFileTypes(framework.fileTypes);
+        if (foldersToRunCheck?.length > 0) {
+          const filesToAnalyze: RiskAnalysisFile[] = await framework?.check(
+            foldersToRunCheck,
+            vcs.workDir
+          );
+          if (filesToAnalyze?.length > 0 ) {
+            const codeAnalysisResponses = await codeAnalyzer.analyze(filesToAnalyze);
+            if (codeAnalysisResponses?.length > 0) {
+              await vcs.parseOutput(filesToAnalyze as any, codeAnalysisResponses);
+            }
+          }else {
+            vcs.logger.exit('No files to analyze')
+          }
+        }
       } else {
         await vcs.parseOutput([], [], "Not Authenticated, please check action's logs");
-        vcs.logger.exit("Analysis process completed with issues, please check logs.")
       }
-      if (foldersToRunCheck?.length > 0) {
-        const filesToAnalyze: RiskAnalysisFile[] = await framework?.check(
-          foldersToRunCheck,
-          vcs.workDir
-        );
-        if (filesToAnalyze?.length > 0 ) {
-          const codeAnalysisResponses = await codeAnalyzer.analyze(
-            filesToAnalyze
-          );
-          if (codeAnalysisResponses?.length > 0) {
-            await vcs.parseOutput(filesToAnalyze as any, codeAnalysisResponses);
-          }
-        }else {
-          vcs.logger.exit('No files to analyze')
-        }
-      }
+     
     } catch (_e) {
       throw new Error(_e);
       

@@ -484,28 +484,24 @@ class Main {
                 const framework = yield new framework_service_1.FrameworkService().getInstanceByType(this.frameworkType, vcs);
                 const codeAnalyzer = yield new code_analysis_1.AshCodeAnalysis(vcs);
                 const isInitilizaed = yield codeAnalyzer.init();
-                // if (codeAnalyzer.debugMode) {
-                // await vcs.exec(`rimraf ${vcs.workDir}`);
-                // }
-                let foldersToRunCheck = [];
                 if (isInitilizaed && framework) {
+                    let foldersToRunCheck = [];
                     foldersToRunCheck = yield vcs.checkForDiffByFileTypes(framework.fileTypes);
+                    if ((foldersToRunCheck === null || foldersToRunCheck === void 0 ? void 0 : foldersToRunCheck.length) > 0) {
+                        const filesToAnalyze = yield (framework === null || framework === void 0 ? void 0 : framework.check(foldersToRunCheck, vcs.workDir));
+                        if ((filesToAnalyze === null || filesToAnalyze === void 0 ? void 0 : filesToAnalyze.length) > 0) {
+                            const codeAnalysisResponses = yield codeAnalyzer.analyze(filesToAnalyze);
+                            if ((codeAnalysisResponses === null || codeAnalysisResponses === void 0 ? void 0 : codeAnalysisResponses.length) > 0) {
+                                yield vcs.parseOutput(filesToAnalyze, codeAnalysisResponses);
+                            }
+                        }
+                        else {
+                            vcs.logger.exit('No files to analyze');
+                        }
+                    }
                 }
                 else {
                     yield vcs.parseOutput([], [], "Not Authenticated, please check action's logs");
-                    vcs.logger.exit("Analysis process completed with issues, please check logs.");
-                }
-                if ((foldersToRunCheck === null || foldersToRunCheck === void 0 ? void 0 : foldersToRunCheck.length) > 0) {
-                    const filesToAnalyze = yield (framework === null || framework === void 0 ? void 0 : framework.check(foldersToRunCheck, vcs.workDir));
-                    if ((filesToAnalyze === null || filesToAnalyze === void 0 ? void 0 : filesToAnalyze.length) > 0) {
-                        const codeAnalysisResponses = yield codeAnalyzer.analyze(filesToAnalyze);
-                        if ((codeAnalysisResponses === null || codeAnalysisResponses === void 0 ? void 0 : codeAnalysisResponses.length) > 0) {
-                            yield vcs.parseOutput(filesToAnalyze, codeAnalysisResponses);
-                        }
-                    }
-                    else {
-                        vcs.logger.exit('No files to analyze');
-                    }
                 }
             }
             catch (_e) {
@@ -813,7 +809,6 @@ class Github {
             catch (e) {
                 this.logger.error("Failed to create report: " + e);
             }
-            this.logger.info("Creating Risks Report");
             if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => { var _a, _b; return (response === null || response === void 0 ? void 0 : response.additions) && ((_b = (_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })) {
                 if (this.stopWhenFail)
                     this.logger.exit("The risks analysis process completed successfully with risks, please check report: " + commentUrl);
@@ -840,10 +835,10 @@ class Github {
         return analysisBody;
     }
     buildCommentReportResult(analysis, file) {
-        var _a, _b;
+        var _a, _b, _c;
         let risksList = "";
         const CODE_BLOCK = "```";
-        analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result.sort((a, b) => parseInt(risk_model_1.severityOrder[a.riskSeverity]) -
+        (_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.sort((a, b) => parseInt(risk_model_1.severityOrder[a.riskSeverity]) -
             parseInt(risk_model_1.severityOrder[b.riskSeverity])).forEach((risk) => {
             var _a, _b;
             risksList += `<details>\n
@@ -898,7 +893,7 @@ ${(_b = (_a = risk === null || risk === void 0 ? void 0 : risk.items) === null |
                 "&nbsp;Low"
             : ""}</div>`;
         const codeAnalysisContent = `<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${this.assetsUrl}/warning.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder +
-            (((_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.length) == 0 ? "No Risks Found" : "")}</b></h3>${((_b = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0 ? severityCount : ""}</summary>\n${risksList}\n`;
+            (((_b = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _b === void 0 ? void 0 : _b.length) == 0 ? "No Risks Found" : "")}</b></h3>${((_c = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _c === void 0 ? void 0 : _c.length) > 0 ? severityCount : ""}</summary>\n${risksList}\n`;
         return codeAnalysisContent;
     }
     buildCommentReportError(result) {
@@ -932,6 +927,7 @@ ${((_l = (_k = file === null || file === void 0 ? void 0 : file.output) === null
         return frameworkContent;
     }
     buildCommentSummary(filesToUpload, results) {
+        var _a;
         let risksTableContents = "";
         const riskArrays = results
             .filter((result) => { var _a, _b; return (result === null || result === void 0 ? void 0 : result.additions) && ((_b = (_a = result === null || result === void 0 ? void 0 : result.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })
@@ -948,9 +944,7 @@ ${((_l = (_k = file === null || file === void 0 ? void 0 : file.output) === null
                 };
             });
         });
-        const mergedRisks = [].concat
-            .apply([], riskArrays)
-            .sort((a, b) => parseInt(risk_model_1.severityOrder[a.riskSeverity]) -
+        const mergedRisks = (_a = [].concat.apply([], riskArrays)) === null || _a === void 0 ? void 0 : _a.sort((a, b) => parseInt(risk_model_1.severityOrder[a.riskSeverity]) -
             parseInt(risk_model_1.severityOrder[b.riskSeverity]));
         const groupedRisksById = mergedRisks.reduce((accumulator, item) => {
             if (accumulator[item.riskId]) {
