@@ -201,6 +201,14 @@ export class AshCodeAnalysis {
         success: false,
       };
         this.vcs.logger.error("Failed to get analysis result for folder: " + file?.folder + "\n" + analysisResult?.error);
+    } else if (!analysisResult?.success){
+      analysisResult = {
+        folder: file?.folder,
+        error: analysisResult?.additions?.toString(),
+        proceeded_file: file?.uuid,
+        additions: undefined,
+        success: false,
+      };
     }
     return analysisResult;
   }
