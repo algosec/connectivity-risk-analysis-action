@@ -19,7 +19,7 @@ jobs:
      runs-on: ubuntu-latest
      steps:
         - name: Connectivity Risk Analysis
-          uses: algosec/connectivity-risk-analysis-action@v0.0.1
+          uses: algosec/connectivity-risk-analysis-action@v0.0.19
           env:
             # Github's Private Access Token
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -33,6 +33,34 @@ jobs:
             # as secrets or use an external action to preconfigure
             
 ```
+
+### Full Analysis
+If you want to run check on all folders that contain IaC files, use the following example:
+
+Example usage 
+
+```yaml
+name: 'Your Repo CI/CD Yaml Workflow'
+on:
+  pull_request:
+    branches:
+      - 'main'
+jobs:
+  algosec-iac-connectivity-risk-analysis:
+     name: 'Algosec IAC Connectivity Risk Analysis'
+     runs-on: ubuntu-latest
+     steps:
+        - name: Connectivity Risk Analysis
+          uses: algosec/connectivity-risk-analysis-action@v0.0.19
+          env:
+            FULL_ANALYSIS: true
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
+            CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
+            CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
+            
+```
+
 
 
 ## Cloud Providers configuration
@@ -55,7 +83,7 @@ jobs:
      name: 'Algosec IAC Connectivity Risk Analysis'
      runs-on: ubuntu-latest
      steps:
-          uses: algosec/connectivity-risk-analysis-action@v0.0.12
+          uses: algosec/connectivity-risk-analysis-action@v0.0.19
           env:            
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
@@ -84,7 +112,7 @@ jobs:
      runs-on: ubuntu-latest
      steps:
         - name: Connectivity Risk Analysis
-          uses: algosec/connectivity-risk-analysis-action@v0.0.12
+          uses: algosec/connectivity-risk-analysis-action@v0.0.19
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
@@ -130,7 +158,7 @@ jobs:
           with:
             credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
         - name: Connectivity Risk Analysis
-          uses: algosec/connectivity-risk-analysis-action@v0.0.12
+          uses: algosec/connectivity-risk-analysis-action@v0.0.19
           env:    
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
