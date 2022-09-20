@@ -17,7 +17,7 @@ jobs:
       with:
         tag_name: v0.0.20
         release_name: v0.0.20
-        draft: true
+        draft: false
         prerelease: true
 
 #     - uses: actions/upload-release-asset@v1.0.1
