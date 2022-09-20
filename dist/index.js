@@ -105,7 +105,7 @@ class AshCodeAnalysis {
                 const responses = yield Promise.all(fileUploadPromises);
                 if ((responses === null || responses === void 0 ? void 0 : responses.filter(response => response).length) == 0) {
                     this.vcs.steps.upload = { exitCode: 0, stdout: '', stderr: "No files to upload" };
-                    this.vcs.logger.exit("No files were uploaded, please check logs");
+                    this.vcs.logger.error("No files were uploaded, please check logs");
                 }
                 else if (responses.some(response => !response)) {
                     this.vcs.steps.upload = { exitCode: 0, stdout: '', stderr: "Some files failed to upload" };
@@ -499,13 +499,13 @@ class Main {
                         const filesToAnalyze = yield (framework === null || framework === void 0 ? void 0 : framework.check(foldersToRunCheck, vcs.workDir));
                         if ((filesToAnalyze === null || filesToAnalyze === void 0 ? void 0 : filesToAnalyze.length) > 0) {
                             const codeAnalysisResponses = yield codeAnalyzer.analyze(filesToAnalyze);
-                            if ((codeAnalysisResponses === null || codeAnalysisResponses === void 0 ? void 0 : codeAnalysisResponses.length) > 0) {
-                                yield vcs.parseOutput(filesToAnalyze, codeAnalysisResponses);
-                            }
+                            // if (codeAnalysisResponses?.length > 0) {
+                            yield vcs.parseOutput(filesToAnalyze, codeAnalysisResponses);
+                            // }
                         }
-                        else {
-                            vcs.logger.exit('No files to analyze');
-                        }
+                        // else {
+                        //   vcs.logger.exit('No files to analyze')
+                        // }
                     }
                 }
                 else {

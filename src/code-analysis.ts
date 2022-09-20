@@ -112,7 +112,7 @@ export class AshCodeAnalysis {
   
       if (responses?.filter(response => response).length == 0) {
         this.vcs.steps.upload = {exitCode: 0, stdout: '', stderr: "No files to upload"}
-        this.vcs.logger.exit(
+        this.vcs.logger.error(
           "No files were uploaded, please check logs"
         );
       } else if (responses.some(response => !response)) {

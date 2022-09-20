@@ -38,12 +38,13 @@ export class Main {
           );
           if (filesToAnalyze?.length > 0 ) {
             const codeAnalysisResponses = await codeAnalyzer.analyze(filesToAnalyze);
-            if (codeAnalysisResponses?.length > 0) {
+            // if (codeAnalysisResponses?.length > 0) {
               await vcs.parseOutput(filesToAnalyze as any, codeAnalysisResponses);
-            }
-          }else {
-            vcs.logger.exit('No files to analyze')
+            // }
           }
+          // else {
+          //   vcs.logger.exit('No files to analyze')
+          // }
         }
       } else {
         await vcs.parseOutput([], [], "Not Authenticated, please check action's logs");
