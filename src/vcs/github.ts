@@ -27,7 +27,7 @@ export class Github implements IVersionControl {
   steps: ExecSteps = {};
   workDir: string;
   useCheckoutAction: boolean = false
-  firstRun: boolean = false
+  runFullAnalysis: boolean = false
   actionUuid: string;
   fileTypes: string[];
   stopWhenFail: boolean;
@@ -35,7 +35,7 @@ export class Github implements IVersionControl {
   cfApiUrl: string;
 
   constructor() {
-    this.firstRun = process?.env?.FIRST_RUN == 'true';
+    this.runFullAnalysis = process?.env?.FULL_ANALYSIS == 'true';
     this.stopWhenFail = process?.env?.STOP_WHEN_FAIL != 'false';
     this.http = new HttpClient();
     const dateFormatter = (isoDate: string) => isoDate?.split("T")[0].split("-").reverse().join("/") +" "+ isoDate.split("T")[1].replace("Z","")
@@ -262,7 +262,7 @@ export class Github implements IVersionControl {
     let diffFolders: any[] = [];
     try {
       const allFoldersPaths = await this.getFoldersList(this.workDir)
-      if (this.firstRun){
+      if (this.runFullAnalysis){
         diffFolders = allFoldersPaths.filter(folder => this.hasFileType(folder, fileTypes))
       } else {
         const diffs = await this.getDiff(this.octokit);
