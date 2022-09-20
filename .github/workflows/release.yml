@@ -1,0 +1,7 @@
+name: 'Release'
+on:
+  pull_request:
+    branches:
+      - 'develop'
+jobs:
+  prepare-release:
