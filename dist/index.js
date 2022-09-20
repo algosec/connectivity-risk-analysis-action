@@ -814,13 +814,10 @@ class Github {
                 this.logger.error("Failed to create report: " + e);
             }
             if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => { var _a, _b; return (response === null || response === void 0 ? void 0 : response.additions) && ((_b = (_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })) {
-                if (this.stopWhenFail)
-                    this.logger.exit("The risks analysis process completed successfully with risks, please check report: " + commentUrl);
-                else
-                    this.logger.info("The risks analysis process completed successfully with risks, please check report: " + commentUrl);
+                this.logger[this.stopWhenFail ? 'exit' : 'info']("The risks analysis process completed successfully with risks, please check report: " + commentUrl);
             }
             else {
-                this.logger.info("Analysis process completed with errors or without any risks, please check action's logs: " + commentUrl);
+                this.logger[this.stopWhenFail ? 'exit' : 'info']("The risks analysis process completed with errors or without any risks, please check action's logs: " + commentUrl);
             }
         });
     }
