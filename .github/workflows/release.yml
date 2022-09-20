@@ -1,0 +1,11 @@
+name: 'Release'
+on:
+  pull_request:
+    branches:
+      - 'develop'
+jobs:
+  prepare-release:
+   runs-on: ubuntu-latest
+   steps:
+    - name: checkout
+      uses: actions/checkout@v3
