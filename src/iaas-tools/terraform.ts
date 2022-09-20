@@ -58,7 +58,6 @@ export class Terraform implements IFramework {
             ])
           ).stdout
       }
-      console.log('::endgroup::')
       process.chdir(options.workDir);
       result = { plan: jsonPlan, log: vcs.steps.plan, initLog };
     } catch (error: any) {
@@ -67,6 +66,7 @@ export class Terraform implements IFramework {
         result = { plan: '', log: { stderr: error?.message, stdout: '', exitCode:0  },  initLog };
       }
     }
+    vcs.logger.info('::endgroup::')
     return result
   }
 

@@ -166,12 +166,12 @@ export class AshCodeAnalysis {
         );
       analysisResults = await Promise.all(codeAnalysisPromises);
       if (!analysisResults || analysisResults?.length == 0) {
-        this.vcs.logger.error("Analysis failed, please contact support.");
+        // this.vcs.logger.error("Analysis failed, please contact support.");
         analysisResults = []
       }
-      this.vcs.logger.debug( `Risk analysis result:\n${JSON.stringify(analysisResults, null, "\t")}\n`, true);
+      this.vcs.logger.debug(`Risk analysis result:\n${JSON.stringify(analysisResults, null, "\t")}\n`, true);
     } catch(e){
-      this.vcs.logger.error(`Analysis failed, please contact support.\n: ${e}`);
+      // this.vcs.logger.error(`Analysis failed, please contact support.\n: ${e}`);
       analysisResults = []
     }
    

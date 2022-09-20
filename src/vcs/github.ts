@@ -335,7 +335,7 @@ export class Github implements IVersionControl {
       } catch(e){
         this.logger.error("Failed to create report: " + e);
       }
-      if ( analysisResults?.some((response) => response?.additions && response?.additions?.analysis_result?.length > 0) ) {
+      if ( analysisResults?.some((response) => response?.additions && response?.additions?.analysis_result?.length > 0)) {
         if (this.stopWhenFail)
           this.logger.exit(
             "The risks analysis process completed successfully with risks, please check report: " + commentUrl
@@ -346,7 +346,7 @@ export class Github implements IVersionControl {
           );
       } else {
         this.logger.info(
-          "Analysis process completed with issues or without any risks, please check action's logs: " + commentUrl
+          "Analysis process completed with errors or without any risks, please check action's logs: " + commentUrl
         );
       }
   }

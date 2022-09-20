@@ -154,13 +154,13 @@ class AshCodeAnalysis {
                 filesToUpload === null || filesToUpload === void 0 ? void 0 : filesToUpload.filter((file) => { var _a; return ((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan) != ''; }).forEach((file) => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
                 analysisResults = yield Promise.all(codeAnalysisPromises);
                 if (!analysisResults || (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.length) == 0) {
-                    this.vcs.logger.error("Analysis failed, please contact support.");
+                    // this.vcs.logger.error("Analysis failed, please contact support.");
                     analysisResults = [];
                 }
                 this.vcs.logger.debug(`Risk analysis result:\n${JSON.stringify(analysisResults, null, "\t")}\n`, true);
             }
             catch (e) {
-                this.vcs.logger.error(`Analysis failed, please contact support.\n: ${e}`);
+                // this.vcs.logger.error(`Analysis failed, please contact support.\n: ${e}`);
                 analysisResults = [];
             }
             return analysisResults;
@@ -392,7 +392,6 @@ class Terraform {
                             `${process.cwd()}\\tmp\\${options.runFolder}.out`,
                         ])).stdout;
                 }
-                console.log('::endgroup::');
                 process.chdir(options.workDir);
                 result = { plan: jsonPlan, log: vcs.steps.plan, initLog };
             }
@@ -402,6 +401,7 @@ class Terraform {
                     result = { plan: '', log: { stderr: error === null || error === void 0 ? void 0 : error.message, stdout: '', exitCode: 0 }, initLog };
                 }
             }
+            vcs.logger.info('::endgroup::');
             return result;
         });
     }
@@ -825,7 +825,7 @@ class Github {
                     this.logger.info("The risks analysis process completed successfully with risks, please check report: " + commentUrl);
             }
             else {
-                this.logger.info("Analysis process completed with issues or without any risks, please check action's logs: " + commentUrl);
+                this.logger.info("Analysis process completed with errors or without any risks, please check action's logs: " + commentUrl);
             }
         });
     }
