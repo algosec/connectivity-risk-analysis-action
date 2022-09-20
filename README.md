@@ -79,6 +79,7 @@ jobs:
           uses: algosec/connectivity-risk-analysis-action@v0.0.19
           env:
             FULL_ANALYSIS: true
+            ######
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
             CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
@@ -110,15 +111,16 @@ jobs:
      steps:
           uses: algosec/connectivity-risk-analysis-action@v0.0.19
           env:            
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
-            CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
-            CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}  
             # Use AWS Environment Variables or
             # an external Action to authenticate with provider
             # https://github.com/marketplace/actions/configure-aws-credentials-action-for-github-actions
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}   
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }} 
+            ######
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
+            CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
+            CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }} 
             
 ```
 
@@ -139,10 +141,6 @@ jobs:
         - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v0.0.19
           env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
-            CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
-            CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
             # Use AWS Environment Variables or
             # an external Action to authenticate with provider
             # https://github.com/marketplace/actions/azure-login
@@ -150,6 +148,11 @@ jobs:
             ARM_TENANT_ID: ${{ secrets.AZ_TENANT_ID }}
             ARM_CLIENT_ID: ${{ secrets.AZ_CLIENT_ID }}
             ARM_CLIENT_SECRET: ${{ secrets.AZ_CLIENT_SECRET }}
+            ######
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
+            CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
+            CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
             
 ```
 
@@ -166,18 +169,12 @@ jobs:
   algosec-iac-connectivity-risk-analysis:
      name: 'Algosec IAC Connectivity Risk Analysis'
      runs-on: ubuntu-latest
-     steps:
-          # use @actions/checkout@v3 to checkout the repo 
-          # and add "USE_CHECKOUT: true" under "env:"
-          
-        - name: Checkout Repo
-          uses: @actions/checkout@v3
-          
-          # Need to use @actions/checkout@v3 before Authenticate Google Cloud action
+     steps: 
           # Read how to create GCP_CREDENTIALS key from GCP Json file:
           # https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
-          # Auth Gcp Action 
-          # https://github.com/google-github-actions/auth
+          # Auth Gcp Action https://github.com/google-github-actions/auth
+        - name: Checkout Repo
+          uses: @actions/checkout@v3
         - name: Authenticate to Google Cloud
           uses: google-github-actions/auth@v0.7.3
           with:
@@ -185,9 +182,9 @@ jobs:
         - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v0.0.19
           env:  
-            # By default our action doesn't require actions/checkout, 
-            # but using the GCP Auth action requires us to specify its usage
+            # By default our action doesn't require actions/checkout, using GCP Auth action requires us to specify its usage
             USE_CHECKOUT: true
+            ######
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
             CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
