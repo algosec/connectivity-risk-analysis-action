@@ -21,15 +21,6 @@ jobs:
         - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v0.0.1
           env:
-            # Optional: when using @actions/checkout@v3 to checkout the repo add "USE_CHECKOUT: true" under "env:"
-            USE_CHECKOUT: false (default)
-            
-            # Optional: run checks on all folders with relevant file type
-            FIRST_RUN: false (default)
-            
-            # Optional: Fail or Continue if any risks were found after action finish
-            STOP_WHEN_FAIL: true (default)
-            
             # Github's Private Access Token
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
