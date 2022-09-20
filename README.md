@@ -6,6 +6,9 @@ Here is an example of all possible parameters passed as environment variables to
 Take into consideration that GitHub and AlgoSec CloudFlow credentials are mandatory in order to run this action, along with the credentials of the provider/s used (you can see in the next section, Cloud Providers COnfiguration).
 
 Example usage 
+First, create a new client id and client secret in your Algosec Cloudflow account using our access management module.
+then, add these variables to your github repo's secrets.
+now you'll be able to run the risks analysis process.
 
 ```yaml
 name: 'Your Repo CI/CD Yaml Workflow'
