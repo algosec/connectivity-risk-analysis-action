@@ -40,24 +40,24 @@ jobs:
 |Parameter|Description|Required|Default|Type|
 |---|---|---|---|---|
 |GITHUB_TOKEN|Github PaT for checking diffs and commenting|Yes| |Secret Parameter|
-|CF_TENANT_ID|Cloudflow tenant id for Authentication|Yes| |Secret Parameter|
-|CF_CLIENT_ID|Cloudflow client id for Authentication|Yes| |Secret Parameter|
-|CF_CLIENT_SECRET|Cloudflow client secret for Authentication|Yes| |Secret Parameter|
+|CF_TENANT_ID|Cloudflow tenant id|Yes| |Secret Parameter|
+|CF_CLIENT_ID|Cloudflow client id|Yes| |Secret Parameter|
+|CF_CLIENT_SECRET|Cloudflow client secretn|Yes| |Secret Parameter|
 |FULL_ANALYSIS|Run checks on all folders with relevant file types|No|false|boolean|
 |USE_CHECKOUT|Use actions/checkout action to checkout the current repo<br><b>Currently needed only for GCP Provider</b>|No|false|boolean|
 |STOP_WHEN_FAIL|Runs checks without failing commit, failing will be only on Critical risks|No|false|boolean|
 ||||||
 |<b>Providers Parameters</b>| | | | |
 |<b>`AWS`</b>| | | | |
-|AWS_ACCESS_KEY_ID|Customer's AWS access key id|No| |Secret Parameter|
-|AWS_SECRET_ACCESS_KEY|Customer's AWS secret access key|No| |Secret Parameter|
+|AWS_ACCESS_KEY_ID|AWS access key id|No| |Secret Parameter|
+|AWS_SECRET_ACCESS_KEY|AWS secret access key|No| |Secret Parameter|
 |<b>`AZURE`</b>| | | | |
-|ARM_SUBSCRIPTION_ID|Customer's Azure subscription id|No| |Secret Parameter|
-|ARM_TENANT_ID|Customer's Azure tenant id|No| |Secret Parameter|
-|ARM_CLIENT_ID|Customer's Azure access client id|No| |Secret Parameter|
-|ARM_CLIENT_SECRET|Customer's Azure client secret|No| |Secret Parameter|
+|ARM_SUBSCRIPTION_ID|Azure subscription id|No| |Secret Parameter|
+|ARM_TENANT_ID|Azure tenant id|No| |Secret Parameter|
+|ARM_CLIENT_ID|Azure access client id|No| |Secret Parameter|
+|ARM_CLIENT_SECRET|Azure client secret|No| |Secret Parameter|
 |<b>`GCP`</b>| | | | |
-|GCP_CREDENTIALS|Customer's Google's Cloud credentials in a stringify() JSON|No| |Secret Parameter|
+|GCP_CREDENTIALS|Google's Cloud credentials in a stringify() JSON|No| |Secret Parameter|
 
 ### Full Analysis
 If you want to run check on all folders that contain IaC files, use the following example:
