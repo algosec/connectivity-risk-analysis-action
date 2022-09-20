@@ -5,9 +5,9 @@ The IaC Connectivity Risk Analysis GitHub Action runs on the current repository 
 Here is an example of all possible parameters passed as environment variables to the action. 
 Take into consideration that GitHub and AlgoSec CloudFlow credentials are mandatory in order to run this action, along with the credentials of the provider/s used (you can see in the next section, Cloud Providers COnfiguration).
 
-Example usage 
-First, create a new client id and client secret in your Algosec Cloudflow account using our access management module.
-then, add these variables to your github repo's secrets.
+#### Example usage 
+First, create a new client id and client secret in your Algosec Cloudflow account using our access management module.<br>
+then, add these variables to your github repo's secrets.<br>
 now you'll be able to run the risks analysis process.
 
 ```yaml
@@ -194,4 +194,8 @@ jobs:
             CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
            
             
-```           
+```      
+
+### Output(screenshots)
+
+
