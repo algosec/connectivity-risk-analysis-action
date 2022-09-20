@@ -20,14 +20,14 @@ jobs:
         draft: true
         prerelease: true
 
-    - uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./my-artifact.zip
-        asset_name: my-artifact.zip
-        asset_content_type: application/zip
+#     - uses: actions/upload-release-asset@v1.0.1
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       with:
+#         upload_url: ${{ steps.create_release.outputs.upload_url }}
+#         asset_path: ./my-artifact.zip
+#         asset_name: my-artifact.zip
+#         asset_content_type: application/zip
 
     - uses: eregon/publish-release@v1
       env:
