@@ -104,11 +104,9 @@ class AshCodeAnalysis {
                 filesToUpload.forEach((file) => fileUploadPromises.push(this.uploadFile(file)));
                 const responses = yield Promise.all(fileUploadPromises);
                 if ((responses === null || responses === void 0 ? void 0 : responses.filter(response => response).length) == 0) {
-                    this.vcs.steps.upload = { exitCode: 0, stdout: '', stderr: "No files to upload" };
                     this.vcs.logger.error("No files were uploaded, please check logs");
                 }
                 else if (responses.some(response => !response)) {
-                    this.vcs.steps.upload = { exitCode: 0, stdout: '', stderr: "Some files failed to upload" };
                     this.vcs.logger.error("Some files failed to upload, please check logs");
                 }
                 else {
@@ -116,7 +114,6 @@ class AshCodeAnalysis {
                 }
             }
             catch (e) {
-                this.vcs.steps.upload = { exitCode: 0, stdout: '', stderr: "Upload Failure: " + e };
                 this.vcs.logger.error("Some files failed to upload, please check logs");
             }
         });
@@ -133,12 +130,10 @@ class AshCodeAnalysis {
                     }
                 }
                 else {
-                    file.upload = { stderr: `No plan was created for: ${file.folder}, please check terraform logs`, stdout: '', exitCode: 0 };
-                    this.vcs.logger.info(`No plan was created for: ${file.folder}, please check terraform logs`);
+                    this.vcs.logger.debug(`No plan was created for: ${file.folder}, please check terraform logs`);
                 }
             }
             catch (e) {
-                file.upload = { stderr: e, stdout: '', exitCode: 0 };
                 this.vcs.logger.error(`File upload for: ${file.folder} failed due to errors:\n ${e}`);
                 res = false;
             }
@@ -437,7 +432,7 @@ class Terraform {
                         folder: (_b = value === null || value === void 0 ? void 0 : value.split(/([/\\])/g)) === null || _b === void 0 ? void 0 : _b.pop(),
                         output,
                     };
-                    this.vcs.logger.info(`Folder ${file.folder} Action UUID: ${file.uuid}`);
+                    this.vcs.logger.debug(`Folder ${file.folder} Action UUID: ${file.uuid}`);
                     res.push(file);
                 }
             });
