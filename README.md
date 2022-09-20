@@ -198,4 +198,6 @@ jobs:
 
 ### Output(screenshots)
 
-
+<a href="#"><img height="100" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/screenshot1.png" /></a>
+<br>
+<a href="#"><img height="100" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/screenshot2.png" /></a>
