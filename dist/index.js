@@ -401,7 +401,7 @@ class Terraform {
                     result = { plan: '', log: { stderr: error === null || error === void 0 ? void 0 : error.message, stdout: '', exitCode: 0 }, initLog };
                 }
             }
-            vcs.logger.info('::endgroup::');
+            console.log('::endgroup::');
             return result;
         });
     }

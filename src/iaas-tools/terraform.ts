@@ -66,7 +66,7 @@ export class Terraform implements IFramework {
         result = { plan: '', log: { stderr: error?.message, stdout: '', exitCode:0  },  initLog };
       }
     }
-    vcs.logger.info('::endgroup::')
+    console.log('::endgroup::')
     return result
   }
 
