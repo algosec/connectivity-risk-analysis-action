@@ -9,33 +9,28 @@ jobs:
    steps:
     - name: checkout
       uses: actions/checkout@v3
-    - name: Determine Version
+    - name: Versioning
       uses: paulhatch/semantic-version@v4.0.2
       with:
         tag_prefix: "v"
         major_pattern: "(MAJOR)"
         minor_pattern: "(MINOR)"
         format: "${major}.${minor}.${patch}-prerelease${increment}"
+        change_path: "src/my-service"
+        namespace: my-service
+        bump_each_commit: false
+#         search_commit_body: false
+#         user_format_type: "csv"
     - name: Create Draft Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: <tofill>
-        release_name: <tofill>
-        draft: true
-        prerelease: false
-
-#     - uses: actions/upload-release-asset@v1.0.1
-#       env:
-#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#       with:
-#         upload_url: ${{ steps.create_release.outputs.upload_url }}
-#         asset_path: ./my-artifact.zip
-#         asset_name: my-artifact.zip
-#         asset_content_type: application/zip
-
+        tag_name: v0.0.21
+        release_name: v0.0.21
+        draft: false
+        prerelease: true
     - uses: eregon/publish-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
