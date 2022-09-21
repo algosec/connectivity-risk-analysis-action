@@ -27,8 +27,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: "v${{steps.determine_version.outputs.major}}.${{steps.determine_version.outputs.minor}}.${{steps.determine_version.outputs.patch}}-prerelease.${{steps.determine_version.outputs.increment}}"
-        release_name: "v${{steps.determine_version.outputs.major}}.${{steps.determine_version.outputs.minor}}.${{steps.determine_version.outputs.patch}}-prerelease.${{steps.determine_version.outputs.increment}}"
+        tag_name: "v${{steps.determine_version.outputs.version}}"
+        release_name: "v${{steps.determine_version.outputs.version}}"
         draft: false
         prerelease: true
     - uses: eregon/publish-release@v1
