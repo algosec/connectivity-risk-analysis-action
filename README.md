@@ -1,4 +1,4 @@
-<a href="#"><img height="100" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/header.svg" /></a>
+<picture><img height="100" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/header.svg" /></picture>
 The IaC Connectivity Risk Analysis GitHub Action runs on the current repository and return risks analysis for any changes in IaC framework.
 
 ### Basic Configuration
