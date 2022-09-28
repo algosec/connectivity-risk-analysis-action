@@ -12,7 +12,7 @@ export class AshCodeAnalysis {
   loginAPI;
   actionUuid;
   jwt: string;
-  gcpCredsJson: string
+  gcpCredsJson: string;
 
   constructor(public vcs: IVersionControl) {}
 
@@ -25,9 +25,7 @@ export class AshCodeAnalysis {
       this.loginAPI
     );
     if (!this.jwt || this.jwt == "") {
-      this.vcs.logger.exit(
-        "Not Authenticated"
-      );
+      this.vcs.logger.exit("Not Authenticated");
       return false;
     }
     this.vcs.steps.auth = { exitCode: 0, stdout: this.jwt, stderr: "" };
@@ -37,12 +35,14 @@ export class AshCodeAnalysis {
   setSecrets(): void {
     const inputs = this.vcs.getInputs();
     this.debugMode = inputs?.ALGOSEC_DEBUG == "true";
-    this.apiUrl = this.vcs.cfApiUrl
-    this.loginAPI = inputs?.CF_LOGIN_API ?? "https://dev.app.algosec.com/api/algosaas/auth/v1/access-keys/login";
+    this.apiUrl = this.vcs.cfApiUrl;
+    this.loginAPI =
+      inputs?.CF_LOGIN_API ??
+      "https://dev.app.algosec.com/api/algosaas/auth/v1/access-keys/login";
     this.tenantId = inputs?.CF_TENANT_ID;
     this.clientId = inputs?.CF_CLIENT_ID;
     this.clientSecret = inputs?.CF_CLIENT_SECRET;
-    this.gcpCredsJson = inputs?.GOOGLE_CREDENTIALS  ?? ""
+    this.gcpCredsJson = inputs?.GOOGLE_CREDENTIALS ?? "";
   }
 
   async auth(
@@ -77,28 +77,37 @@ export class AshCodeAnalysis {
         return data?.access_token;
       } else {
         this.vcs.logger.exit(
-          `Failed to generate token, ${data.errorCode == "TENANT_NOT_FOUND" ? "Tenant not found" : data.message}`
+          `Failed to generate token, ${
+            data.errorCode == "TENANT_NOT_FOUND"
+              ? "Tenant not found"
+              : data.message
+          }`
         );
       }
     } catch (error: any) {
-      const errMsg = JSON.parse(error)
+      const errMsg = JSON.parse(error);
       this.vcs.logger.exit(
-        `Failed to generate token. Error msg: ${errMsg?.message != "" ? errMsg?.message : errMsg?.errorCode == "TENANT_NOT_FOUND" ? "Tenant not found" : error.toString()}`
+        `Failed to generate token. Error msg: ${
+          errMsg?.message != ""
+            ? errMsg?.message
+            : errMsg?.errorCode == "TENANT_NOT_FOUND"
+            ? "Tenant not found"
+            : error.toString()
+        }`
       );
     }
     return "";
   }
 
-  async createGcpCredentials(gcpCredsString: string){
+  async createGcpCredentials(gcpCredsString: string) {
     // const gcpCreds = JSON.parse(gcpCredsString)
-    const credentialsFilePath =`${this.vcs.workDir}/gcp_auth.json`
+    const credentialsFilePath = `${this.vcs.workDir}/gcp_auth.json`;
     try {
-      writeFileSync(credentialsFilePath, gcpCredsString)
-      process.env.GOOGLE_APPLICATION_CREDENTIALS = credentialsFilePath
-    } catch(e){
-      this.vcs.logger.error("Creating GCP Credentials failed: "+e)
+      writeFileSync(credentialsFilePath, gcpCredsString);
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = credentialsFilePath;
+    } catch (e) {
+      this.vcs.logger.error("Creating GCP Credentials failed: " + e);
     }
-
   }
 
   async triggerCodeAnalysis(filesToUpload: RiskAnalysisFile[]): Promise<void> {
@@ -107,96 +116,116 @@ export class AshCodeAnalysis {
       filesToUpload.forEach((file) =>
         fileUploadPromises.push(this.uploadFile(file))
       );
-  
-      const responses = await Promise.all(fileUploadPromises);
-  
-      if (responses?.filter(response => response).length == 0) {
-        this.vcs.logger.error(
-          "No files were uploaded, please check logs"
-        );
-      } else if (responses.some(response => !response)) {
-        this.vcs.logger.error(
-          "Some files failed to upload, please check logs"
-        );
-      } else {
-        this.vcs.logger.info(
-          "File/s were uploaded successfully"
-        );
-      }
-    } catch(e){
-      this.vcs.logger.error(
-        "Some files failed to upload, please check logs"
-      );
-      
-    }
 
+      const responses = await Promise.all(fileUploadPromises);
+
+      if (responses?.filter((response) => response).length == 0) {
+        this.vcs.logger.error("No files were uploaded, please check logs");
+      } else if (responses.some((response) => !response)) {
+        this.vcs.logger.error("Some files failed to upload, please check logs");
+      } else {
+        this.vcs.logger.info("File/s were uploaded successfully");
+      }
+    } catch (e) {
+      this.vcs.logger.error("Some files failed to upload, please check logs");
+    }
   }
 
   async uploadFile(file: RiskAnalysisFile): Promise<boolean> {
     let res = false;
     try {
-      if (file?.output?.plan != '') {
+      if (file?.output?.plan != "") {
         const ans = await this.vcs.uploadAnalysisFile(file, this.jwt);
         if (ans) {
           res = true;
         }
       } else {
-        this.vcs.logger.debug(`No plan was created for: ${file.folder}, please check terraform logs`)
+        this.vcs.logger.debug(
+          `No plan was created for: ${file.folder}, please check terraform logs`
+        );
       }
     } catch (e) {
-      this.vcs.logger.error(`File upload for: ${file.folder} failed due to errors:\n ${e}`)
+      this.vcs.logger.error(
+        `File upload for: ${file.folder} failed due to errors:\n ${e}`
+      );
       res = false;
     }
     return res;
   }
 
-  async analyze(filesToUpload: RiskAnalysisFile[]): Promise<Array<RiskAnalysisResult>> {
+  async analyze(
+    filesToUpload: RiskAnalysisFile[]
+  ): Promise<Array<RiskAnalysisResult>> {
     let analysisResults: Array<RiskAnalysisResult> = [];
     try {
       await this.triggerCodeAnalysis(filesToUpload);
       const codeAnalysisPromises: Array<Promise<RiskAnalysisResult>> = [];
-      filesToUpload?.filter((file) => file?.output?.plan != '')
+      filesToUpload
+        ?.filter((file) => file?.output?.plan != "")
         .forEach((file) =>
           codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file))
         );
       analysisResults = await Promise.all(codeAnalysisPromises);
       if (!analysisResults || analysisResults?.length == 0) {
         // this.vcs.logger.error("Analysis failed, please contact support.");
-        analysisResults = []
+        analysisResults = [];
       }
-      this.vcs.logger.debug(`Risk analysis result:\n${JSON.stringify(analysisResults, null, "\t")}\n`, true);
-    } catch(e){
+      this.vcs.logger.debug(
+        `Risk analysis result:\n${JSON.stringify(
+          analysisResults,
+          null,
+          "\t"
+        )}\n`,
+        true
+      );
+    } catch (e) {
       // this.vcs.logger.error(`Analysis failed, please contact support.\n: ${e}`);
-      analysisResults = []
+      analysisResults = [];
     }
-   
+
     return analysisResults;
   }
 
   async pollCodeAnalysisResponse(
     file: RiskAnalysisFile
   ): Promise<RiskAnalysisResult> {
-    let analysisResult: RiskAnalysisResult | null = await this.checkCodeAnalysisResponse(file);
-    this.vcs.logger.info(`Waiting for risk analysis response for folder: ${file.folder}`);
+    let analysisResult: RiskAnalysisResult | null =
+      await this.checkCodeAnalysisResponse(file);
+    this.vcs.logger.info(
+      `Waiting for risk analysis response for folder: ${file.folder}`
+    );
     for (let i = 0; i < 60; i++) {
       await this.wait(5000);
       analysisResult = await this.checkCodeAnalysisResponse(file);
       if (analysisResult?.additions) {
         analysisResult.folder = file?.folder;
-        this.vcs.logger.debug(`Response for folder: ${file?.folder}\n` + JSON.stringify(analysisResult) + "\n", true);
+        this.vcs.logger.debug(
+          `Response for folder: ${file?.folder}\n` +
+            JSON.stringify(analysisResult) +
+            "\n",
+          true
+        );
         break;
-      } 
+      }
     }
-    if (!analysisResult){
+    if (!analysisResult) {
       analysisResult = {
         folder: file?.folder,
-        error: "Analysis has timed out for folder: " + file?.folder + ", please contact support.",
+        error:
+          "Analysis has timed out for folder: " +
+          file?.folder +
+          ", please contact support.",
         proceeded_file: file?.uuid,
         additions: undefined,
         success: false,
       };
-        this.vcs.logger.error("Failed to get analysis result for folder: " + file?.folder + "\n" + analysisResult?.error);
-    } else if (!analysisResult?.success){
+      this.vcs.logger.error(
+        "Failed to get analysis result for folder: " +
+          file?.folder +
+          "\n" +
+          analysisResult?.error
+      );
+    } else if (!analysisResult?.success) {
       analysisResult = {
         folder: file?.folder,
         error: analysisResult?.additions?.toString(),
