@@ -48,7 +48,8 @@ class AshCodeAnalysis {
         const inputs = this.vcs.getInputs();
         this.debugMode = (inputs === null || inputs === void 0 ? void 0 : inputs.ALGOSEC_DEBUG) == "true";
         this.apiUrl = this.vcs.cfApiUrl;
-        this.loginAPI = (_a = inputs === null || inputs === void 0 ? void 0 : inputs.CF_LOGIN_API) !== null && _a !== void 0 ? _a : "https://dev.app.algosec.com/api/algosaas/auth/v1/access-keys/login";
+        this.loginAPI =
+            (_a = inputs === null || inputs === void 0 ? void 0 : inputs.CF_LOGIN_API) !== null && _a !== void 0 ? _a : "https://dev.app.algosec.com/api/algosaas/auth/v1/access-keys/login";
         this.tenantId = inputs === null || inputs === void 0 ? void 0 : inputs.CF_TENANT_ID;
         this.clientId = inputs === null || inputs === void 0 ? void 0 : inputs.CF_CLIENT_ID;
         this.clientSecret = inputs === null || inputs === void 0 ? void 0 : inputs.CF_CLIENT_SECRET;
@@ -74,12 +75,18 @@ class AshCodeAnalysis {
                     return data === null || data === void 0 ? void 0 : data.access_token;
                 }
                 else {
-                    this.vcs.logger.exit(`Failed to generate token, ${data.errorCode == "TENANT_NOT_FOUND" ? "Tenant not found" : data.message}`);
+                    this.vcs.logger.exit(`Failed to generate token, ${data.errorCode == "TENANT_NOT_FOUND"
+                        ? "Tenant not found"
+                        : data.message}`);
                 }
             }
             catch (error) {
                 const errMsg = JSON.parse(error);
-                this.vcs.logger.exit(`Failed to generate token. Error msg: ${(errMsg === null || errMsg === void 0 ? void 0 : errMsg.message) != "" ? errMsg === null || errMsg === void 0 ? void 0 : errMsg.message : (errMsg === null || errMsg === void 0 ? void 0 : errMsg.errorCode) == "TENANT_NOT_FOUND" ? "Tenant not found" : error.toString()}`);
+                this.vcs.logger.exit(`Failed to generate token. Error msg: ${(errMsg === null || errMsg === void 0 ? void 0 : errMsg.message) != ""
+                    ? errMsg === null || errMsg === void 0 ? void 0 : errMsg.message
+                    : (errMsg === null || errMsg === void 0 ? void 0 : errMsg.errorCode) == "TENANT_NOT_FOUND"
+                        ? "Tenant not found"
+                        : error.toString()}`);
             }
             return "";
         });
@@ -103,10 +110,10 @@ class AshCodeAnalysis {
                 const fileUploadPromises = [];
                 filesToUpload.forEach((file) => fileUploadPromises.push(this.uploadFile(file)));
                 const responses = yield Promise.all(fileUploadPromises);
-                if ((responses === null || responses === void 0 ? void 0 : responses.filter(response => response).length) == 0) {
+                if ((responses === null || responses === void 0 ? void 0 : responses.filter((response) => response).length) == 0) {
                     this.vcs.logger.error("No files were uploaded, please check logs");
                 }
-                else if (responses.some(response => !response)) {
+                else if (responses.some((response) => !response)) {
                     this.vcs.logger.error("Some files failed to upload, please check logs");
                 }
                 else {
@@ -123,7 +130,7 @@ class AshCodeAnalysis {
         return __awaiter(this, void 0, void 0, function* () {
             let res = false;
             try {
-                if (((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan) != '') {
+                if (((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan) != "") {
                     const ans = yield this.vcs.uploadAnalysisFile(file, this.jwt);
                     if (ans) {
                         res = true;
@@ -146,7 +153,7 @@ class AshCodeAnalysis {
             try {
                 yield this.triggerCodeAnalysis(filesToUpload);
                 const codeAnalysisPromises = [];
-                filesToUpload === null || filesToUpload === void 0 ? void 0 : filesToUpload.filter((file) => { var _a; return ((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan) != ''; }).forEach((file) => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
+                filesToUpload === null || filesToUpload === void 0 ? void 0 : filesToUpload.filter((file) => { var _a; return ((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan) != ""; }).forEach((file) => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
                 analysisResults = yield Promise.all(codeAnalysisPromises);
                 if (!analysisResults || (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.length) == 0) {
                     // this.vcs.logger.error("Analysis failed, please contact support.");
@@ -171,19 +178,26 @@ class AshCodeAnalysis {
                 analysisResult = yield this.checkCodeAnalysisResponse(file);
                 if (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.additions) {
                     analysisResult.folder = file === null || file === void 0 ? void 0 : file.folder;
-                    this.vcs.logger.debug(`Response for folder: ${file === null || file === void 0 ? void 0 : file.folder}\n` + JSON.stringify(analysisResult) + "\n", true);
+                    this.vcs.logger.debug(`Response for folder: ${file === null || file === void 0 ? void 0 : file.folder}\n` +
+                        JSON.stringify(analysisResult) +
+                        "\n", true);
                     break;
                 }
             }
             if (!analysisResult) {
                 analysisResult = {
                     folder: file === null || file === void 0 ? void 0 : file.folder,
-                    error: "Analysis has timed out for folder: " + (file === null || file === void 0 ? void 0 : file.folder) + ", please contact support.",
+                    error: "Analysis has timed out for folder: " +
+                        (file === null || file === void 0 ? void 0 : file.folder) +
+                        ", please contact support.",
                     proceeded_file: file === null || file === void 0 ? void 0 : file.uuid,
                     additions: undefined,
                     success: false,
                 };
-                this.vcs.logger.error("Failed to get analysis result for folder: " + (file === null || file === void 0 ? void 0 : file.folder) + "\n" + (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error));
+                this.vcs.logger.error("Failed to get analysis result for folder: " +
+                    (file === null || file === void 0 ? void 0 : file.folder) +
+                    "\n" +
+                    (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.error));
             }
             else if (!(analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.success)) {
                 analysisResult = {
@@ -432,7 +446,7 @@ class Terraform {
                         folder: (_b = value === null || value === void 0 ? void 0 : value.split(/([/\\])/g)) === null || _b === void 0 ? void 0 : _b.pop(),
                         output,
                     };
-                    this.vcs.logger.debug(`Folder ${file.folder} Action UUID: ${file.uuid}`);
+                    this.vcs.logger.info(`Checked folder ${file.folder} Action UUID: ${file.uuid}`);
                     res.push(file);
                 }
             });
@@ -477,8 +491,8 @@ const vcs_service_1 = __nccwpck_require__(9701);
 // } from "../test/mockData.folder-error"
 class Main {
     constructor() {
-        this.vcsType = 'github'; // Add when supported (process?.env?.VCS ?? 'github') as VersionControlKeys;
-        this.frameworkType = 'terraform'; // Add when supported (process?.env?.FRAMEWORK ?? 'terraform') as FrameworkKeys;
+        this.vcsType = "github"; // Add when supported (process?.env?.VCS ?? 'github') as VersionControlKeys;
+        this.frameworkType = "terraform"; // Add when supported (process?.env?.FRAMEWORK ?? 'terraform') as FrameworkKeys;
     }
     run() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -801,6 +815,7 @@ class Github {
     parseOutput(filesToUpload, analysisResults, errorMessage) {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
+            this.logger.info(`analysis result :${JSON.stringify(analysisResults)}, error: ${errorMessage}`);
             const body = this.parseCodeAnalysis(filesToUpload, analysisResults, errorMessage);
             if (body && body != "")
                 this.steps.comment = yield this.createComment(body);
@@ -814,8 +829,11 @@ class Github {
             if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => { var _a, _b; return (response === null || response === void 0 ? void 0 : response.additions) && ((_b = (_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })) {
                 this.logger[this.stopWhenFail ? 'exit' : 'info']("The risks analysis process completed successfully with risks, please check report: " + commentUrl);
             }
-            else {
+            else if (errorMessage) {
                 this.logger[this.stopWhenFail ? 'exit' : 'info']("The risks analysis process completed with errors or without any risks, please check action's logs: " + commentUrl);
+            }
+            else {
+                this.logger['info']("The risks analysis process completed with errors or without any risks, please check action's logs: " + commentUrl);
             }
         });
     }
@@ -823,10 +841,10 @@ class Github {
         var _a, _b;
         let analysisBody = "";
         if (!(analysis === null || analysis === void 0 ? void 0 : analysis.additions)) {
-            analysisBody = `<details>\n<summary><sub><sub><sub><picture><img  height="20" width="20" src="${this.assetsUrl}/failure.svg" /></picture></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n${(!(analysis === null || analysis === void 0 ? void 0 : analysis.error) || (analysis === null || analysis === void 0 ? void 0 : analysis.error) == '') ? "" : this.buildCommentReportError(analysis)}\n</details>`;
+            analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${this.assetsUrl}/failure.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n${(!(analysis === null || analysis === void 0 ? void 0 : analysis.error) || (analysis === null || analysis === void 0 ? void 0 : analysis.error) == '') ? "" : this.buildCommentReportError(analysis)}\n</details>`;
         }
         else if (((_b = (_a = analysis === null || analysis === void 0 ? void 0 : analysis.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) == 0) {
-            analysisBody = `<details>\n<summary><sub><sub><sub><picture><img  height="20" width="20" src="${this.assetsUrl}/success.svg" /></picture></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n</details>`;
+            analysisBody = `<details>\n<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${this.assetsUrl}/success.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n</details>`;
         }
         else {
             analysisBody = `<details>\n${this.buildCommentReportResult(analysis === null || analysis === void 0 ? void 0 : analysis.additions, file)}\n${this.buildCommentFrameworkResult(file)}\n</details>`;
@@ -841,7 +859,7 @@ class Github {
             parseInt(risk_model_1.severityOrder[b.riskSeverity])).forEach((risk) => {
             var _a, _b;
             risksList += `<details>\n
-<summary><picture><img  width="10" height="10" src="${this.assetsUrl}/${risk.riskSeverity}.svg" /></picture>  ${risk.riskId}</summary> \n
+<summary><a href="#"><img  width="10" height="10" src="${this.assetsUrl}/${risk.riskSeverity}.svg" /></a>  ${risk.riskId}</summary> \n
 ### **Title:**\n${risk.riskTitle}\n
 ### **Description:**\n${risk.riskDescription}\n
 ### **Recommendation:**\n${risk.riskRecommendation.toString()}\n
@@ -875,23 +893,23 @@ ${(_b = (_a = risk === null || risk === void 0 ? void 0 : risk.items) === null |
 </details>\n`;
         });
         const severityCount = `<div  align="right">${this.count(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "critical") > 0
-            ? `<picture><img  width="10" height="10" src="${this.assetsUrl}/critical.svg" /></picture>&nbsp;` +
+            ? `<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/critical.svg" /></a>&nbsp;` +
                 this.count(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "critical") +
                 "&nbsp;Critical"
             : ""}${this.count(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "high") > 0
-            ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<picture><img  width="10" height="10" src="${this.assetsUrl}/high.svg" /></picture>&nbsp;` +
+            ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/high.svg" /></a>&nbsp;` +
                 this.count(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "high") +
                 "&nbsp;High"
             : ""}${this.count(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "medium") > 0
-            ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<picture><img  width="10" height="10" src="${this.assetsUrl}/medium.svg" /></picture>&nbsp;` +
+            ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/medium.svg" /></a>&nbsp;` +
                 this.count(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "medium") +
                 "&nbsp;Medium"
             : ""}${this.count(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "low") > 0
-            ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<picture><img  width="10" height="10" src="${this.assetsUrl}/low.svg" /></picture>&nbsp;` +
+            ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/low.svg" /></a>&nbsp;` +
                 this.count(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "low") +
                 "&nbsp;Low"
             : ""}</div>`;
-        const codeAnalysisContent = `<summary><sub><sub><sub><picture><img  height="20" width="20" src="${this.assetsUrl}/warning.svg" /></picture></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder +
+        const codeAnalysisContent = `<summary><sub><sub><sub><a href="#"><img  height="20" width="20" src="${this.assetsUrl}/warning.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder +
             (((_b = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _b === void 0 ? void 0 : _b.length) == 0 ? "No Risks Found" : "")}</b></h3>${((_c = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _c === void 0 ? void 0 : _c.length) > 0 ? severityCount : ""}</summary>\n${risksList}\n`;
         return codeAnalysisContent;
     }
@@ -964,8 +982,8 @@ ${((_l = (_k = file === null || file === void 0 ? void 0 : file.output) === null
             var _a, _b;
             risksTableContents += `<tr>\n
 <td>${risk.riskId}</td>\n
-<td align="center"><picture><img  width="10" height="10" src="${this.assetsUrl}/${risk === null || risk === void 0 ? void 0 : risk.riskSeverity}.svg" /></picture></td>\n
-<td align="center"><sub><picture><img  width="24" height="24" src="${this.assetsUrl}/${(_b = (_a = risk === null || risk === void 0 ? void 0 : risk.vendor) === null || _a === void 0 ? void 0 : _a.toLowerCase()) !== null && _b !== void 0 ? _b : "aws"}.svg" /></picture></sub></td>\n
+<td align="center"><a href="#"><img  width="10" height="10" src="${this.assetsUrl}/${risk === null || risk === void 0 ? void 0 : risk.riskSeverity}.svg" /></a></td>\n
+<td align="center"><sub><a href="#"><img  width="24" height="24" src="${this.assetsUrl}/${(_b = (_a = risk === null || risk === void 0 ? void 0 : risk.vendor) === null || _a === void 0 ? void 0 : _a.toLowerCase()) !== null && _b !== void 0 ? _b : "aws"}.svg" /></a></sub></td>\n
 <td>${Array.isArray(risk.folder) ? risk.folder.join(", ") : risk.folder}</td>\n
 <td>${risk.riskTitle}</td>\n
 </tr>\n`;
@@ -973,19 +991,19 @@ ${((_l = (_k = file === null || file === void 0 ? void 0 : file.output) === null
         const risksSummary = `
 \n
 <div align="right">${this.count(mergedRisks, "riskSeverity", "critical") > 0
-            ? `<picture><img  width="10" height="10" src="${this.assetsUrl}/critical.svg" /></picture>&nbsp;` +
+            ? `<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/critical.svg" /></a>&nbsp;` +
                 this.count(mergedRisks, "riskSeverity", "critical") +
                 "&nbsp;Critical"
             : ""}${this.count(mergedRisks, "riskSeverity", "high") > 0
-            ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<picture><img  width="10" height="10" src="${this.assetsUrl}/high.svg" /></picture>&nbsp;` +
+            ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/high.svg" /></a>&nbsp;` +
                 this.count(mergedRisks, "riskSeverity", "high") +
                 "&nbsp;High"
             : ""}${this.count(mergedRisks, "riskSeverity", "medium") > 0
-            ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<picture><img  width="10" height="10" src="${this.assetsUrl}/medium.svg" /></picture>&nbsp;` +
+            ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/medium.svg" /></a>&nbsp;` +
                 this.count(mergedRisks, "riskSeverity", "medium") +
                 "&nbsp;Medium"
             : ""}${this.count(mergedRisks, "riskSeverity", "low") > 0
-            ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<picture><img  width="10" height="10" src="${this.assetsUrl}/low.svg" /></picture>&nbsp;` +
+            ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#"><img  width="10" height="10" src="${this.assetsUrl}/low.svg" /></a>&nbsp;` +
                 this.count(mergedRisks, "riskSeverity", "low") +
                 "&nbsp;Low"
             : ""}</div><br>
@@ -1011,7 +1029,7 @@ ${risksTableContents}
     parseCodeAnalysis(filesToUpload, analysisResults, errMsg) {
         var _a, _b, _c;
         const commentBodyArray = [];
-        const header = `<picture><img  height="50" src="${this.assetsUrl}/header.svg" /></picture> \n`;
+        const header = `<a href="#"><img  height="50" src="${this.assetsUrl}/header.svg" /></a> \n`;
         const footer = `\n\n---\n\n
 <br>
 Pusher: @${(_a = this._context) === null || _a === void 0 ? void 0 : _a.actor}<br>
@@ -1028,7 +1046,7 @@ Workflow: ${(_c = this._context) === null || _c === void 0 ? void 0 : _c.workflo
             ? bodyHeading + commentBodyArray.join("\n\n---\n\n")
             : "\n\n<h4>No risks were found.</h4>\n\n";
         if ((filesToUpload === null || filesToUpload === void 0 ? void 0 : filesToUpload.length) == 0 && (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.length) == 0) {
-            return header + `<br><br><sub><sub><sub><picture><img height="20" width="20" src="${this.assetsUrl}/failure.svg" /></picture></sub></sub></sub>&nbsp;&nbsp;<b>` + errMsg + "</b><br><br>" + footer;
+            return header + `<br><br><sub><sub><sub><a href="#"><img height="20" width="20" src="${this.assetsUrl}/failure.svg" /></a></sub></sub></sub>&nbsp;&nbsp;<b>` + errMsg + "</b><br><br>" + footer;
         }
         return header + summary + analysisByFolder + footer;
     }
