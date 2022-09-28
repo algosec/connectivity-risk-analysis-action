@@ -104,7 +104,7 @@ export class Terraform implements IFramework {
           folder: value?.split(/([/\\])/g)?.pop(),
           output,
         };
-        this.vcs.logger.debug(`Folder ${file.folder} Action UUID: ${file.uuid}`);
+        this.vcs.logger.info(`Folder ${file.folder} Action UUID: ${file.uuid}`);
         res.push(file);
       }
     };
