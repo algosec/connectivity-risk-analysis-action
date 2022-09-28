@@ -340,8 +340,12 @@ export class Github implements IVersionControl {
           this.logger[this.stopWhenFail ? 'exit' : 'info'](
             "The risks analysis process completed successfully with risks, please check report: " + commentUrl
           );
-      } else {
+      } else if(errorMessage){
         this.logger[this.stopWhenFail ? 'exit' : 'info'](
+          "The risks analysis process completed with errors or without any risks, please check action's logs: " + commentUrl
+        );
+      } else{
+        this.logger['info'](
           "The risks analysis process completed with errors or without any risks, please check action's logs: " + commentUrl
         );
       }
