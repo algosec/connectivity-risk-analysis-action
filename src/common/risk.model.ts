@@ -36,14 +36,13 @@ export interface RiskItem {
   fromPort: number;
   ipProtocol: string;
   ipRange: number[];
-  vendor?: string
+  vendor?: string;
 }
-
 
 export interface RiskAnalysisFile {
   uuid: string;
-  output: {plan: string, log: ExecOutput, initLog: ExecOutput};
+  output: { plan: string; log: ExecOutput; initLog: ExecOutput };
   folder: string;
-  upload?: ExecOutput
-  analyze?: ExecOutput
+  upload?: ExecOutput;
+  analyze?: ExecOutput;
 }

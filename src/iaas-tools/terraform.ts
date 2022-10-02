@@ -1,4 +1,4 @@
-import {  RiskAnalysisFile } from "../common/risk.model";
+import { RiskAnalysisFile } from "../common/risk.model";
 import {
   FrameworkKeys,
   FrameworkOptions,
@@ -7,24 +7,41 @@ import {
 } from "./framework.model";
 import { existsSync } from "fs";
 import * as uuid from "uuid";
-import { IVersionControl, VersionControlClassType, VersionControlKeys } from "../vcs/vcs.model";
+import {
+  IVersionControl,
+  VersionControlClassType,
+  VersionControlKeys,
+} from "../vcs/vcs.model";
 import { ExecOutput } from "../vcs/vcs.model";
 
 export class Terraform implements IFramework {
   fileTypes = [".tf"];
   type: FrameworkKeys = "terraform";
-  constructor(public vcs: IVersionControl) {
-  }
+  constructor(public vcs: IVersionControl) {}
 
-  async terraform(options: FrameworkOptions, vcs: VersionControlClassType<VersionControlKeys>): Promise<FrameworkResult> {
-    let result: FrameworkResult = {plan: "", log: {stderr: '', stdout: '', exitCode: 0}, initLog: {stderr: '', stdout: '', exitCode: 0}}
-    const initLog: ExecOutput = {stdout: '', stderr: '', exitCode: 0};
+  async terraform(
+    options: FrameworkOptions,
+    vcs: VersionControlClassType<VersionControlKeys>
+  ): Promise<FrameworkResult> {
+    let result: FrameworkResult = {
+      plan: "",
+      log: { stderr: "", stdout: "", exitCode: 0 },
+      initLog: { stderr: "", stdout: "", exitCode: 0 },
+    };
+    const initLog: ExecOutput = { stdout: "", stderr: "", exitCode: 0 };
     try {
       process.chdir(`${options.path}`);
-      vcs.logger.info(`Run Terraform on folder ${options.runFolder}`, true, false)
+      vcs.logger.info(
+        `Run Terraform on folder ${options.runFolder}`,
+        true,
+        false
+      );
       vcs.steps.init = await vcs.exec("terraform", ["init"]);
       vcs.steps.fmt = await vcs.exec("terraform", ["fmt", "-diff"]);
-      vcs.steps.validate = await vcs.exec("terraform", ["validate", "-no-color"]);
+      vcs.steps.validate = await vcs.exec("terraform", [
+        "validate",
+        "-no-color",
+      ]);
       if (!existsSync("./tmp")) {
         await vcs.exec("mkdir", ["tmp"]);
       }
@@ -47,27 +64,30 @@ export class Terraform implements IFramework {
           vcs.steps.plan.stderr
         ),
       };
-      let jsonPlan = '';
-      if (vcs.steps.plan.stdout != '') {
-        jsonPlan = 
-          (
-            await vcs.exec("terraform", [
-              "show",
-              "-json",
-              `${process.cwd()}\\tmp\\${options.runFolder}.out`,
-            ])
-          ).stdout
+      let jsonPlan = "";
+      if (vcs.steps.plan.stdout != "") {
+        jsonPlan = (
+          await vcs.exec("terraform", [
+            "show",
+            "-json",
+            `${process.cwd()}\\tmp\\${options.runFolder}.out`,
+          ])
+        ).stdout;
       }
       process.chdir(options.workDir);
       result = { plan: jsonPlan, log: vcs.steps.plan, initLog };
     } catch (error: any) {
       if (error instanceof Error) {
         vcs.logger.info(error?.message); // setFailed(error?.message)
-        result = { plan: '', log: { stderr: error?.message, stdout: '', exitCode:0  },  initLog };
+        result = {
+          plan: "",
+          log: { stderr: error?.message, stdout: "", exitCode: 0 },
+          initLog,
+        };
       }
     }
-    console.log('::endgroup::')
-    return result
+    console.log("::endgroup::");
+    return result;
   }
 
   async setVersion(): Promise<void> {
@@ -82,13 +102,13 @@ export class Terraform implements IFramework {
       process?.env?.TF_VERSION == "latest" ||
       process?.env?.TF_VERSION == ""
     ) {
-      this.vcs.steps.switchVersion = await this.vcs.exec("tfswitch", ["--latest"]);
+      this.vcs.steps.switchVersion = await this.vcs.exec("tfswitch", [
+        "--latest",
+      ]);
     } else {
       this.vcs.steps.switchVersion = await this.vcs.exec("tfswitch", []);
     }
-    this.vcs.logger.info(
-      "tfswitch version: " + process?.env?.TF_VERSION
-    );
+    this.vcs.logger.info("tfswitch version: " + process?.env?.TF_VERSION);
   }
 
   async check(
@@ -98,13 +118,18 @@ export class Terraform implements IFramework {
     const res: RiskAnalysisFile[] = [];
     const asyncIterable = async (iterable, action) => {
       for (const [index, value] of iterable?.entries()) {
-        const output = await action({ runFolder: value?.split(/([/\\])/g)?.pop(), workDir, path: value }, this.vcs);
+        const output = await action(
+          { runFolder: value?.split(/([/\\])/g)?.pop(), workDir, path: value },
+          this.vcs
+        );
         const file: RiskAnalysisFile = {
           uuid: uuid.v4(),
           folder: value?.split(/([/\\])/g)?.pop(),
           output,
         };
-        this.vcs.logger.info(`Checked folder ${file.folder} Action UUID: ${file.uuid}`);
+        this.vcs.logger.info(
+          `Checked folder ${file.folder} Action UUID: ${file.uuid}`
+        );
         res.push(file);
       }
     };

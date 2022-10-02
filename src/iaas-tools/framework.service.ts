@@ -10,11 +10,11 @@ export class FrameworkService {
     type: FrameworkSingleKeys<K>,
     vcs: IVersionControl
   ) {
-    try{
+    try {
       return FrameworkFactory.getInstance(type, vcs);
-    } catch(e){
+    } catch (e) {
       vcs.logger.error(e);
-      return null
+      return null;
     }
   }
 }
