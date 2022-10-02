@@ -1,5 +1,5 @@
 name: 'AlgoSec’s IaC solution'
-description: 'Extensible security plugin platform that checks code for potential vulnerabilities before any commits to a repository'
+description: 'Extensible security plugin platform that checks code for potential vulnerabilities before any commits to a repository.'
 author: 'alon.noy@algosec.com'
 branding:
   icon: 'activity'
