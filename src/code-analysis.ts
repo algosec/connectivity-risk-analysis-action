@@ -61,6 +61,7 @@ export class AshCodeAnalysis {
       "Content-Type": "application/json",
     };
     try {
+      this.vcs.logger.debug(`Generate token vs ${loginAPI} with payload ${JSON.stringify(payload)}`);
       const res = await this.vcs.http.post(
         loginAPI,
         JSON.stringify(payload),
