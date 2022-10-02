@@ -8,13 +8,13 @@ export interface IFramework {
 }
 
 export const frameworkMap = {
-  terraform: Terraform
+  terraform: Terraform,
 };
 
 export interface FrameworkOptions {
   runFolder: string;
   workDir: string;
-  path: string
+  path: string;
 }
 
 export interface FrameworkResult {
@@ -46,10 +46,10 @@ export class FrameworkFactory {
     frameworkKey: FrameworkSingleKeys<K>,
     vcs: IVersionControl
   ): FrameworkClassType<K> {
-      try {
-        return new frameworkMap[frameworkKey](vcs);
-      } catch (error) {
-        throw new Error("Unsupported framework type: " + frameworkKey);
-      }
+    try {
+      return new frameworkMap[frameworkKey](vcs);
+    } catch (error) {
+      throw new Error("Unsupported framework type: " + frameworkKey);
+    }
   }
 }
