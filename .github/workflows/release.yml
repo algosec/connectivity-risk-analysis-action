@@ -17,6 +17,12 @@ jobs:
       run: npm run build
     - name: Package
       run: npm run package
+    - name: Archive Release
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'release.zip'
+        exclusions: '*.git* /*node_modules/*'
     - name: Determine Version
       id: determine_version
       uses: paulhatch/semantic-version@v4.0.2
