@@ -4,10 +4,6 @@ node_modules
 # IDE
 .vscode/settings.json
 
-# Compiled Files
-dist
-lib
-
 # Rest pulled from https://github.com/github/gitignore/blob/master/Node.gitignore
 # Logs
 logs
