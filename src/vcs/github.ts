@@ -351,6 +351,7 @@ export class Github implements IVersionControl {
     } catch (error) {
       this.logger.error(`Failed to analyze the result.`);
       this.logger.error(error);
+      this.logger.error(`For result ${JSON.stringify(analysisResults)}`);
       this.logger[this.stopWhenFail ? 'exit' : 'info'](
         "The risks analysis process completed with error, please check action's logs:"
       );
