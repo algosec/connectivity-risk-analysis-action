@@ -1,5 +1,5 @@
-name: 'Algosec IaC Connectivity Risk Analysis'
-description: 'This GitHub Action runs Algosec  IaC Connectivity Risk Analysis against an Infrastructure-as-Code repository.'
+name: 'AlgoSec’s IaC solution'
+description: 'Extensible security plugin platform that checks code for potential vulnerabilities before any commits to a repository.'
 author: 'alon.noy@algosec.com'
 branding:
   icon: 'activity'
