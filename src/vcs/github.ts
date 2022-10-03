@@ -38,14 +38,14 @@ export class Github implements IVersionControl {
     this.runFullAnalysis = process?.env?.FULL_ANALYSIS == 'true';
     this.stopWhenFail = process?.env?.STOP_WHEN_FAIL != 'false';
     this.http = new HttpClient();
-    const dateFormatter = (isoDate: string) => isoDate?.split("T")[0].split("-").reverse().join("/") +" "+ isoDate.split("T")[1].replace("Z","")
-    const prefix = (str: string, group = false, close = true) => (group ? '::group::' : '- ') + dateFormatter(new Date().toISOString()) +' ##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '')
-    this.logger = { 
-            debug: (str: string, group = false) => debug(prefix(str, group)), 
-            error: (str: string, group = false) => error(prefix(str, group)), 
-            exit: (str: string, group = false) => exit(prefix(str, group)), 
-            info: (str: string, group = false, close = true) => info(prefix(str, group, close)) 
-          };
+    const dateFormatter = (isoDate: string) => isoDate?.split("T")[0].split("-").reverse().join("/") + " " + isoDate.split("T")[1].replace("Z", "")
+    const prefix = (str: string, group = false, close = true) => (group ? '::group::' : '- ') + dateFormatter(new Date().toISOString()) + ' ##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '')
+    this.logger = {
+      debug: (str: string, group = false) => debug(prefix(str, group)),
+      error: (str: string, group = false) => error(prefix(str, group)),
+      exit: (str: string, group = false) => exit(prefix(str, group)),
+      info: (str: string, group = false, close = true) => info(prefix(str, group, close))
+    };
     this.workspace = process?.env?.GITHUB_WORKSPACE ?? "";
     this.token = process?.env?.GITHUB_TOKEN ?? "";
     this.sha = process?.env?.GITHUB_SHA ?? "";
@@ -69,7 +69,7 @@ export class Github implements IVersionControl {
       stderr: "",
       exitCode: 0,
     };
-  
+
     try {
       const code = await actionsExec(cmd, args, {
         listeners: {
@@ -81,18 +81,17 @@ export class Github implements IVersionControl {
           },
         },
       });
-  
+
       res.exitCode = code;
       return res;
     } catch (err) {
-      const msg = `Command '${cmd}' failed with args '${args.join(" ")}': ${
-        res.stderr
-      }: ${err}`;
+      const msg = `Command '${cmd}' failed with args '${args.join(" ")}': ${res.stderr
+        }: ${err}`;
       debug(`@actions/exec.exec() threw an error: ${msg}`);
       throw new Error(msg);
     }
   }
-  
+
   count(array, property, value) {
     return array?.filter((obj) => obj[property] === value).length;
   }
@@ -110,37 +109,37 @@ export class Github implements IVersionControl {
   }
 
   async getDirectories(source: string): Promise<string[]> {
-    return  readdirSync(source, { withFileTypes: true })
+    return readdirSync(source, { withFileTypes: true })
       .filter(dirent => dirent.isDirectory())
       .map(dirent => dirent.name)
-    }
-  
+  }
 
-   getFoldersList(dirName): string[] {
-      let folders: string[] = [];
-      const items = readdirSync(dirName, { withFileTypes: true });
-  
-      for (const item of items) {
-          if (item.isDirectory()) {
-              folders = [...folders, ...this.getFoldersList(`${dirName}/${item.name}`)];
-              folders.push(`${dirName}/${item.name}`);
-          } 
+
+  getFoldersList(dirName): string[] {
+    let folders: string[] = [];
+    const items = readdirSync(dirName, { withFileTypes: true });
+
+    for (const item of items) {
+      if (item.isDirectory()) {
+        folders = [...folders, ...this.getFoldersList(`${dirName}/${item.name}`)];
+        folders.push(`${dirName}/${item.name}`);
       }
-  
-      return folders;
+    }
+
+    return folders;
   };
 
 
-  hasFileType(dir:string, fileTypes: string[]): boolean {
+  hasFileType(dir: string, fileTypes: string[]): boolean {
     const files = readdirSync(dir);
-      if (files.some(file => fileTypes.some(type => file.endsWith(type)))){
-        return true
-      } else {
-        return false
-      }
+    if (files.some(file => fileTypes.some(type => file.endsWith(type)))) {
+      return true
+    } else {
+      return false
     }
+  }
 
-  
+
 
 
   async createComment(body: string): Promise<ExecOutput> {
@@ -154,7 +153,7 @@ export class Github implements IVersionControl {
       exitCode: result?.data?.body ? 0 : 1,
       stdout: result?.data?.body ? result?.data?.body : null,
       stderr: result?.data?.body ? null : result?.data?.body,
-      url: result?.data?.html_url 
+      url: result?.data?.html_url
     } as ExecOutput;
   }
 
@@ -237,9 +236,8 @@ export class Github implements IVersionControl {
       res.exitCode = code;
       return res;
     } catch (err) {
-      const msg = `Command '${cmd}' failed with args '${args.join(" ")}': ${
-        res.stderr
-      }: ${err}`;
+      const msg = `Command '${cmd}' failed with args '${args.join(" ")}': ${res.stderr
+        }: ${err}`;
       debug(`@actions/exec.exec() threw an error: ${msg}`);
       throw new Error(msg);
     }
@@ -256,13 +254,13 @@ export class Github implements IVersionControl {
   }
 
   async checkForDiffByFileTypes(fileTypes: string[]): Promise<string[]> {
-    if (!this.useCheckoutAction){
+    if (!this.useCheckoutAction) {
       await this.prepareRepo();
     }
     let diffFolders: any[] = [];
     try {
       const allFoldersPaths = await this.getFoldersList(this.workDir)
-      if (this.runFullAnalysis){
+      if (this.runFullAnalysis) {
         diffFolders = allFoldersPaths.filter(folder => this.hasFileType(folder, fileTypes))
       } else {
         const diffs = await this.getDiff(this.octokit);
@@ -276,7 +274,7 @@ export class Github implements IVersionControl {
         );
         diffFolders = [...foldersSet];
       }
-    
+
     } catch (error: unknown) {
       if (error instanceof Error) this.logger.exit(error?.message ?? error?.toString());
     }
@@ -287,7 +285,7 @@ export class Github implements IVersionControl {
       return []
     }
     // this.logger.info(
-      // `Running IaC on folders:\n ${diffFolders.join(',\n')}`
+    // `Running IaC on folders:\n ${diffFolders.join(',\n')}`
     // );
     return diffFolders;
   }
@@ -314,11 +312,11 @@ export class Github implements IVersionControl {
         exit(response);
         return false;
       }
-    } catch(e){
+    } catch (e) {
       this.logger.error(`Upload file failed due to errors:\n${e}\n`)
       return false
     }
-   
+
   }
 
 
@@ -327,28 +325,35 @@ export class Github implements IVersionControl {
     analysisResults: RiskAnalysisResult[],
     errorMessage: string
   ): Promise<void> {
-    this.logger.info(`analysis result :${JSON.stringify(analysisResults)}, error: ${errorMessage}`);
-    const body = this.parseCodeAnalysis(filesToUpload, analysisResults, errorMessage);
-    if (body && body != "") this.steps.comment = await this.createComment(body);
+    this.logger.debug(`analysis result :${JSON.stringify(analysisResults)}, error: ${errorMessage}`);
+    try {
+      const body = this.parseCodeAnalysis(filesToUpload, analysisResults, errorMessage);
+      if (body && body != "") this.steps.comment = await this.createComment(body);
       let commentUrl = ""
       try {
         commentUrl = this.steps?.comment["url"]
-      } catch(e){
+      } catch (e) {
         this.logger.error("Failed to create report: " + e);
       }
-      if ( analysisResults?.some((response) => response?.additions && response?.additions?.analysis_result?.length > 0)) {
-          this.logger[this.stopWhenFail ? 'exit' : 'info'](
-            "The risks analysis process completed successfully with risks, please check report: " + commentUrl
-          );
-      } else if(errorMessage){
+      if (analysisResults?.some((response) => response?.additions && response?.additions?.analysis_result?.length > 0)) {
+        this.logger[this.stopWhenFail ? 'exit' : 'info'](
+          "The risks analysis process completed successfully with risks, please check report: " + commentUrl
+        );
+      } else if (errorMessage) {
         this.logger[this.stopWhenFail ? 'exit' : 'info'](
           "The risks analysis process completed with errors or without any risks, please check action's logs: " + commentUrl
         );
-      } else{
+      } else {
         this.logger['info'](
           "The risks analysis process completed with errors or without any risks, please check action's logs: " + commentUrl
         );
       }
+    } catch (error) {
+      this.logger.error(`Failed to analyze the result. Error: ${JSON.stringify(console.error())} `);
+      this.logger[this.stopWhenFail ? 'exit' : 'info'](
+        "The risks analysis process completed with error, please check action's logs:"
+      );
+    }
   }
 
   buildCommentAnalysisBody(
@@ -389,10 +394,10 @@ export class Github implements IVersionControl {
     let risksList = "";
     const CODE_BLOCK = "```";
     analysis?.analysis_result?.sort(
-        (a, b) =>
-          parseInt(severityOrder[a.riskSeverity]) -
-          parseInt(severityOrder[b.riskSeverity])
-      )
+      (a, b) =>
+        parseInt(severityOrder[a.riskSeverity]) -
+        parseInt(severityOrder[b.riskSeverity])
+    )
       .forEach((risk) => {
         risksList += `<details>\n
 <summary><picture><img width="10" height="10" src="${this.assetsUrl}/${
@@ -402,10 +407,10 @@ export class Github implements IVersionControl {
 ### **Description:**\n${risk.riskDescription}\n
 ### **Recommendation:**\n${risk.riskRecommendation.toString()}\n
 ### **Details:**\n`+
-// ${CODE_BLOCK}\n
-// ${JSON.stringify(risk.items, null, "\t")}\n
-// ${CODE_BLOCK}\n
-`<table>
+          // ${CODE_BLOCK}\n
+          // ${JSON.stringify(risk.items, null, "\t")}\n
+          // ${CODE_BLOCK}\n
+          `<table>
 <thead>\n
 <tr>\n
 <th align="left" scope="col">Vendor</th>\n
@@ -416,15 +421,15 @@ export class Github implements IVersionControl {
 </tr>\n
 </thead>\n
 <tbody id="tableBody">\n
-${risk?.items?.map(item => 
-  `<tr>\n
+${risk?.items?.map(item =>
+            `<tr>\n
   <td>${item?.vendor}</td>\n
   <td>${item?.fromPort}</td>\n
   <td>${item?.toPort}</td>\n
   <td>${item?.ipProtocol}</td>\n
   <td>${item?.ipRange ?? ''}</td>\n
   </tr>\n`
-)?.join('')}                
+          )?.join('')}                
 </tbody>
 </table>\n
 </details>\n`;
@@ -458,10 +463,10 @@ ${risk?.items?.map(item =>
       this.assetsUrl
     }/warning.svg" /></picture></sub></sub></sub>&nbsp;&nbsp;<h3><b>${
       file.folder +
+
       (analysis?.analysis_result?.length == 0 ? "No Risks Found" : "")
-    }</b></h3>${
-      analysis?.analysis_result?.length > 0 ? severityCount : ""
-    }</summary>\n${risksList}\n`;
+      }</b></h3>${analysis?.analysis_result?.length > 0 ? severityCount : ""
+      }</summary>\n${risksList}\n`;
     return codeAnalysisContent;
   }
 
@@ -473,7 +478,7 @@ ${result?.error}\n
 ${CODE_BLOCK}\n`;
     const analysisContent = `\n<details>
 <summary>Analysis Log</summary>
-${!result?.error || result?.error == '' ? "Analysis Failed, check action logs" : "<br>" + errors + "<br>" }
+${!result?.error || result?.error == '' ? "Analysis Failed, check action logs" : "<br>" + errors + "<br>"}
 </details> <!-- End Format Logs -->\n`;
     return analysisContent;
   }
@@ -519,10 +524,10 @@ ${file?.output?.log?.stderr ? "<br>" + errors + "<br>" : ""}
       });
 
     const mergedRisks = [].concat.apply([], riskArrays)?.sort(
-        (a, b) =>
-          parseInt(severityOrder[a.riskSeverity]) -
-          parseInt(severityOrder[b.riskSeverity])
-      );
+      (a, b) =>
+        parseInt(severityOrder[a.riskSeverity]) -
+        parseInt(severityOrder[b.riskSeverity])
+    );
     const groupedRisksById = mergedRisks.reduce(
       (accumulator: any, item: any) => {
         if (accumulator[item.riskId]) {
@@ -554,6 +559,7 @@ ${file?.output?.log?.stderr ? "<br>" + errors + "<br>" : ""}
     });
     const risksSummary = `
 \n
+
 <div align="right">${
       this.count(mergedRisks, "riskSeverity", "critical") > 0
         ? `<picture><img width="10" height="10" src="${this.assetsUrl}/critical.svg" /></picture>&nbsp;` +
@@ -578,7 +584,7 @@ ${file?.output?.log?.stderr ? "<br>" + errors + "<br>" : ""}
           this.count(mergedRisks, "riskSeverity", "low") +
           "&nbsp;Low"
         : ""
-    }</div><br>
+      }</div><br>
 \n`;
     const risksTable = `<table>\n
 <thead>\n
@@ -631,6 +637,7 @@ Workflow: ${this._context?.workflow}`;
       commentBodyArray?.length > 0
         ? bodyHeading + commentBodyArray.join("\n\n---\n\n")
         : "\n\n<h4>No risks were found.</h4>\n\n";
+
     
     if (filesToUpload?.length == 0 && analysisResults?.length == 0){
       return header + `<br><br><sub><sub><sub><picture><img height="20" width="20" src="${this.assetsUrl}/failure.svg" /></picture></sub></sub></sub>&nbsp;&nbsp;<b>` + errMsg + "</b><br><br>" + footer
