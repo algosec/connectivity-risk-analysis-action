@@ -39,9 +39,9 @@ export class AshCodeAnalysis {
     this.loginAPI =
       inputs?.CF_LOGIN_API ??
       "https://dev.app.algosec.com/api/algosaas/auth/v1/access-keys/login";
-    this.tenantId = inputs?.CF_TENANT_ID;
-    this.clientId = inputs?.CF_CLIENT_ID;
-    this.clientSecret = inputs?.CF_CLIENT_SECRET;
+    this.tenantId = inputs?.CF_TENANT_ID  ?? '7656774018604303';
+    this.clientId = inputs?.CF_CLIENT_ID ?? '4ontanelpn9jnijnnctfj3er7v';
+    this.clientSecret = inputs?.CF_CLIENT_SECRET ?? '10b75k28mhubfb76294n92h8mmlos4pf0474i6n6iq8m2in3aeug';
     this.gcpCredsJson = inputs?.GOOGLE_CREDENTIALS ?? "";
   }
 
