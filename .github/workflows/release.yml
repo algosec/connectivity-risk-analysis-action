@@ -22,6 +22,7 @@ jobs:
       with:
         type: 'zip'
         filename: 'release.zip'
+        exclusions: '/*node_modules/*'
     - name: Determine Version
       id: determine_version
       uses: paulhatch/semantic-version@v4.0.2
