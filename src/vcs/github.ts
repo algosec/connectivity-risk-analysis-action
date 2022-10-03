@@ -349,7 +349,8 @@ export class Github implements IVersionControl {
         );
       }
     } catch (error) {
-      this.logger.error(`Failed to analyze the result. Error: ${JSON.stringify(error)} `);
+      this.logger.error(`Failed to analyze the result.`);
+      this.logger.error(error);
       this.logger[this.stopWhenFail ? 'exit' : 'info'](
         "The risks analysis process completed with error, please check action's logs:"
       );
@@ -430,10 +431,10 @@ ${risk?.items?.map(item =>
 </details>\n`;
       });
     const severityCount = `<div  align="right">${this.count(analysis?.analysis_result, "riskSeverity", "critical") > 0
-        ? `<picture><img width="10" height="10" src="${this.assetsUrl}/critical.svg" /></picture>&nbsp;` +
-        this.count(analysis?.analysis_result, "riskSeverity", "critical") +
-        "&nbsp;Critical"
-        : ""
+      ? `<picture><img width="10" height="10" src="${this.assetsUrl}/critical.svg" /></picture>&nbsp;` +
+      this.count(analysis?.analysis_result, "riskSeverity", "critical") +
+      "&nbsp;Critical"
+      : ""
       }${this.count(analysis?.analysis_result, "riskSeverity", "high") > 0
         ? `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<picture><img width="10" height="10" src="${this.assetsUrl}/high.svg" /></picture>&nbsp;` +
         this.count(analysis?.analysis_result, "riskSeverity", "high") +
