@@ -890,12 +890,12 @@ class Github {
 ${(_b = (_a = risk === null || risk === void 0 ? void 0 : risk.items) === null || _a === void 0 ? void 0 : _a.map(item => {
                     var _a;
                     return `<tr>\n
-            <td>${item === null || item === void 0 ? void 0 : item.vendor}</td>\n
-            <td>${item === null || item === void 0 ? void 0 : item.fromPort}</td>\n
-            <td>${item === null || item === void 0 ? void 0 : item.toPort}</td>\n
-            <td>${item === null || item === void 0 ? void 0 : item.ipProtocol}</td>\n
-            <td>${(_a = item === null || item === void 0 ? void 0 : item.ipRange) !== null && _a !== void 0 ? _a : ''}</td>\n
-            </tr>\n`;
+  <td>${item === null || item === void 0 ? void 0 : item.vendor}</td>\n
+  <td>${item === null || item === void 0 ? void 0 : item.fromPort}</td>\n
+  <td>${item === null || item === void 0 ? void 0 : item.toPort}</td>\n
+  <td>${item === null || item === void 0 ? void 0 : item.ipProtocol}</td>\n
+  <td>${(_a = item === null || item === void 0 ? void 0 : item.ipRange) !== null && _a !== void 0 ? _a : ''}</td>\n
+  </tr>\n`;
                 })) === null || _b === void 0 ? void 0 : _b.join('')}                
 </tbody>
 </table>\n
