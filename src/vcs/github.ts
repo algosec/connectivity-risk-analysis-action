@@ -514,7 +514,7 @@ ${file?.output?.log?.stderr ? "<br>" + errors + "<br>" : ""}
             riskId: risk.riskId,
             riskTitle: risk.riskTitle,
             riskSeverity: risk.riskSeverity,
-            vendor: risk?.items[0].vendor
+            vendor: risk?.items[0]?.vendor
           };
         });
       });
