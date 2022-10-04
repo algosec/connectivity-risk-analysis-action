@@ -57,6 +57,9 @@ export class AshCodeAnalysis {
       clientSecret,
     };
 
+    if( !tenantId || !clientID || !clientSecret){
+      this.vcs.logger.exit(`Failed to generate token. ${!tenantId ? 'CF_TENANT_ID' : (!clientID ? 'CF_CLIENT_ID' : 'CF_CLIENT_SECRET')} is not available under secrets in GitHub`);
+    }
     const headers = {
       "Content-Type": "application/json",
     };
@@ -80,7 +83,7 @@ export class AshCodeAnalysis {
         this.vcs.logger.exit(
           `Failed to generate token, ${
             data.errorCode == "TENANT_NOT_FOUND"
-              ? "Tenant not found"
+              ? "Invalid value in tenantId field"
               : data.message
           }`
         );
@@ -92,7 +95,7 @@ export class AshCodeAnalysis {
           errMsg?.message != ""
             ? errMsg?.message
             : errMsg?.errorCode == "TENANT_NOT_FOUND"
-            ? "Tenant not found"
+            ? "Invalid value in tenantId field"
             : error.toString()
         }`
       );
