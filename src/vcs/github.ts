@@ -418,15 +418,19 @@ export class Github implements IVersionControl {
 </tr>\n
 </thead>\n
 <tbody id="tableBody">\n
-${risk?.items?.map(item =>
-            `<tr>\n
-  <td>${item?.vendor}</td>\n
-  <td>${item?.fromPort}</td>\n
-  <td>${item?.toPort}</td>\n
-  <td>${item?.ipProtocol}</td>\n
-  <td>${item?.ipRange ?? ''}</td>\n
-  </tr>\n`
-          )?.join('')}                
+${risk?.items?.map((item, index) => {
+  if( item ){
+    return `<tr>\n
+            <td>${item?.vendor}</td>\n
+            <td>${item?.fromPort}</td>\n
+            <td>${item?.toPort}</td>\n
+            <td>${item?.ipProtocol}</td>\n
+            <td>${item?.ipRange ?? ''}</td>\n
+            </tr>\n`
+  }else{
+    this.logger.error(`There is an empty item by index ${index} in risk ${JSON.stringify(risk)}`);
+    return '';
+  }})?.join('')}                
 </tbody>
 </table>\n
 </details>\n`;
