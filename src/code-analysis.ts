@@ -59,6 +59,7 @@ export class AshCodeAnalysis {
 
     if( !tenantId || !clientID || !clientSecret){
       this.vcs.logger.exit(`Failed to generate token. ${!tenantId ? 'CF_TENANT_ID' : (!clientID ? 'CF_CLIENT_ID' : 'CF_CLIENT_SECRET')} is not available under secrets in GitHub`);
+      return "";
     }
     const headers = {
       "Content-Type": "application/json",
@@ -84,7 +85,7 @@ export class AshCodeAnalysis {
           `Failed to generate token, ${
             data.errorCode == "TENANT_NOT_FOUND"
               ? "Invalid value in tenantId field"
-              : data.message
+              : data.message + '. Check that CF_CLIENT_ID and CF_CLIENT_SECRET values are correct'
           }`
         );
       }
