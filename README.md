@@ -25,7 +25,7 @@ jobs:
      runs-on: ubuntu-latest
      steps:
         - name: Connectivity Risk Analysis
-          uses: algosec/connectivity-risk-analysis-action@v0.0.24
+          uses: algosec/connectivity-risk-analysis-action@v0.0.41
           env:
             # Github's Private Access Token
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
