@@ -79,7 +79,7 @@ jobs:
      runs-on: ubuntu-latest
      steps:
         - name: Connectivity Risk Analysis
-          uses: algosec/connectivity-risk-analysis-action@v0.0.19
+          uses: algosec/connectivity-risk-analysis-action@v0.0.41
           env:
             FULL_ANALYSIS: true
             ######
@@ -112,7 +112,7 @@ jobs:
      name: 'Algosec IAC Connectivity Risk Analysis'
      runs-on: ubuntu-latest
      steps:
-          uses: algosec/connectivity-risk-analysis-action@v0.0.19
+          uses: algosec/connectivity-risk-analysis-action@v0.0.41
           env:            
             # Use AWS Environment Variables or
             # an external Action to authenticate with provider
@@ -142,7 +142,7 @@ jobs:
      runs-on: ubuntu-latest
      steps:
         - name: Connectivity Risk Analysis
-          uses: algosec/connectivity-risk-analysis-action@v0.0.19
+          uses: algosec/connectivity-risk-analysis-action@v0.0.41
           env:
             # Use AWS Environment Variables or
             # an external Action to authenticate with provider
@@ -183,7 +183,7 @@ jobs:
           with:
             credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
         - name: Connectivity Risk Analysis
-          uses: algosec/connectivity-risk-analysis-action@v0.0.19
+          uses: algosec/connectivity-risk-analysis-action@v0.0.41
           env:  
             # By default our action doesn't require actions/checkout, using GCP Auth action requires us to specify its usage
             USE_CHECKOUT: true
