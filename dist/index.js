@@ -968,12 +968,13 @@ ${((_l = (_k = file === null || file === void 0 ? void 0 : file.output) === null
             var _a, _b;
             const folder = (_a = filesToUpload.find((file) => { var _a; return (_a = result === null || result === void 0 ? void 0 : result.proceeded_file) === null || _a === void 0 ? void 0 : _a.includes(file.uuid); })) === null || _a === void 0 ? void 0 : _a.folder;
             return (_b = result === null || result === void 0 ? void 0 : result.additions) === null || _b === void 0 ? void 0 : _b.analysis_result.map((risk) => {
+                var _a;
                 return {
                     folder,
                     riskId: risk.riskId,
                     riskTitle: risk.riskTitle,
                     riskSeverity: risk.riskSeverity,
-                    vendor: risk === null || risk === void 0 ? void 0 : risk.items[0].vendor
+                    vendor: (_a = risk === null || risk === void 0 ? void 0 : risk.items[0]) === null || _a === void 0 ? void 0 : _a.vendor
                 };
             });
         });
