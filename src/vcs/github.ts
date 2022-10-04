@@ -419,6 +419,7 @@ export class Github implements IVersionControl {
 </thead>\n
 <tbody id="tableBody">\n
 ${risk?.items?.map((item, index) => {
+  this.logger.error(item);
   if( item ){
     return `<tr>\n
             <td>${item?.vendor}</td>\n

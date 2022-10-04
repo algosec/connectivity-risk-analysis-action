@@ -889,6 +889,7 @@ class Github {
 <tbody id="tableBody">\n
 ${(_b = (_a = risk === null || risk === void 0 ? void 0 : risk.items) === null || _a === void 0 ? void 0 : _a.map((item, index) => {
                     var _a;
+                    this.logger.error(item);
                     if (item) {
                         return `<tr>\n
             <td>${item === null || item === void 0 ? void 0 : item.vendor}</td>\n
