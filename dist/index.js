@@ -179,8 +179,6 @@ class AshCodeAnalysis {
             let analysisResult = yield this.checkCodeAnalysisResponse(file);
             this.vcs.logger.info(`Waiting for risk analysis response for folder: ${file.folder}`);
             for (let i = 0; i < 60; i++) {
-                yield this.wait(5000);
-                analysisResult = yield this.checkCodeAnalysisResponse(file);
                 if (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.additions) {
                     analysisResult.folder = file === null || file === void 0 ? void 0 : file.folder;
                     this.vcs.logger.debug(`Response for folder: ${file === null || file === void 0 ? void 0 : file.folder}\n` +
@@ -188,6 +186,8 @@ class AshCodeAnalysis {
                         "\n", true);
                     break;
                 }
+                yield this.wait(5000);
+                analysisResult = yield this.checkCodeAnalysisResponse(file);
             }
             if (!analysisResult) {
                 analysisResult = {
