@@ -200,8 +200,6 @@ export class AshCodeAnalysis {
       `Waiting for risk analysis response for folder: ${file.folder}`
     );
     for (let i = 0; i < 60; i++) {
-      await this.wait(5000);
-      analysisResult = await this.checkCodeAnalysisResponse(file);
       if (analysisResult?.additions) {
         analysisResult.folder = file?.folder;
         this.vcs.logger.debug(
@@ -212,6 +210,8 @@ export class AshCodeAnalysis {
         );
         break;
       }
+      await this.wait(5000);
+      analysisResult = await this.checkCodeAnalysisResponse(file);
     }
     if (!analysisResult) {
       analysisResult = {
