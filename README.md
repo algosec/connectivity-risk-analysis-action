@@ -45,7 +45,7 @@ jobs:
 |GITHUB_TOKEN|Github PaT for checking diffs and commenting|Yes| |Secret Parameter|
 |CF_TENANT_ID|Cloudflow tenant id|Yes| |Secret Parameter|
 |CF_CLIENT_ID|Cloudflow client id|Yes| |Secret Parameter|
-|CF_CLIENT_SECRET|Cloudflow client secretn|Yes| |Secret Parameter|
+|CF_CLIENT_SECRET|Cloudflow client secret|Yes| |Secret Parameter|
 |FULL_ANALYSIS|Run checks on all folders with relevant file types|No|false|boolean|
 |USE_CHECKOUT|Use actions/checkout action to checkout the current repo<br><b>Currently needed only for GCP Provider</b>|No|false|boolean|
 |STOP_WHEN_FAIL|Runs checks without failing commit, failing will be only on Critical risks|No|false|boolean|
