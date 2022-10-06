@@ -82,11 +82,11 @@ export class AshCodeAnalysis {
         return data?.access_token;
       } else {
         this.vcs.logger.exit(
-          `Failed to generate token, ${
+          `Failed to generate token${
             data.errorCode == "TENANT_NOT_FOUND"
               ? "Invalid value in tenantId field"
-              : data.message + '. Check that CF_CLIENT_ID and CF_CLIENT_SECRET values are correct'
-          }`
+              : data.message ? ','+data.message :  ''
+          }. Check that CF_CLIENT_ID and CF_CLIENT_SECRET values are correct`
         );
       }
     } catch (error: any) {
