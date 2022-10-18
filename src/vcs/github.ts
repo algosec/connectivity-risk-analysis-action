@@ -421,9 +421,9 @@ export class Github implements IVersionControl {
 ${risk?.items?.map(item => 
   `<tr>\n
   <td>${item?.vendor}</td>\n
-  <td>${item?.fromPort}</td>\n
-  <td>${item?.toPort}</td>\n
-  <td>${item?.ipProtocol}</td>\n
+  <td>${item?.fromPort ?? ''}</td>\n
+  <td>${item?.toPort ?? ''}</td>\n
+  <td>${item?.ipProtocol ?? ''}</td>\n
   <td>${item?.ipRange ?? ''}</td>\n
   </tr>\n`)?.join('')}                
 </tbody>
