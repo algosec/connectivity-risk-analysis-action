@@ -61,7 +61,7 @@ jobs:
 |`ARM_CLIENT_ID`|Azure access client id|No| |Secret Parameter|
 |`ARM_CLIENT_SECRET`|Azure client secret|No| |Secret Parameter|
 |<b>*GCP*</b>| | | | |
-|`GCP_CREDENTIALS`|Google's Cloud credentials in a stringify() JSON|No| |Secret Parameter|
+|`GCP_CREDENTIALS`|Google's Cloud credentials as described here: https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference|No| |Secret Parameter|
 
 ### Full Analysis
 If you want to run check on all folders that contain IaC files, use the following example:
