@@ -145,7 +145,7 @@ jobs:
         - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v0.0.41
           env:
-            # Use AWS Environment Variables or
+            # Use Azure Environment Variables or
             # an external Action to authenticate with provider
             # https://github.com/marketplace/actions/azure-login
             ARM_SUBSCRIPTION_ID: ${{ secrets.AZ_SUBSCRIPTION_ID }}
@@ -173,7 +173,9 @@ jobs:
   algosec-iac-connectivity-risk-analysis:
      name: 'Algosec IAC Connectivity Risk Analysis'
      runs-on: ubuntu-latest
-     steps: 
+     steps:
+          # For GCP, there is no option to use just environment variables like other cloud providers,
+          # So we need to use a dedicated action to authenticate to GCP Cloud
           # Read how to create GCP_CREDENTIALS key from GCP Json file:
           # https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
           # Auth Gcp Action https://github.com/google-github-actions/auth
