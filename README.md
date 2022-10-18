@@ -178,7 +178,7 @@ jobs:
           # https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
           # Auth Gcp Action https://github.com/google-github-actions/auth
         - name: Checkout Repo
-          uses: @actions/checkout@v3
+          uses: actions/checkout@v3
         - name: Authenticate to Google Cloud
           uses: google-github-actions/auth@v0.7.3
           with:
@@ -194,6 +194,44 @@ jobs:
             CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
             CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
             CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
+           
+            
+```      
+
+### Advanced Configuration (includes multiple providers)
+
+Example usage 
+ ```yaml
+name: 'Your Repo CI/CD Yaml Workflow'
+on:
+  pull_request:
+    branches:
+      - 'main'
+jobs:
+  algosec-iac-connectivity-risk-analysis:
+     name: 'Algosec IAC Connectivity Risk Analysis'
+     runs-on: ubuntu-latest
+     steps: 
+        - name: Checkout Repo
+          uses: actions/checkout@v3
+        - name: Authenticate to Google Cloud
+          uses: google-github-actions/auth@v0.7.3
+          with:
+            credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+        - name: Connectivity Risk Analysis
+          uses: algosec/connectivity-risk-analysis-action@v0.0.41
+          env:  
+            USE_CHECKOUT: true
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
+            CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
+            CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            ARM_SUBSCRIPTION_ID: ${{ secrets.AZ_SUBSCRIPTION_ID }}
+            ARM_TENANT_ID: ${{ secrets.AZ_TENANT_ID }}
+            ARM_CLIENT_ID: ${{ secrets.AZ_CLIENT_ID }}
+            ARM_CLIENT_SECRET: ${{ secrets.AZ_CLIENT_SECRET }}
            
             
 ```      
