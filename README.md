@@ -43,25 +43,25 @@ jobs:
 ### Action's parameters
 |Parameter|Description|Required|Default|Type|
 |---|---|---|---|---|
-|GITHUB_TOKEN|Github PaT for checking diffs and commenting|Yes| |Secret Parameter|
-|CF_TENANT_ID|Cloudflow tenant id|Yes| |Secret Parameter|
-|CF_CLIENT_ID|Cloudflow client id|Yes| |Secret Parameter|
-|CF_CLIENT_SECRET|Cloudflow client secret|Yes| |Secret Parameter|
-|FULL_ANALYSIS|Run checks on all folders with relevant file types|No|false|boolean|
-|USE_CHECKOUT|Use actions/checkout action to checkout the current repo<br><b>Currently needed only for GCP Provider</b>|Yes|false|boolean|
-|STOP_WHEN_FAIL|Runs checks without failing commit, failing will be only on Critical risks|No|false|boolean|
+|`GITHUB_TOKEN`|Github PaT for checking diffs and commenting|Yes| |Secret Parameter|
+|`CF_TENANT_ID`|Cloudflow tenant id|Yes| |Secret Parameter|
+|`CF_CLIENT_ID`|Cloudflow client id|Yes| |Secret Parameter|
+|`CF_CLIENT_SECRET`|Cloudflow client secret|Yes| |Secret Parameter|
+|`FULL_ANALYSIS`|Run checks on all folders with relevant file types|No|false|boolean|
+|`USE_CHECKOUT`|Use actions/checkout action to checkout the current repo<br><b>Currently required for GCP Provider to support actions/checkout action that's needed to authenticate GCP</b>|Yes|false|boolean|
+|`STOP_WHEN_FAIL`|Runs checks without failing commit, failing will be only on Critical risks|No|false|boolean|
 ||||||
 |<b>Providers Parameters</b>| | | | |
-|<b>`AWS`</b>| | | | |
-|AWS_ACCESS_KEY_ID|AWS access key id|No| |Secret Parameter|
-|AWS_SECRET_ACCESS_KEY|AWS secret access key|No| |Secret Parameter|
-|<b>`AZURE`</b>| | | | |
-|ARM_SUBSCRIPTION_ID|Azure subscription id|No| |Secret Parameter|
-|ARM_TENANT_ID|Azure tenant id|No| |Secret Parameter|
-|ARM_CLIENT_ID|Azure access client id|No| |Secret Parameter|
-|ARM_CLIENT_SECRET|Azure client secret|No| |Secret Parameter|
-|<b>`GCP`</b>| | | | |
-|GCP_CREDENTIALS|Google's Cloud credentials in a stringify() JSON|No| |Secret Parameter|
+|<b>*AWS*</b>| | | | |
+|`AWS_ACCESS_KEY_ID`|AWS access key id|No| |Secret Parameter|
+|`AWS_SECRET_ACCESS_KEY`|AWS secret access key|No| |Secret Parameter|
+|<b>*AZURE*</b>| | | | |
+|`ARM_SUBSCRIPTION_ID`|Azure subscription id|No| |Secret Parameter|
+|`ARM_TENANT_ID`|Azure tenant id|No| |Secret Parameter|
+|`ARM_CLIENT_ID`|Azure access client id|No| |Secret Parameter|
+|`ARM_CLIENT_SECRET`|Azure client secret|No| |Secret Parameter|
+|<b>*GCP*</b>| | | | |
+|`GCP_CREDENTIALS`|Google's Cloud credentials in a stringify() JSON|No| |Secret Parameter|
 
 ### Full Analysis
 If you want to run check on all folders that contain IaC files, use the following example:
@@ -186,7 +186,8 @@ jobs:
         - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v0.0.41
           env:  
-            # By default our action doesn't require actions/checkout, using GCP Auth action requires us to specify its usage
+            # By default our action doesn't require actions/checkout, it checkouts the repository into a saved name folder
+            # using GCP Auth action requires us to use actions/checkout and add USE_CHECKOUT = true
             USE_CHECKOUT: true
             ######
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
