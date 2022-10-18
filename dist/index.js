@@ -443,13 +443,13 @@ class Terraform {
         return __awaiter(this, void 0, void 0, function* () {
             const res = [];
             const asyncIterable = (iterable, action) => __awaiter(this, void 0, void 0, function* () {
-                var _a, _b;
+                var _a;
                 for (const [index, value] of iterable === null || iterable === void 0 ? void 0 : iterable.entries()) {
                     const output = yield action({ runFolder: (_a = value === null || value === void 0 ? void 0 : value.split(/([/\\])/g)) === null || _a === void 0 ? void 0 : _a.pop(), workDir, path: value }, this.vcs);
                     const file = {
                         uuid: uuid.v4(),
-                        folder: (_b = value === null || value === void 0 ? void 0 : value.split(/([/\\])/g)) === null || _b === void 0 ? void 0 : _b.pop(),
-                        output,
+                        folder: value,
+                        output
                     };
                     this.vcs.logger.info(`Checked folder ${file.folder} Action UUID: ${file.uuid}`);
                     res.push(file);
@@ -892,13 +892,13 @@ class Github {
 </thead>\n
 <tbody id="tableBody">\n
 ${(_b = (_a = risk === null || risk === void 0 ? void 0 : risk.items) === null || _a === void 0 ? void 0 : _a.map(item => {
-                    var _a;
+                    var _a, _b, _c, _d;
                     return `<tr>\n
   <td>${item === null || item === void 0 ? void 0 : item.vendor}</td>\n
-  <td>${item === null || item === void 0 ? void 0 : item.fromPort}</td>\n
-  <td>${item === null || item === void 0 ? void 0 : item.toPort}</td>\n
-  <td>${item === null || item === void 0 ? void 0 : item.ipProtocol}</td>\n
-  <td>${(_a = item === null || item === void 0 ? void 0 : item.ipRange) !== null && _a !== void 0 ? _a : ''}</td>\n
+  <td>${(_a = item === null || item === void 0 ? void 0 : item.fromPort) !== null && _a !== void 0 ? _a : ''}</td>\n
+  <td>${(_b = item === null || item === void 0 ? void 0 : item.toPort) !== null && _b !== void 0 ? _b : ''}</td>\n
+  <td>${(_c = item === null || item === void 0 ? void 0 : item.ipProtocol) !== null && _c !== void 0 ? _c : ''}</td>\n
+  <td>${(_d = item === null || item === void 0 ? void 0 : item.ipRange) !== null && _d !== void 0 ? _d : ''}</td>\n
   </tr>\n`;
                 })) === null || _b === void 0 ? void 0 : _b.join('')}                
 </tbody>
