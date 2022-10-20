@@ -17,6 +17,12 @@ jobs:
       run: npm run build
     - name: Package
       run: npm run package
+    - name: Archive Release
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'release.zip'
+        exclusions: '*.git* /*node_modules/*'
     - name: Determine Version
       id: determine_version
       uses: paulhatch/semantic-version@v4.0.2
@@ -36,7 +42,7 @@ jobs:
         tag_name: "v${{steps.determine_version.outputs.version}}"
         release_name: "v${{steps.determine_version.outputs.version}}"
         draft: false
-        prerelease: true
+        prerelease: false
     - uses: eregon/publish-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
