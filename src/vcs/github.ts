@@ -369,7 +369,7 @@ export class Github implements IVersionControl {
         }/failure.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder
         }</b></h3></summary>\n${this.buildCommentFrameworkResult(
           file
-        )}\n${(!analysis?.error || analysis?.error == '') ? "" : this.buildCommentReportError(analysis)}\n</details>`;
+        )}\n${(!analysis?.error || analysis?.error == '') ? "" : "Analysis failed, please check action's logs"}\n</details>`;
     } else if (analysis?.additions?.analysis_result?.length == 0) {
       analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl
         }/success.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder
@@ -420,11 +420,11 @@ export class Github implements IVersionControl {
 <tbody id="tableBody">\n
 ${risk?.items?.map(item => 
   `<tr>\n
-  <td>${item?.vendor}</td>\n
-  <td>${item?.fromPort ?? ''}</td>\n
-  <td>${item?.toPort ?? ''}</td>\n
-  <td>${item?.ipProtocol ?? ''}</td>\n
-  <td>${item?.ipRange ?? ''}</td>\n
+  <td>${item?.vendor ?? ""}</td>\n
+  <td>${item?.fromPort ?? ""}</td>\n
+  <td>${item?.toPort ?? ""}</td>\n
+  <td>${item?.ipProtocol ?? ""}</td>\n
+  <td>${item?.ipRange ?? ""}</td>\n
   </tr>\n`)?.join('')}                
 </tbody>
 </table>\n
@@ -460,34 +460,36 @@ ${risk?.items?.map(item =>
     return codeAnalysisContent;
   }
 
-  buildCommentReportError(result: RiskAnalysisResult | undefined): string {
-    const CODE_BLOCK = "```";
-    const errors = `Errors\n
-${CODE_BLOCK}\n
-${result?.error}\n
-${CODE_BLOCK}\n`;
-    const analysisContent = `\n<details>
-<summary>Analysis Log</summary>
-${!result?.error || result?.error == '' ? "Analysis Failed, check action logs" : "<br>" + errors + "<br>"}
-</details> <!-- End Format Logs -->\n`;
-    return analysisContent;
-  }
+  // buildCommentReportError(result: RiskAnalysisResult | undefined): string {
+//     const CODE_BLOCK = "```";
+//     const errors = `Errors\n
+// ${CODE_BLOCK}\n
+// ${result?.error}\n
+// ${CODE_BLOCK}\n`;
+//     const analysisContent = `\n<details>
+// <summary>Analysis Log</summary>
+// ${!result?.error || result?.error == '' ? "Analysis Failed, check action logs" : "<br>" + errors + "<br>"}
+// </details> <!-- End Format Logs -->\n`;
+    // return analysisContent;
+  // }
 
   buildCommentFrameworkResult(file: RiskAnalysisFile): string {
-    const CODE_BLOCK = "```";
-    const errors = `Errors\n
-${CODE_BLOCK}\n
-${file?.output?.log?.stderr ?? file?.output?.initLog?.stderr}\n
-${CODE_BLOCK}\n`;
-    const output = `Output\n
-${CODE_BLOCK}\n
-${file?.output?.log?.stdout}\n
-${CODE_BLOCK}\n`;
-    const frameworkContent = `\n<details>
-<summary>Terraform Log</summary>
-${file?.output?.log?.stdout ? "<br>" + output + "<br>" : ""}
-${file?.output?.log?.stderr ? "<br>" + errors + "<br>" : ""}
-</details> <!-- End Format Logs -->\n`;
+//     const CODE_BLOCK = "```";
+//     const errors = `Errors\n
+// ${CODE_BLOCK}\n
+// ${file?.output?.log?.stderr ?? file?.output?.initLog?.stderr}\n
+// ${CODE_BLOCK}\n`;
+//     const output = `Output\n
+// ${CODE_BLOCK}\n
+// ${file?.output?.log?.stdout}\n
+// ${CODE_BLOCK}\n`;
+//     const frameworkContent = `\n<details>
+// <summary>Terraform Log</summary>
+// ${file?.output?.log?.stdout ? "<br>" + output + "<br>" : ""}
+// ${file?.output?.log?.stderr ? "<br>" + errors + "<br>" : ""}
+// </details> <!-- End Format Logs -->\n`;
+const frameworkContent = `\n${file?.output?.log?.stdout ? "Terraform process finished successfully" : "Terraform process failed, please check action's logs"}\n`
+
     return frameworkContent;
   }
 
