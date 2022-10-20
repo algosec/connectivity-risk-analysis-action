@@ -27,17 +27,11 @@ jobs:
         namespace: develop
         change_path: "."
         format: "${major}.${minor}.${patch}-prerelease${increment}"
-    - name: Archive Release
-      uses: thedoctor0/zip-release@main
-      with:
-        type: 'zip'
-        filename: 'release.zip'
-        exclusions: '*.git* /*node_modules/*'
     - name: Create Draft Release
       id: create_release
       uses: ncipollo/release-action@v1.11.1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        tag: "sarav2-${{steps.determine_version.outputs.version}}"
+        tag: "sarav3-${{steps.determine_version.outputs.version}}"
         draft: false
         prerelease: true
