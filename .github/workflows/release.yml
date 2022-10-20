@@ -27,6 +27,12 @@ jobs:
         namespace: develop
         change_path: "."
         format: "${major}.${minor}.${patch}-prerelease${increment}"
+    - name: Archive Release
+      uses: thedoctor0/zip-release@main
+      with:
+        type: 'zip'
+        filename: 'release.zip'
+        exclusions: '*.git* /*node_modules/*'
     - name: Create Draft Release
       id: create_release
       uses: actions/create-release@v1
