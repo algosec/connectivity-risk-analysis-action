@@ -29,9 +29,11 @@ jobs:
         format: "${major}.${minor}.${patch}-prerelease${increment}"
     - name: Create Draft Release
       id: create_release
-      uses: ncipollo/release-action@v1.11.1
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        tag: "v${{steps.determine_version.outputs.version}}"
+        tag_name: "v${{steps.determine_version.outputs.version}}"
+        release_name: "v${{steps.determine_version.outputs.version}}"
         draft: false
         prerelease: true
