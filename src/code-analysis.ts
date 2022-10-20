@@ -57,6 +57,10 @@ export class AshCodeAnalysis {
       clientSecret,
     };
 
+    if( !tenantId || !clientID || !clientSecret){
+      this.vcs.logger.exit(`Failed to generate token. ${!tenantId ? 'CF_TENANT_ID' : (!clientID ? 'CF_CLIENT_ID' : 'CF_CLIENT_SECRET')} is not available under secrets in GitHub`);
+      return "";
+    }
     const headers = {
       "Content-Type": "application/json",
     };
@@ -78,11 +82,11 @@ export class AshCodeAnalysis {
         return data?.access_token;
       } else {
         this.vcs.logger.exit(
-          `Failed to generate token, ${
+          `Failed to generate token${
             data.errorCode == "TENANT_NOT_FOUND"
-              ? "Tenant not found"
-              : data.message
-          }`
+              ? "Invalid value in tenantId field"
+              : data.message ? ','+data.message :  ''
+          }. Check that CF_CLIENT_ID and CF_CLIENT_SECRET values are correct`
         );
       }
     } catch (error: any) {
@@ -92,7 +96,7 @@ export class AshCodeAnalysis {
           errMsg?.message != ""
             ? errMsg?.message
             : errMsg?.errorCode == "TENANT_NOT_FOUND"
-            ? "Tenant not found"
+            ? "Invalid value in tenantId field"
             : error.toString()
         }`
       );
@@ -196,8 +200,6 @@ export class AshCodeAnalysis {
       `Waiting for risk analysis response for folder: ${file.folder}`
     );
     for (let i = 0; i < 60; i++) {
-      await this.wait(5000);
-      analysisResult = await this.checkCodeAnalysisResponse(file);
       if (analysisResult?.additions) {
         analysisResult.folder = file?.folder;
         this.vcs.logger.debug(
@@ -208,6 +210,8 @@ export class AshCodeAnalysis {
         );
         break;
       }
+      await this.wait(5000);
+      analysisResult = await this.checkCodeAnalysisResponse(file);
     }
     if (!analysisResult) {
       analysisResult = {
