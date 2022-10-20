@@ -39,5 +39,6 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: "v${{steps.determine_version.outputs.version}}"
+        artifacts: 'release.zip'
         draft: false
         prerelease: true
