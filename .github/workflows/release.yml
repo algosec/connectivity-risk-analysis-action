@@ -39,7 +39,7 @@ jobs:
       uses: ncipollo/release-action@v1.11.1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        tag: "sara-${{ steps.determine_version.outputs.version }}"
+        tag: "sara6-${{ steps.determine_version.outputs.version }}"
         artifacts: "release.zip"
         draft: false
         prerelease: true
