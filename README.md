@@ -249,5 +249,7 @@ The input is the same for all integrations using Github Flavored Markdown, and t
 You can read more about Email/Teams/Slack integrations in the following links:
 
 https://docs.github.com/en/account-and-profile/managing-subscriptions-and-notifications-on-github/setting-up-notifications/configuring-notifications
+
 https://github.com/marketplace/microsoft-teams-for-github
+
 https://github.com/marketplace/slack-github
