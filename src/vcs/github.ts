@@ -373,10 +373,7 @@ export class Github implements IVersionControl {
     } else if (analysis?.additions?.analysis_result?.length == 0) {
       analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl
         }/success.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder
-        }</b></h3></summary>\n
-
-        No Risks were found for this folder.
-        \n</details>`;
+        }</b></h3></summary>\nNo Risks were found for this folder\n</details>`;
     } else {
       analysisBody = `<details>\n${this.buildCommentReportResult(
         analysis?.additions,
