@@ -353,7 +353,7 @@ export class Github implements IVersionControl {
       this.logger.error(error);
       this.logger.error(`For result ${JSON.stringify(analysisResults)}`);
       this.logger[this.stopWhenFail ? 'exit' : 'info'](
-        "The risks analysis process completed with error, please check action's logs:"
+        "The risks analysis process completed with error, please check action's logs"
       );
     }
   }
@@ -373,9 +373,10 @@ export class Github implements IVersionControl {
     } else if (analysis?.additions?.analysis_result?.length == 0) {
       analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl
         }/success.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder
-        }</b></h3></summary>\n${this.buildCommentFrameworkResult(
-          file
-        )}\n</details>`;
+        }</b></h3></summary>\n
+        // ${this.buildCommentFrameworkResult(file)}
+        No Risks were found for this folder.
+        \n</details>`;
     } else {
       analysisBody = `<details>\n${this.buildCommentReportResult(
         analysis?.additions,

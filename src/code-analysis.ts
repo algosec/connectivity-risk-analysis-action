@@ -127,12 +127,12 @@ export class AshCodeAnalysis {
       if (responses?.filter((response) => response).length == 0) {
         this.vcs.logger.error("No files were uploaded, please check logs");
       } else if (responses.some((response) => !response)) {
-        this.vcs.logger.error("Some files failed to upload, please check logs");
+        this.vcs.logger.error("Some files failed to upload, please check IaC framework logs");
       } else {
         this.vcs.logger.info("File/s were uploaded successfully");
       }
     } catch (e) {
-      this.vcs.logger.error("Some files failed to upload, please check logs");
+      this.vcs.logger.error("Some files failed to upload, please check IaC framework logs");
     }
   }
 

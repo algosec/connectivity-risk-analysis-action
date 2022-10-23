@@ -184,7 +184,7 @@ jobs:
         - name: Authenticate to Google Cloud
           uses: google-github-actions/auth@v0.7.3
           with:
-            credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+            credentials_json: ${{ secrets.GCP_CREDENTIALS }}
         - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v0.0.41
           env:  
@@ -219,7 +219,7 @@ jobs:
         - name: Authenticate to Google Cloud
           uses: google-github-actions/auth@v0.7.3
           with:
-            credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+            credentials_json: ${{ secrets.GCP_CREDENTIALS }}
         - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v0.0.41
           env:  
@@ -242,3 +242,12 @@ jobs:
 <img width="500" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/screenshot2.png" />
 <img height="500" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/screenshot1.png" />
 
+### Email/Teams/Slack Integrations
+
+Github provides integrations between those apps, given you defined and subscribed the relevant features on your repository/organization.
+The input is the same for all integrations using Github Flavored Markdown, and the output is being renderend by each client in a different way.
+You can read more about Email/Teams/Slack integrations in the following links:
+
+https://docs.github.com/en/account-and-profile/managing-subscriptions-and-notifications-on-github/setting-up-notifications/configuring-notifications
+https://github.com/marketplace/microsoft-teams-for-github
+https://github.com/marketplace/slack-github

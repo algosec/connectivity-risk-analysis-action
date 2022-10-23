@@ -62,7 +62,7 @@ export class Terraform implements IFramework {
       result = { plan: jsonPlan, log: vcs.steps.plan, initLog };
     } catch (error: any) {
       if (error instanceof Error) {
-        vcs.logger.info(error?.message); // setFailed(error?.message)
+        vcs.logger.error(error?.message); // setFailed(error?.message)
         result = { plan: '', log: { stderr: error?.message, stdout: '', exitCode:0  },  initLog };
       }
     }

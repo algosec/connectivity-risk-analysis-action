@@ -119,14 +119,14 @@ class AshCodeAnalysis {
                     this.vcs.logger.error("No files were uploaded, please check logs");
                 }
                 else if (responses.some((response) => !response)) {
-                    this.vcs.logger.error("Some files failed to upload, please check logs");
+                    this.vcs.logger.error("Some files failed to upload, please check IaC framework logs");
                 }
                 else {
                     this.vcs.logger.info("File/s were uploaded successfully");
                 }
             }
             catch (e) {
-                this.vcs.logger.error("Some files failed to upload, please check logs");
+                this.vcs.logger.error("Some files failed to upload, please check IaC framework logs");
             }
         });
     }
@@ -411,7 +411,7 @@ class Terraform {
             }
             catch (error) {
                 if (error instanceof Error) {
-                    vcs.logger.info(error === null || error === void 0 ? void 0 : error.message); // setFailed(error?.message)
+                    vcs.logger.error(error === null || error === void 0 ? void 0 : error.message); // setFailed(error?.message)
                     result = { plan: '', log: { stderr: error === null || error === void 0 ? void 0 : error.message, stdout: '', exitCode: 0 }, initLog };
                 }
             }
@@ -846,7 +846,7 @@ class Github {
                 this.logger.error(`Failed to analyze the result.`);
                 this.logger.error(error);
                 this.logger.error(`For result ${JSON.stringify(analysisResults)}`);
-                this.logger[this.stopWhenFail ? 'exit' : 'info']("The risks analysis process completed with error, please check action's logs:");
+                this.logger[this.stopWhenFail ? 'exit' : 'info']("The risks analysis process completed with error, please check action's logs");
             }
         });
     }
@@ -857,7 +857,10 @@ class Github {
             analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl}/failure.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n${(!(analysis === null || analysis === void 0 ? void 0 : analysis.error) || (analysis === null || analysis === void 0 ? void 0 : analysis.error) == '') ? "" : "Analysis failed, please check action's logs"}\n</details>`;
         }
         else if (((_b = (_a = analysis === null || analysis === void 0 ? void 0 : analysis.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) == 0) {
-            analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl}/success.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n</details>`;
+            analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl}/success.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n
+        // ${this.buildCommentFrameworkResult(file)}
+        No Risks were found for this folder.
+        \n</details>`;
         }
         else {
             analysisBody = `<details>\n${this.buildCommentReportResult(analysis === null || analysis === void 0 ? void 0 : analysis.additions, file)}\n${this.buildCommentFrameworkResult(file)}\n</details>`;
