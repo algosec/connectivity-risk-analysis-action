@@ -374,13 +374,14 @@ export class Github implements IVersionControl {
       analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl
         }/success.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder
         }</b></h3></summary>\n
+
         No Risks were found for this folder.
         \n</details>`;
     } else {
       analysisBody = `<details>\n${this.buildCommentReportResult(
         analysis?.additions,
         file
-      )}\n${this.buildCommentFrameworkResult(file)}\n</details>`;
+      )}\n</details>`;
     }
     return analysisBody;
   }
