@@ -244,7 +244,7 @@ jobs:
 
 ### Email/Teams/Slack Integrations
 
-Github provides integrations between those apps, given you defined and subscribed the relevant features on your repository/organization.
+Github provides integrations between Github and Email/Teams/Slack, given you defined and subscribed the relevant features on your repository/organization.
 The input is the same for all integrations using Github Flavored Markdown, and the output is being renderend by each client in a different way.
 You can read more about Email/Teams/Slack integrations in the following links:
 
