@@ -369,12 +369,11 @@ export class Github implements IVersionControl {
         }/failure.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder
         }</b></h3></summary>\n${this.buildCommentFrameworkResult(
           file
-        )}\n${(!analysis?.error || analysis?.error == '') ? "" : "Analysis failed, please check action's logs"}\n</details>`;
+        )}\n${(!analysis?.error || analysis?.error == '') ? "" : "Analysis process failed, please check action's logs"}\n</details>`;
     } else if (analysis?.additions?.analysis_result?.length == 0) {
       analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl
         }/success.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder
         }</b></h3></summary>\n
-        // ${this.buildCommentFrameworkResult(file)}
         No Risks were found for this folder.
         \n</details>`;
     } else {
