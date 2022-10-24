@@ -374,7 +374,6 @@ class Terraform {
         this.type = "terraform";
     }
     terraform(options, vcs) {
-        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             let result = { plan: "", log: { stderr: '', stdout: '', exitCode: 0 }, initLog: { stderr: '', stdout: '', exitCode: 0 } };
             const initLog = { stdout: '', stderr: '', exitCode: 0 };
@@ -391,7 +390,7 @@ class Terraform {
                     "plan",
                     "-input=false",
                     "-no-color",
-                    `-out=${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\${(_a = options === null || options === void 0 ? void 0 : options.runFolder) === null || _a === void 0 ? void 0 : _a.replace(/([/\\])/g, "-")}.out`,
+                    `-out=${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\${options.runFolder.replace(/([/\\])/g, "-")}.out`,
                 ]);
                 const initLog = {
                     exitCode: 0,
@@ -404,7 +403,7 @@ class Terraform {
                         (yield vcs.exec("terraform", [
                             "show",
                             "-json",
-                            `${process.cwd()}\\tmp\\${(_b = options === null || options === void 0 ? void 0 : options.runFolder) === null || _b === void 0 ? void 0 : _b.replace(/([/\\])/g, "-")}.out`,
+                            `${process.cwd()}\\tmp\\${options.runFolder.replace(/([/\\])/g, "-")}.out`,
                         ])).stdout;
                 }
                 process.chdir(options.workDir);
@@ -444,12 +443,11 @@ class Terraform {
         return __awaiter(this, void 0, void 0, function* () {
             const res = [];
             const asyncIterable = (iterable, action) => __awaiter(this, void 0, void 0, function* () {
-                var _a, _b;
                 for (const [index, value] of iterable === null || iterable === void 0 ? void 0 : iterable.entries()) {
-                    const output = yield action({ runFolder: (_a = value === null || value === void 0 ? void 0 : value.replace(workDir, "")) === null || _a === void 0 ? void 0 : _a.substring(1, (value === null || value === void 0 ? void 0 : value.length) - 1), workDir, path: value }, this.vcs);
+                    const output = yield action({ runFolder: value === null || value === void 0 ? void 0 : value.replace(workDir, ""), workDir, path: value }, this.vcs);
                     const file = {
                         uuid: uuid.v4(),
-                        folder: (_b = value === null || value === void 0 ? void 0 : value.replace(workDir, "")) === null || _b === void 0 ? void 0 : _b.substring(1, (value === null || value === void 0 ? void 0 : value.length) - 1),
+                        folder: value === null || value === void 0 ? void 0 : value.replace(workDir, ""),
                         output,
                     };
                     this.vcs.logger.debug(`Checked folder ${file.folder} Action UUID: ${file.uuid}`);
