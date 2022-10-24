@@ -161,13 +161,11 @@ class AshCodeAnalysis {
                 filesToUpload === null || filesToUpload === void 0 ? void 0 : filesToUpload.filter((file) => { var _a; return ((_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan) != ""; }).forEach((file) => codeAnalysisPromises.push(this.pollCodeAnalysisResponse(file)));
                 analysisResults = yield Promise.all(codeAnalysisPromises);
                 if (!analysisResults || (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.length) == 0) {
-                    // this.vcs.logger.error("Analysis failed, please contact support.");
                     analysisResults = [];
                 }
                 this.vcs.logger.debug(`Risk analysis result:\n${JSON.stringify(analysisResults, null, "\t")}\n`, true);
             }
             catch (e) {
-                // this.vcs.logger.error(`Analysis failed, please contact support.\n: ${e}`);
                 analysisResults = [];
             }
             return analysisResults;

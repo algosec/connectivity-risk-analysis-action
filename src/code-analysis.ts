@@ -172,7 +172,6 @@ export class AshCodeAnalysis {
         );
       analysisResults = await Promise.all(codeAnalysisPromises);
       if (!analysisResults || analysisResults?.length == 0) {
-        // this.vcs.logger.error("Analysis failed, please contact support.");
         analysisResults = [];
       }
       this.vcs.logger.debug(
@@ -184,7 +183,6 @@ export class AshCodeAnalysis {
         true
       );
     } catch (e) {
-      // this.vcs.logger.error(`Analysis failed, please contact support.\n: ${e}`);
       analysisResults = [];
     }
 
