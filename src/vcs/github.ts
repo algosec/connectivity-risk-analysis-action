@@ -259,20 +259,17 @@ export class Github implements IVersionControl {
     }
     let diffFolders: any[] = [];
     try {
-      const allFoldersPaths = await this.getFoldersList(this.workDir)
+      const allFoldersPaths: string[] = await this.getFoldersList(this.workDir)
       allFoldersPaths.push(this.workDir)
       if (this.runFullAnalysis) {
         diffFolders = allFoldersPaths.filter(folder => this.hasFileType(folder, fileTypes))
       } else {
         const diffs = await this.getDiff(this.octokit);
-        const foldersSet: Set<string> = new Set(
-          diffs
-            .filter((diff) =>
-              fileTypes?.some((fileType) => diff?.filename?.endsWith(fileType))
-            )
-            .map(diff => diff.filename.split("/").splice(0, diff?.filename.split("/").length - 1).join("/"))
-            .map((diff) => allFoldersPaths.find(path => path.endsWith(diff)))
-        );
+        const filterdDiffs = diffs
+          .filter((diff) => fileTypes?.some((fileType) => diff?.filename?.endsWith(fileType)))
+          .map(diff => diff?.filename?.split("/")?.splice(0, diff?.filename?.split("/").length - 1).join("/"))
+          .map((diff) => allFoldersPaths.reverse().find(path => path.endsWith(diff)))
+        const foldersSet: Set<string> = new Set(filterdDiffs);
         diffFolders = [...foldersSet];
       }
 
@@ -423,7 +420,7 @@ ${risk?.items?.map(item =>
   <td>${item?.fromPort ?? ""}</td>\n
   <td>${item?.toPort ?? ""}</td>\n
   <td>${item?.ipProtocol}</td>\n
-  <td>${item?.ipRange}</td>\n
+  <td>${item?.ipRange?.join(', ')}</td>\n
   </tr>\n`)?.join('')}                
 </tbody>
 </table>\n
