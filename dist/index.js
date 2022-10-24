@@ -390,7 +390,7 @@ class Terraform {
                     "plan",
                     "-input=false",
                     "-no-color",
-                    `-out=${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\${options.runFolder}.out`,
+                    `-out=${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\${options.runFolder.replace(/([/\\])/g, "-")}.out`,
                 ]);
                 const initLog = {
                     exitCode: 0,
@@ -403,7 +403,7 @@ class Terraform {
                         (yield vcs.exec("terraform", [
                             "show",
                             "-json",
-                            `${process.cwd()}\\tmp\\${options.runFolder}.out`,
+                            `${process.cwd()}\\tmp\\${options.runFolder.replace(/([/\\])/g, "-")}.out`,
                         ])).stdout;
                 }
                 process.chdir(options.workDir);
@@ -450,7 +450,7 @@ class Terraform {
                         folder: value === null || value === void 0 ? void 0 : value.replace(workDir, ""),
                         output,
                     };
-                    this.vcs.logger.info(`Checked folder ${file.folder} Action UUID: ${file.uuid}`);
+                    this.vcs.logger.debug(`Checked folder ${file.folder} Action UUID: ${file.uuid}`);
                     res.push(file);
                 }
             });
@@ -853,7 +853,9 @@ class Github {
         var _a, _b;
         let analysisBody = "";
         if (!(analysis === null || analysis === void 0 ? void 0 : analysis.additions)) {
-            analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl}/failure.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n${(!(analysis === null || analysis === void 0 ? void 0 : analysis.error) || (analysis === null || analysis === void 0 ? void 0 : analysis.error) == '') ? "" : "Analysis process failed, please check action's logs"}\n</details>`;
+            analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl}/failure.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n"Analysis process failed:"
+${(!(analysis === null || analysis === void 0 ? void 0 : analysis.error) || (analysis === null || analysis === void 0 ? void 0 : analysis.error) == '') ? ", please contact support" : ", please check logs"}\n</details>`;
+            this.logger.error(`Analysis process failed due to errors:\n${analysis === null || analysis === void 0 ? void 0 : analysis.error}\n`);
         }
         else if (((_b = (_a = analysis === null || analysis === void 0 ? void 0 : analysis.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) == 0) {
             analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl}/success.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\nNo Risks were found for this folder\n</details>`;

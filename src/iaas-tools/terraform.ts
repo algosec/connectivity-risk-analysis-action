@@ -32,7 +32,7 @@ export class Terraform implements IFramework {
         "plan",
         "-input=false",
         "-no-color",
-        `-out=${process?.cwd()}\\tmp\\${options.runFolder}.out`,
+        `-out=${process?.cwd()}\\tmp\\${options.runFolder.replace(/([/\\])/g, "-")}.out`,
       ]);
       const initLog = {
         exitCode: 0,
@@ -54,7 +54,7 @@ export class Terraform implements IFramework {
             await vcs.exec("terraform", [
               "show",
               "-json",
-              `${process.cwd()}\\tmp\\${options.runFolder}.out`,
+              `${process.cwd()}\\tmp\\${options.runFolder.replace(/([/\\])/g, "-")}.out`,
             ])
           ).stdout
       }
@@ -104,7 +104,7 @@ export class Terraform implements IFramework {
           folder: value?.replace(workDir, ""),
           output,
         };
-        this.vcs.logger.info(`Checked folder ${file.folder} Action UUID: ${file.uuid}`);
+        this.vcs.logger.debug(`Checked folder ${file.folder} Action UUID: ${file.uuid}`);
         res.push(file);
       }
     };

@@ -9,7 +9,7 @@ import { readdirSync } from "fs";
 import { ExecOutput, ExecSteps, IVersionControl, Logger } from "./vcs.model";
 import { RiskAnalysisResult, RiskAnalysisFile, AnalysisResultAdditions, severityOrder } from "../common/risk.model";
 
-// import {githubEventPayloadMock } from "../../test/mockData.folder-error"
+// import {githubEventPayloadMock } from "../../test/mockData.7229"
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 export type GithubContext = typeof context;
 
@@ -367,9 +367,9 @@ export class Github implements IVersionControl {
     if (!analysis?.additions) {
       analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl
         }/failure.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder
-        }</b></h3></summary>\n${this.buildCommentFrameworkResult(
-          file
-        )}\n${(!analysis?.error || analysis?.error == '') ? "" : "Analysis process failed, please check action's logs"}\n</details>`;
+        }</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n"Analysis process failed:"
+${(!analysis?.error || analysis?.error == '') ? ", please contact support" : ", please check logs"}\n</details>`;
+      this.logger.error(`Analysis process failed due to errors:\n${analysis?.error}\n`)
     } else if (analysis?.additions?.analysis_result?.length == 0) {
       analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl
         }/success.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder
