@@ -367,9 +367,9 @@ export class Github implements IVersionControl {
     if (!analysis?.additions) {
       analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl
         }/failure.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder
-        }</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n"Analysis process failed:"
+        }</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\nAnalysis process failed
 ${(!analysis?.error || analysis?.error == '') ? ", please contact support" : ", please check logs"}\n</details>`;
-      this.logger.error(`Analysis process failed due to errors:\n${analysis?.error}\n`)
+  !analysis?.error || analysis?.error == '' ? null : this.logger.error(`Analysis process failed: \n${analysis?.error}`)
     } else if (analysis?.additions?.analysis_result?.length == 0) {
       analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl
         }/success.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder
