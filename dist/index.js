@@ -763,6 +763,7 @@ class Github {
             let diffFolders = [];
             try {
                 const allFoldersPaths = yield this.getFoldersList(this.workDir);
+                allFoldersPaths.push(this.workDir);
                 if (this.runFullAnalysis) {
                     diffFolders = allFoldersPaths.filter(folder => this.hasFileType(folder, fileTypes));
                 }
@@ -893,13 +894,13 @@ ${(!(analysis === null || analysis === void 0 ? void 0 : analysis.error) || (ana
 </thead>\n
 <tbody id="tableBody">\n
 ${(_b = (_a = risk === null || risk === void 0 ? void 0 : risk.items) === null || _a === void 0 ? void 0 : _a.map(item => {
-                    var _a, _b, _c, _d, _e;
+                    var _a, _b;
                     return `<tr>\n
-  <td>${(_a = item === null || item === void 0 ? void 0 : item.vendor) !== null && _a !== void 0 ? _a : ""}</td>\n
-  <td>${(_b = item === null || item === void 0 ? void 0 : item.fromPort) !== null && _b !== void 0 ? _b : ""}</td>\n
-  <td>${(_c = item === null || item === void 0 ? void 0 : item.toPort) !== null && _c !== void 0 ? _c : ""}</td>\n
-  <td>${(_d = item === null || item === void 0 ? void 0 : item.ipProtocol) !== null && _d !== void 0 ? _d : ""}</td>\n
-  <td>${(_e = item === null || item === void 0 ? void 0 : item.ipRange) !== null && _e !== void 0 ? _e : ""}</td>\n
+  <td>${item === null || item === void 0 ? void 0 : item.vendor}</td>\n
+  <td>${(_a = item === null || item === void 0 ? void 0 : item.fromPort) !== null && _a !== void 0 ? _a : ""}</td>\n
+  <td>${(_b = item === null || item === void 0 ? void 0 : item.toPort) !== null && _b !== void 0 ? _b : ""}</td>\n
+  <td>${item === null || item === void 0 ? void 0 : item.ipProtocol}</td>\n
+  <td>${item === null || item === void 0 ? void 0 : item.ipRange}</td>\n
   </tr>\n`;
                 })) === null || _b === void 0 ? void 0 : _b.join('')}                
 </tbody>
