@@ -98,10 +98,10 @@ export class Terraform implements IFramework {
     const res: RiskAnalysisFile[] = [];
     const asyncIterable = async (iterable, action) => {
       for (const [index, value] of iterable?.entries()) {
-        const output = await action({ runFolder: value?.split(/([/\\])/g)?.pop(), workDir, path: value }, this.vcs);
+        const output = await action({ runFolder: value?.replace(workDir, ""), workDir, path: value }, this.vcs);
         const file: RiskAnalysisFile = {
           uuid: uuid.v4(),
-          folder: value?.split(/([/\\])/g)?.pop(),
+          folder: value?.replace(workDir, ""),
           output,
         };
         this.vcs.logger.info(`Checked folder ${file.folder} Action UUID: ${file.uuid}`);

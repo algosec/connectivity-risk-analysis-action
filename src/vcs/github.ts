@@ -120,7 +120,7 @@ export class Github implements IVersionControl {
     const items = readdirSync(dirName, { withFileTypes: true });
 
     for (const item of items) {
-      if (item.isDirectory()) {
+      if (item.isDirectory() && !item.name.startsWith(".")) {
         folders = [...folders, ...this.getFoldersList(`${dirName}/${item.name}`)];
         folders.push(`${dirName}/${item.name}`);
       }
