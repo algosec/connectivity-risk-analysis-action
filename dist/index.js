@@ -833,7 +833,13 @@ class Github {
                 catch (e) {
                     this.logger.error("Failed to create report: " + e);
                 }
-                if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => { var _a, _b; return (response === null || response === void 0 ? void 0 : response.additions) && ((_b = (_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0; })) {
+                if (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.some((response) => {
+                    var _a, _b, _c;
+                    if ((_a = response === null || response === void 0 ? void 0 : response.additions) === null || _a === void 0 ? void 0 : _a.analysis_result.some((risk) => { var _a; return ((_a = risk === null || risk === void 0 ? void 0 : risk.riskSeverity) === null || _a === void 0 ? void 0 : _a.toString()) == "critical"; })) {
+                        this.logger[this.stopWhenFail ? 'exit' : 'info']("The risks analysis process completed successfully with critical risks, please check report: " + commentUrl);
+                    }
+                    return (response === null || response === void 0 ? void 0 : response.additions) && ((_c = (_b = response === null || response === void 0 ? void 0 : response.additions) === null || _b === void 0 ? void 0 : _b.analysis_result) === null || _c === void 0 ? void 0 : _c.length) > 0;
+                })) {
                     this.logger[this.stopWhenFail ? 'exit' : 'info']("The risks analysis process completed successfully with risks, please check report: " + commentUrl);
                 }
                 else if (errorMessage) {

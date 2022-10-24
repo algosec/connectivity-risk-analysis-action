@@ -7,9 +7,9 @@ import { WebhookPayload } from "@actions/github/lib/interfaces";
 import getUuid from "uuid-by-string";
 import { readdirSync } from "fs";
 import { ExecOutput, ExecSteps, IVersionControl, Logger } from "./vcs.model";
-import { RiskAnalysisResult, RiskAnalysisFile, AnalysisResultAdditions, severityOrder } from "../common/risk.model";
+import { RiskAnalysisResult, RiskAnalysisFile, AnalysisResultAdditions, severityOrder, Risk } from "../common/risk.model";
 
-// import {githubEventPayloadMock } from "../../test/mockData.7197"
+// import {githubEventPayloadMock } from "../../test/mockData.7132"
 // context.payload = githubEventPayloadMock as WebhookPayload & any
 export type GithubContext = typeof context;
 
@@ -333,7 +333,15 @@ export class Github implements IVersionControl {
       } catch (e) {
         this.logger.error("Failed to create report: " + e);
       }
-      if (analysisResults?.some((response) => response?.additions && response?.additions?.analysis_result?.length > 0)) {
+      if (analysisResults?.some((response) => {
+        if (response?.additions?.analysis_result.some((risk: Risk) => risk?.riskSeverity?.toString() == "critical")){
+          this.logger[this.stopWhenFail ? 'exit' : 'info'](
+            "The risks analysis process completed successfully with critical risks, please check report: " + commentUrl
+          );
+        }
+        return response?.additions && response?.additions?.analysis_result?.length > 0
+      })) {
+
         this.logger[this.stopWhenFail ? 'exit' : 'info'](
           "The risks analysis process completed successfully with risks, please check report: " + commentUrl
         );
