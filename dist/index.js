@@ -374,6 +374,7 @@ class Terraform {
         this.type = "terraform";
     }
     terraform(options, vcs) {
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             let result = { plan: "", log: { stderr: '', stdout: '', exitCode: 0 }, initLog: { stderr: '', stdout: '', exitCode: 0 } };
             const initLog = { stdout: '', stderr: '', exitCode: 0 };
@@ -390,7 +391,7 @@ class Terraform {
                     "plan",
                     "-input=false",
                     "-no-color",
-                    `-out=${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\${options.runFolder.replace(/([/\\])/g, "-")}.out`,
+                    `-out=${process === null || process === void 0 ? void 0 : process.cwd()}\\tmp\\${(_a = options === null || options === void 0 ? void 0 : options.runFolder) === null || _a === void 0 ? void 0 : _a.replace(/([/\\])/g, "-")}.out`,
                 ]);
                 const initLog = {
                     exitCode: 0,
@@ -403,7 +404,7 @@ class Terraform {
                         (yield vcs.exec("terraform", [
                             "show",
                             "-json",
-                            `${process.cwd()}\\tmp\\${options.runFolder.replace(/([/\\])/g, "-")}.out`,
+                            `${process.cwd()}\\tmp\\${(_b = options === null || options === void 0 ? void 0 : options.runFolder) === null || _b === void 0 ? void 0 : _b.replace(/([/\\])/g, "-")}.out`,
                         ])).stdout;
                 }
                 process.chdir(options.workDir);
@@ -443,11 +444,12 @@ class Terraform {
         return __awaiter(this, void 0, void 0, function* () {
             const res = [];
             const asyncIterable = (iterable, action) => __awaiter(this, void 0, void 0, function* () {
+                var _a, _b;
                 for (const [index, value] of iterable === null || iterable === void 0 ? void 0 : iterable.entries()) {
-                    const output = yield action({ runFolder: value === null || value === void 0 ? void 0 : value.replace(workDir, ""), workDir, path: value }, this.vcs);
+                    const output = yield action({ runFolder: (_a = value === null || value === void 0 ? void 0 : value.replace(workDir, "")) === null || _a === void 0 ? void 0 : _a.substring(1), workDir, path: value }, this.vcs);
                     const file = {
                         uuid: uuid.v4(),
-                        folder: value === null || value === void 0 ? void 0 : value.replace(workDir, ""),
+                        folder: (_b = value === null || value === void 0 ? void 0 : value.replace(workDir, "")) === null || _b === void 0 ? void 0 : _b.substring(1),
                         output,
                     };
                     this.vcs.logger.debug(`Checked folder ${file.folder} Action UUID: ${file.uuid}`);
@@ -569,7 +571,7 @@ class Github {
         this.runFullAnalysis = ((_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.FULL_ANALYSIS) == 'true';
         this.stopWhenFail = ((_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b.STOP_WHEN_FAIL) != 'false';
         this.http = new http_client_1.HttpClient();
-        const dateFormatter = (isoDate) => (isoDate === null || isoDate === void 0 ? void 0 : isoDate.split("T")[0].split("-").reverse().join("/")) + " " + isoDate.split("T")[1].replace("Z", "");
+        const dateFormatter = (isoDate) => { var _a; return ((_a = isoDate === null || isoDate === void 0 ? void 0 : isoDate.split("T")[0].split("-").reverse()) === null || _a === void 0 ? void 0 : _a.join("/")) + " " + isoDate.split("T")[1].replace("Z", ""); };
         const prefix = (str, group = false, close = true) => (group ? '::group::' : '- ') + dateFormatter(new Date().toISOString()) + ' ##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '');
         this.logger = {
             debug: (str, group = false) => (0, core_1.debug)(prefix(str, group)),
@@ -771,7 +773,7 @@ class Github {
                     const diffs = yield this.getDiff(this.octokit);
                     const filterdDiffs = diffs
                         .filter((diff) => fileTypes === null || fileTypes === void 0 ? void 0 : fileTypes.some((fileType) => { var _a; return (_a = diff === null || diff === void 0 ? void 0 : diff.filename) === null || _a === void 0 ? void 0 : _a.endsWith(fileType); }))
-                        .map(diff => { var _a, _b, _c; return (_b = (_a = diff === null || diff === void 0 ? void 0 : diff.filename) === null || _a === void 0 ? void 0 : _a.split("/")) === null || _b === void 0 ? void 0 : _b.splice(0, ((_c = diff === null || diff === void 0 ? void 0 : diff.filename) === null || _c === void 0 ? void 0 : _c.split("/").length) - 1).join("/"); })
+                        .map(diff => { var _a, _b, _c, _d; return (_d = (_b = (_a = diff === null || diff === void 0 ? void 0 : diff.filename) === null || _a === void 0 ? void 0 : _a.split("/")) === null || _b === void 0 ? void 0 : _b.splice(0, ((_c = diff === null || diff === void 0 ? void 0 : diff.filename) === null || _c === void 0 ? void 0 : _c.split("/").length) - 1)) === null || _d === void 0 ? void 0 : _d.join("/"); })
                         .map((diff) => allFoldersPaths.reverse().find(path => path.endsWith(diff)));
                     const foldersSet = new Set(filterdDiffs);
                     diffFolders = [...foldersSet];
@@ -901,7 +903,7 @@ ${(_b = (_a = risk === null || risk === void 0 ? void 0 : risk.items) === null |
   <td>${(_a = item === null || item === void 0 ? void 0 : item.fromPort) !== null && _a !== void 0 ? _a : ""}</td>\n
   <td>${(_b = item === null || item === void 0 ? void 0 : item.toPort) !== null && _b !== void 0 ? _b : ""}</td>\n
   <td>${item === null || item === void 0 ? void 0 : item.ipProtocol}</td>\n
-  <td>${(_c = item === null || item === void 0 ? void 0 : item.ipRange) === null || _c === void 0 ? void 0 : _c.join(', ')}</td>\n
+  <td>${Array.isArray(item === null || item === void 0 ? void 0 : item.ipRange) ? (_c = item === null || item === void 0 ? void 0 : item.ipRange) === null || _c === void 0 ? void 0 : _c.join(', ') : item === null || item === void 0 ? void 0 : item.ipRange}</td>\n
   </tr>\n`;
                 })) === null || _b === void 0 ? void 0 : _b.join('')}                
 </tbody>
@@ -997,12 +999,12 @@ ${(_b = (_a = risk === null || risk === void 0 ? void 0 : risk.items) === null |
             return accumulator;
         }, {});
         Object.values(groupedRisksById).forEach((risk) => {
-            var _a, _b;
+            var _a, _b, _c;
             risksTableContents += `<tr>\n
 <td>${risk.riskId}</td>\n
 <td align="center"><img width="10" height="10" src="${this.assetsUrl}/${risk === null || risk === void 0 ? void 0 : risk.riskSeverity}.svg" /></td>\n
 <td align="center"><sub><img width="24" height="24" src="${this.assetsUrl}/${(_b = (_a = risk === null || risk === void 0 ? void 0 : risk.vendor) === null || _a === void 0 ? void 0 : _a.toLowerCase()) !== null && _b !== void 0 ? _b : "aws"}.svg" /></sub></td>\n
-<td>${Array.isArray(risk.folder) ? risk.folder.join(", ") : risk.folder}</td>\n
+<td>${Array.isArray(risk.folder) ? (_c = risk.folder) === null || _c === void 0 ? void 0 : _c.join(", ") : risk.folder}</td>\n
 <td>${risk.riskTitle}</td>\n
 </tr>\n`;
         });
@@ -1062,7 +1064,7 @@ Workflow: ${(_c = this._context) === null || _c === void 0 ? void 0 : _c.workflo
             commentBodyArray.push(this.buildCommentAnalysisBody(fileAnalysis, file));
         });
         const analysisByFolder = (commentBodyArray === null || commentBodyArray === void 0 ? void 0 : commentBodyArray.length) > 0
-            ? bodyHeading + commentBodyArray.join("\n\n---\n\n")
+            ? bodyHeading + (commentBodyArray === null || commentBodyArray === void 0 ? void 0 : commentBodyArray.join("\n\n---\n\n"))
             : "\n\n<h4>No risks were found.</h4>\n\n";
         if ((filesToUpload === null || filesToUpload === void 0 ? void 0 : filesToUpload.length) == 0 && (analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.length) == 0) {
             return header + `<br><br><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl}/failure.svg" /></sub></sub></sub>&nbsp;&nbsp;<b>` + errMsg + "</b><br><br>" + footer;

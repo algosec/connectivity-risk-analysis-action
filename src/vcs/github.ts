@@ -38,7 +38,7 @@ export class Github implements IVersionControl {
     this.runFullAnalysis = process?.env?.FULL_ANALYSIS == 'true';
     this.stopWhenFail = process?.env?.STOP_WHEN_FAIL != 'false';
     this.http = new HttpClient();
-    const dateFormatter = (isoDate: string) => isoDate?.split("T")[0].split("-").reverse().join("/") + " " + isoDate.split("T")[1].replace("Z", "")
+    const dateFormatter = (isoDate: string) => isoDate?.split("T")[0].split("-").reverse()?.join("/") + " " + isoDate.split("T")[1].replace("Z", "")
     const prefix = (str: string, group = false, close = true) => (group ? '::group::' : '- ') + dateFormatter(new Date().toISOString()) + ' ##### IAC Connectivity Risk Analysis ##### ' + str + (close && group ? '\n::endgroup::' : '')
     this.logger = {
       debug: (str: string, group = false) => debug(prefix(str, group)),
@@ -267,7 +267,7 @@ export class Github implements IVersionControl {
         const diffs = await this.getDiff(this.octokit);
         const filterdDiffs = diffs
           .filter((diff) => fileTypes?.some((fileType) => diff?.filename?.endsWith(fileType)))
-          .map(diff => diff?.filename?.split("/")?.splice(0, diff?.filename?.split("/").length - 1).join("/"))
+          .map(diff => diff?.filename?.split("/")?.splice(0, diff?.filename?.split("/").length - 1)?.join("/"))
           .map((diff) => allFoldersPaths.reverse().find(path => path.endsWith(diff)))
         const foldersSet: Set<string> = new Set(filterdDiffs);
         diffFolders = [...foldersSet];
@@ -420,7 +420,7 @@ ${risk?.items?.map(item =>
   <td>${item?.fromPort ?? ""}</td>\n
   <td>${item?.toPort ?? ""}</td>\n
   <td>${item?.ipProtocol}</td>\n
-  <td>${item?.ipRange?.join(', ')}</td>\n
+  <td>${Array.isArray(item?.ipRange) ? item?.ipRange?.join(', ') : item?.ipRange}</td>\n
   </tr>\n`)?.join('')}                
 </tbody>
 </table>\n
@@ -539,7 +539,7 @@ const frameworkContent = `\n${file?.output?.log?.stdout ? "Terraform process fin
         }.svg" /></td>\n
 <td align="center"><sub><img width="24" height="24" src="${this.assetsUrl}/${risk?.vendor?.toLowerCase() ?? "aws"
         }.svg" /></sub></td>\n
-<td>${Array.isArray(risk.folder) ? risk.folder.join(", ") : risk.folder}</td>\n
+<td>${Array.isArray(risk.folder) ? risk.folder?.join(", ") : risk.folder}</td>\n
 <td>${risk.riskTitle}</td>\n
 </tr>\n`;
     });
@@ -617,7 +617,7 @@ Workflow: ${this._context?.workflow}`;
 
     const analysisByFolder =
       commentBodyArray?.length > 0
-        ? bodyHeading + commentBodyArray.join("\n\n---\n\n")
+        ? bodyHeading + commentBodyArray?.join("\n\n---\n\n")
         : "\n\n<h4>No risks were found.</h4>\n\n";
 
 
