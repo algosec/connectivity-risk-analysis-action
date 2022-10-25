@@ -73,19 +73,23 @@ export class AshCodeAnalysis {
       );
 
       const response_code = res.message.statusCode;
-      const data = JSON.parse(await res.readBody());
+      let data
       // this.gcpCredsJson ? await this.createGcpCredentials(this.gcpCredsJson) : null
       if (response_code >= 200 && response_code <= 300) {
+        data = JSON.parse(await res?.readBody());
         this.vcs.logger.info(
           "Passed authentication vs CF's login. new token has been generated."
         );
         return data?.access_token;
+      } else if (response_code == 403) {
+        this.vcs.logger.exit(`Failed to generate token, Access Denied`)
       } else {
+        data = JSON.parse(await res?.readBody());
         this.vcs.logger.exit(
           `Failed to generate token${
-            data.errorCode == "TENANT_NOT_FOUND"
+            data?.errorCode == "TENANT_NOT_FOUND"
               ? "Invalid value in tenantId field"
-              : data.message ? ','+data.message :  ''
+              : data?.message ? ','+data?.message :  ''
           }. Check that CF_CLIENT_ID and CF_CLIENT_SECRET values are correct`
         );
       }
