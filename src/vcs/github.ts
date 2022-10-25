@@ -298,7 +298,7 @@ export class Github implements IVersionControl {
       const body = file?.output?.plan;
       const getPresignedUrl = `${this.cfApiUrl}/presignedurl?actionId=${file?.uuid}&owner=${context?.repo?.owner}&folder=${file?.folder}`;
       const presignedUrlResponse = await (
-        await http.get(getPresignedUrl, { Authorization: `Bearer ${jwt}` })
+        await http.get(getPresignedUrl, { Authorization: `Bearer ${jwt}`, "User-Agent": "CloudFlow/1.0" })
       ).readBody();
       const presignedUrl = JSON.parse(presignedUrlResponse).presignedUrl;
       const response = await (

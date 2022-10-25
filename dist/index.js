@@ -68,6 +68,7 @@ class AshCodeAnalysis {
             }
             const headers = {
                 "Content-Type": "application/json",
+                "User-Agent": "CloudFlow/1.0"
             };
             try {
                 this.vcs.logger.debug(`Generate token vs ${loginAPI} with payload ${JSON.stringify(payload)}`);
@@ -232,6 +233,7 @@ class AshCodeAnalysis {
             const pollUrl = `${this.apiUrl}/analysis_result?customer=${this.vcs.repo.owner}&action_id=${file.uuid}`;
             const response = yield this.vcs.http.get(pollUrl, {
                 Authorization: "Bearer " + this.jwt,
+                "User-Agent": "CloudFlow/1.0"
             });
             if (((_a = response === null || response === void 0 ? void 0 : response.message) === null || _a === void 0 ? void 0 : _a.statusCode) == 200) {
                 const body = yield response.readBody();
@@ -806,7 +808,7 @@ class Github {
                 const http = new http_client_1.HttpClient();
                 const body = (_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.plan;
                 const getPresignedUrl = `${this.cfApiUrl}/presignedurl?actionId=${file === null || file === void 0 ? void 0 : file.uuid}&owner=${(_b = github_1.context === null || github_1.context === void 0 ? void 0 : github_1.context.repo) === null || _b === void 0 ? void 0 : _b.owner}&folder=${file === null || file === void 0 ? void 0 : file.folder}`;
-                const presignedUrlResponse = yield (yield http.get(getPresignedUrl, { Authorization: `Bearer ${jwt}` })).readBody();
+                const presignedUrlResponse = yield (yield http.get(getPresignedUrl, { Authorization: `Bearer ${jwt}`, "User-Agent": "CloudFlow/1.0" })).readBody();
                 const presignedUrl = JSON.parse(presignedUrlResponse).presignedUrl;
                 const response = yield (yield http.put(presignedUrl, body, { "Content-Type": "application/json" })).readBody();
                 if (response == "") {

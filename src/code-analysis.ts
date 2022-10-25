@@ -63,6 +63,7 @@ export class AshCodeAnalysis {
     }
     const headers = {
       "Content-Type": "application/json",
+      "User-Agent": "CloudFlow/1.0"
     };
     try {
       this.vcs.logger.debug(`Generate token vs ${loginAPI} with payload ${JSON.stringify(payload)}`);
@@ -256,6 +257,7 @@ export class AshCodeAnalysis {
     const pollUrl = `${this.apiUrl}/analysis_result?customer=${this.vcs.repo.owner}&action_id=${file.uuid}`;
     const response = await this.vcs.http.get(pollUrl, {
       Authorization: "Bearer " + this.jwt,
+      "User-Agent": "CloudFlow/1.0"
     });
     if (response?.message?.statusCode == 200) {
       const body = await response.readBody();
