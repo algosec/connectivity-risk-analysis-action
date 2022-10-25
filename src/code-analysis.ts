@@ -38,7 +38,7 @@ export class AshCodeAnalysis {
     this.apiUrl = this.vcs.cfApiUrl;
     this.loginAPI =
       inputs?.CF_LOGIN_API ??
-      "https://dev.app.algosec.com/api/algosaas/auth/v1/access-keys/login";
+      "https://app.algosec.com/api/algosaas/auth/v1/access-keys/login";
     this.tenantId = inputs?.CF_TENANT_ID;
     this.clientId = inputs?.CF_CLIENT_ID;
     this.clientSecret = inputs?.CF_CLIENT_SECRET;

@@ -49,7 +49,7 @@ class AshCodeAnalysis {
         this.debugMode = (inputs === null || inputs === void 0 ? void 0 : inputs.ALGOSEC_DEBUG) == "true";
         this.apiUrl = this.vcs.cfApiUrl;
         this.loginAPI =
-            (_a = inputs === null || inputs === void 0 ? void 0 : inputs.CF_LOGIN_API) !== null && _a !== void 0 ? _a : "https://dev.app.algosec.com/api/algosaas/auth/v1/access-keys/login";
+            (_a = inputs === null || inputs === void 0 ? void 0 : inputs.CF_LOGIN_API) !== null && _a !== void 0 ? _a : "https://app.algosec.com/api/algosaas/auth/v1/access-keys/login";
         this.tenantId = inputs === null || inputs === void 0 ? void 0 : inputs.CF_TENANT_ID;
         this.clientId = inputs === null || inputs === void 0 ? void 0 : inputs.CF_CLIENT_ID;
         this.clientSecret = inputs === null || inputs === void 0 ? void 0 : inputs.CF_CLIENT_SECRET;
@@ -590,7 +590,7 @@ class Github {
         this.actionUuid = (0, uuid_by_string_1.default)(this.sha);
         this.assetsUrl =
             "https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons";
-        this.cfApiUrl = (_t = (_s = process === null || process === void 0 ? void 0 : process.env) === null || _s === void 0 ? void 0 : _s.CF_API_URL) !== null && _t !== void 0 ? _t : "https://api-feature-cs-0025342.dev.cloudflow.algosec.com/cloudflow/api/devsecops/v1";
+        this.cfApiUrl = (_t = (_s = process === null || process === void 0 ? void 0 : process.env) === null || _s === void 0 ? void 0 : _s.CF_API_URL) !== null && _t !== void 0 ? _t : "https://prod.cloudflow.algosec.com/cloudflow/api/devsecops/v1";
     }
     exec(cmd, args) {
         return __awaiter(this, void 0, void 0, function* () {
