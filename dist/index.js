@@ -880,7 +880,7 @@ class Github {
         return analysisBody;
     }
     buildCommentReportResult(analysis, file) {
-        var _a, _b, _c;
+        var _a, _b;
         let risksList = "";
         const CODE_BLOCK = "```";
         (_a = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _a === void 0 ? void 0 : _a.sort((a, b) => parseInt(risk_model_1.severityOrder[a.riskSeverity]) -
@@ -937,8 +937,7 @@ ${(_b = (_a = risk === null || risk === void 0 ? void 0 : risk.items) === null |
                 this.count(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "low") +
                 "&nbsp;Low"
             : ""}</div>`;
-        const codeAnalysisContent = `<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl}/warning.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder +
-            (((_b = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _b === void 0 ? void 0 : _b.length) == 0 ? "No Risks Found" : "")}</b></h3>${((_c = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _c === void 0 ? void 0 : _c.length) > 0 ? severityCount : ""}</summary>\n${risksList}\n`;
+        const codeAnalysisContent = `<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl}/warning.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3>${((_b = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0 ? severityCount : ""}</summary>\nThe following risks were found in this folder:\n${risksList}\n`;
         return codeAnalysisContent;
     }
     // buildCommentReportError(result: RiskAnalysisResult | undefined): string {

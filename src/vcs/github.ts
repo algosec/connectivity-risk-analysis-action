@@ -455,11 +455,8 @@ ${risk?.items?.map(item =>
         : ""
       }</div>`;
     const codeAnalysisContent = `<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl
-      }/warning.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder +
-
-      (analysis?.analysis_result?.length == 0 ? "No Risks Found" : "")
-      }</b></h3>${analysis?.analysis_result?.length > 0 ? severityCount : ""
-      }</summary>\n${risksList}\n`;
+      }/warning.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3>${analysis?.analysis_result?.length > 0 ? severityCount : ""
+      }</summary>\nThe following risks were found in this folder:\n${risksList}\n`;
     return codeAnalysisContent;
   }
 

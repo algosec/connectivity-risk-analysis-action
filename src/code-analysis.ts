@@ -25,7 +25,6 @@ export class AshCodeAnalysis {
       this.loginAPI
     );
     if (!this.jwt || this.jwt == "") {
-      this.vcs.logger.exit("Authentication failed. Missing Jwt.");
       return false;
     }
     this.vcs.steps.auth = { exitCode: 0, stdout: this.jwt, stderr: "" };
@@ -87,11 +86,11 @@ export class AshCodeAnalysis {
       } else {
         data = JSON.parse(await res?.readBody());
         this.vcs.logger.exit(
-          `Failed to generate token${
+          `Failed to generate token. ${
             data?.errorCode == "TENANT_NOT_FOUND"
               ? "Invalid value in tenantId field"
-              : data?.message ? ','+data?.message :  ''
-          }. Check that CF_CLIENT_ID and CF_CLIENT_SECRET values are correct`
+              : data?.message ? ','+ data?.message :  ''
+          }Check that CF_CLIENT_ID and CF_CLIENT_SECRET values are correct`
         );
       }
     } catch (error: any) {
