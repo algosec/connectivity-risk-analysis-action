@@ -1,6 +1,6 @@
 <img height="100" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/header.svg" />
 
-## AlgoSec’s IaC solution
+## IAC connectivity risk analysis
 
 AlgoSec’s IaC solution is an extensible security plugin platform that checks code for potential vulnerabilities before any commits are made to a repository. Accelerate application delivery taking a proactive, preventive, and collaborative approach within your CI/CD pipeline. 
 The IaC Connectivity Risk Analysis GitHub Action runs on the current repositories, return risks analysis for any changes in IaC framework and gives remediation steps without a need to move to different applications or wait for security admin to manually review and approve that the code is risk free.
