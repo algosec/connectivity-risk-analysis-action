@@ -164,11 +164,6 @@ jobs:
 
 ### Gcp
 
-Note
-
-USE_CHECKOUT Currently required for GCP Provider to support actions/checkout action that's needed to authenticate GCP
-Google's Cloud credentials as described here: https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
-
 Example usage 
  ```yaml
 name: 'Your Repo CI/CD Yaml Workflow'
@@ -205,7 +200,12 @@ jobs:
             CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
            
             
-```      
+```  
+
+#### Note
+
+`USE_CHECKOUT` is currently required for GCP Provider to support actions/checkout action that's needed to authenticate GCP
+Google's Cloud credentials as described here: https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
 
 ### Advanced Configuration (includes multiple providers)
 
@@ -251,12 +251,13 @@ jobs:
 
 ### Email/Teams/Slack Integrations
 
-Github provides integrations between Github and Email/Teams/Slack, given you defined and subscribed the relevant features on your repository/organization.
-The input is the same for all integrations using Github Flavored Markdown, and the output is being renderend by each client in a different way.
-You can read more about Email/Teams/Slack integrations in the following links:
+GitHub can send notifications via email and integrate with MS Teams and Slack. See GitHub documentation for instructions to configure notifications and integrations in the following links:
+
 
 https://docs.github.com/en/account-and-profile/managing-subscriptions-and-notifications-on-github/setting-up-notifications/configuring-notifications
 
 https://github.com/marketplace/microsoft-teams-for-github
 
 https://github.com/marketplace/slack-github
+
+#### Note: Appearance of output may be subject to email/MS Teams/Slack capabilities.
