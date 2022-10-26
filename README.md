@@ -11,8 +11,8 @@ Take into consideration that GitHub and AlgoSec CloudFlow credentials are mandat
 
 #### Example usage 
 First, create a new client id and client secret in your Algosec Cloudflow account using our access management module.<br>
-then, add these variables to your github repo's secrets.<br>
-now you'll be able to run the risks analysis process.
+Then, add these variables to your github repo's secrets.<br>
+Now you'll be able to run the risks analysis process.
 
 ```yaml
 name: 'Your Repo CI/CD Yaml Workflow'
