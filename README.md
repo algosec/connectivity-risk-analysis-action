@@ -202,10 +202,11 @@ jobs:
             
 ```  
 
-#### Note
+#### Important Note
 
 `USE_CHECKOUT` is currently required for GCP Provider to support actions/checkout action that's needed to authenticate GCP
-Google's Cloud credentials as described here: https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
+
+`GCP_CREDENTIALS` Google's Cloud credentials as described here: https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
 
 ### Advanced Configuration (includes multiple providers)
 
