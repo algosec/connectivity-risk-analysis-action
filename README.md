@@ -31,6 +31,7 @@ jobs:
             # Github's Private Access Token
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
+            CF_REGION: 'anz'
             # CloudFlow credentials
             CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
             CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
@@ -44,11 +45,12 @@ jobs:
 |Parameter|Description|Required|Default|Type|
 |---|---|---|---|---|
 |`GITHUB_TOKEN`|Github PaT for checking diffs and commenting|Yes| |Secret Parameter|
+|`CF_REGION`|Cloudflow region|No|us |us/anz|
 |`CF_TENANT_ID`|Cloudflow tenant id|Yes| |Secret Parameter|
 |`CF_CLIENT_ID`|Cloudflow client id|Yes| |Secret Parameter|
 |`CF_CLIENT_SECRET`|Cloudflow client secret|Yes| |Secret Parameter|
 |`FULL_ANALYSIS`|Run checks on all folders with relevant file types|No|false|boolean|
-|`USE_CHECKOUT`|Use actions/checkout action to checkout the current repo<br><b>Currently required for GCP Provider to support actions/checkout action that's needed to authenticate GCP</b>|Yes|false|boolean|
+|`USE_CHECKOUT`|Use actions/checkout action to checkout the current repo</b>|Yes|false|boolean|
 |`STOP_WHEN_FAIL`|Runs checks without failing commit, failing will be only on Critical risks|No|false|boolean|
 ||||||
 |<b>Providers Parameters</b>| | | | |
@@ -61,7 +63,7 @@ jobs:
 |`ARM_CLIENT_ID`|Azure access client id|No| |Secret Parameter|
 |`ARM_CLIENT_SECRET`|Azure client secret|No| |Secret Parameter|
 |<b>*GCP*</b>| | | | |
-|`GCP_CREDENTIALS`|Google's Cloud credentials as described here: https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference|No| |Secret Parameter|
+|`GCP_CREDENTIALS`|Google's Cloud credentials|No| |Secret Parameter|
 
 ### Full Analysis
 If you want to run check on all folders that contain IaC files, use the following example:
@@ -161,6 +163,11 @@ jobs:
 ```
 
 ### Gcp
+
+Note
+
+USE_CHECKOUT Currently required for GCP Provider to support actions/checkout action that's needed to authenticate GCP
+Google's Cloud credentials as described here: https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
 
 Example usage 
  ```yaml
