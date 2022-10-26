@@ -25,7 +25,7 @@ export class AshCodeAnalysis {
       this.loginAPI
     );
     if (!this.jwt || this.jwt == "") {
-      this.vcs.logger.exit("Not Authenticated");
+      this.vcs.logger.exit("Authentication failed. Missing Jwt.");
       return false;
     }
     this.vcs.steps.auth = { exitCode: 0, stdout: this.jwt, stderr: "" };
@@ -38,7 +38,7 @@ export class AshCodeAnalysis {
     this.apiUrl = this.vcs.cfApiUrl;
     this.loginAPI =
       inputs?.CF_LOGIN_API ??
-      "https://app.algosec.com/api/algosaas/auth/v1/access-keys/login";
+      `https://${inputs?.CF_REGION == 'anz' ? 'anz.' : ''}app.algosec.com/api/algosaas/auth/v1/access-keys/login`;
     this.tenantId = inputs?.CF_TENANT_ID;
     this.clientId = inputs?.CF_CLIENT_ID;
     this.clientSecret = inputs?.CF_CLIENT_SECRET;

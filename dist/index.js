@@ -36,7 +36,7 @@ class AshCodeAnalysis {
             this.setSecrets();
             this.jwt = yield this.auth(this.tenantId, this.clientId, this.clientSecret, this.loginAPI);
             if (!this.jwt || this.jwt == "") {
-                this.vcs.logger.exit("Not Authenticated");
+                this.vcs.logger.exit("Authentication failed. Missing Jwt.");
                 return false;
             }
             this.vcs.steps.auth = { exitCode: 0, stdout: this.jwt, stderr: "" };
@@ -49,7 +49,7 @@ class AshCodeAnalysis {
         this.debugMode = (inputs === null || inputs === void 0 ? void 0 : inputs.ALGOSEC_DEBUG) == "true";
         this.apiUrl = this.vcs.cfApiUrl;
         this.loginAPI =
-            (_a = inputs === null || inputs === void 0 ? void 0 : inputs.CF_LOGIN_API) !== null && _a !== void 0 ? _a : "https://app.algosec.com/api/algosaas/auth/v1/access-keys/login";
+            (_a = inputs === null || inputs === void 0 ? void 0 : inputs.CF_LOGIN_API) !== null && _a !== void 0 ? _a : `https://${(inputs === null || inputs === void 0 ? void 0 : inputs.CF_REGION) == 'anz' ? 'anz.' : ''}app.algosec.com/api/algosaas/auth/v1/access-keys/login`;
         this.tenantId = inputs === null || inputs === void 0 ? void 0 : inputs.CF_TENANT_ID;
         this.clientId = inputs === null || inputs === void 0 ? void 0 : inputs.CF_CLIENT_ID;
         this.clientSecret = inputs === null || inputs === void 0 ? void 0 : inputs.CF_CLIENT_SECRET;
@@ -527,7 +527,7 @@ class Main {
                     }
                 }
                 else {
-                    yield vcs.parseOutput([], [], "Not Authenticated, please check action's logs");
+                    yield vcs.parseOutput([], [], "Authentication failed. Check logs.");
                 }
             }
             catch (_e) {
@@ -569,7 +569,7 @@ const fs_1 = __nccwpck_require__(5747);
 const risk_model_1 = __nccwpck_require__(7801);
 class Github {
     constructor() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u;
         this.steps = {};
         this.useCheckoutAction = false;
         this.runFullAnalysis = false;
@@ -597,7 +597,7 @@ class Github {
         this.actionUuid = (0, uuid_by_string_1.default)(this.sha);
         this.assetsUrl =
             "https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons";
-        this.cfApiUrl = (_t = (_s = process === null || process === void 0 ? void 0 : process.env) === null || _s === void 0 ? void 0 : _s.CF_API_URL) !== null && _t !== void 0 ? _t : "https://prod.cloudflow.algosec.com/cloudflow/api/devsecops/v1";
+        this.cfApiUrl = (_t = (_s = process === null || process === void 0 ? void 0 : process.env) === null || _s === void 0 ? void 0 : _s.CF_API_URL) !== null && _t !== void 0 ? _t : `https://${((_u = process === null || process === void 0 ? void 0 : process.env) === null || _u === void 0 ? void 0 : _u.CF_REGION) == 'anz' ? 'api.cloudflow.anz.app' : 'prod.cloudflow'}.algosec.com/cloudflow/api/devsecops/v1`;
     }
     exec(cmd, args) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -868,11 +868,11 @@ class Github {
         var _a, _b;
         let analysisBody = "";
         if (!(analysis === null || analysis === void 0 ? void 0 : analysis.additions)) {
-            analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl}/failure.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n${(!(analysis === null || analysis === void 0 ? void 0 : analysis.error) || (analysis === null || analysis === void 0 ? void 0 : analysis.error) == '') ? "" : "Analysis process failed, please check logs"}\n</details>`;
+            analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl}/failure.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n${(!(analysis === null || analysis === void 0 ? void 0 : analysis.error) || (analysis === null || analysis === void 0 ? void 0 : analysis.error) == '') ? "" : "Analysis process failed. Check logs."}\n</details>`;
             (!(analysis === null || analysis === void 0 ? void 0 : analysis.error) || (analysis === null || analysis === void 0 ? void 0 : analysis.error) == '') ? null : this.logger.error(`Analysis process failed: \n${analysis === null || analysis === void 0 ? void 0 : analysis.error}`);
         }
         else if (((_b = (_a = analysis === null || analysis === void 0 ? void 0 : analysis.additions) === null || _a === void 0 ? void 0 : _a.analysis_result) === null || _b === void 0 ? void 0 : _b.length) == 0) {
-            analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl}/success.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\nNo Risks were found for this folder\n</details>`;
+            analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl}/success.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3></summary>\nNo Risks were found in this folder\n</details>`;
         }
         else {
             analysisBody = `<details>\n${this.buildCommentReportResult(analysis === null || analysis === void 0 ? void 0 : analysis.additions, file)}\n</details>`;
@@ -969,7 +969,7 @@ ${(_b = (_a = risk === null || risk === void 0 ? void 0 : risk.items) === null |
         // ${file?.output?.log?.stdout ? "<br>" + output + "<br>" : ""}
         // ${file?.output?.log?.stderr ? "<br>" + errors + "<br>" : ""}
         // </details> <!-- End Format Logs -->\n`;
-        const frameworkContent = `\n${((_b = (_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.log) === null || _b === void 0 ? void 0 : _b.stdout) ? "Terraform process finished successfully" : "Terraform process failed, please check action's logs"}\n`;
+        const frameworkContent = `\n${((_b = (_a = file === null || file === void 0 ? void 0 : file.output) === null || _a === void 0 ? void 0 : _a.log) === null || _b === void 0 ? void 0 : _b.stdout) ? "Terraform process success." : "Terraform process failed. Check logs."}\n`;
         return frameworkContent;
     }
     buildCommentSummary(filesToUpload, results) {

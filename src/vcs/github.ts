@@ -59,7 +59,7 @@ export class Github implements IVersionControl {
     this.actionUuid = getUuid(this.sha);
     this.assetsUrl =
       "https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons";
-    this.cfApiUrl = process?.env?.CF_API_URL ?? "https://prod.cloudflow.algosec.com/cloudflow/api/devsecops/v1";
+    this.cfApiUrl = process?.env?.CF_API_URL ?? `https://${process?.env?.CF_REGION == 'anz' ? 'api.cloudflow.anz.app' : 'prod.cloudflow'}.algosec.com/cloudflow/api/devsecops/v1`;
 
   }
 
@@ -373,12 +373,12 @@ export class Github implements IVersionControl {
     if (!analysis?.additions) {
       analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl
         }/failure.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder
-        }</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n${(!analysis?.error || analysis?.error == '') ? "" : "Analysis process failed, please check logs"}\n</details>`;
+        }</b></h3></summary>\n${this.buildCommentFrameworkResult(file)}\n${(!analysis?.error || analysis?.error == '') ? "" : "Analysis process failed. Check logs."}\n</details>`;
   (!analysis?.error || analysis?.error == '') ? null : this.logger.error(`Analysis process failed: \n${analysis?.error}`)
     } else if (analysis?.additions?.analysis_result?.length == 0) {
       analysisBody = `<details>\n<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl
         }/success.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder
-        }</b></h3></summary>\nNo Risks were found for this folder\n</details>`;
+        }</b></h3></summary>\nNo Risks were found in this folder\n</details>`;
     } else {
       analysisBody = `<details>\n${this.buildCommentReportResult(
         analysis?.additions,
@@ -491,7 +491,7 @@ ${risk?.items?.map(item =>
 // ${file?.output?.log?.stdout ? "<br>" + output + "<br>" : ""}
 // ${file?.output?.log?.stderr ? "<br>" + errors + "<br>" : ""}
 // </details> <!-- End Format Logs -->\n`;
-const frameworkContent = `\n${file?.output?.log?.stdout ? "Terraform process finished successfully" : "Terraform process failed, please check action's logs"}\n`
+const frameworkContent = `\n${file?.output?.log?.stdout ? "Terraform process success." : "Terraform process failed. Check logs."}\n`
 
     return frameworkContent;
   }

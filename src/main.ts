@@ -49,7 +49,7 @@ export class Main {
         await vcs.parseOutput(
           [],
           [],
-          "Not Authenticated, please check action's logs"
+          "Authentication failed. Check logs."
         );
       }
     } catch (_e) {
