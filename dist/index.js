@@ -457,7 +457,7 @@ class Terraform {
                         folder: relativePath == "" ? "[Root]" : relativePath,
                         output,
                     };
-                    this.vcs.logger.info(`Checked folder ${file.folder} Action UUID: ${file.uuid}`);
+                    this.vcs.logger.debug(`Checked folder ${file.folder} Action UUID: ${file.uuid}`);
                     res.push(file);
                 }
             });
