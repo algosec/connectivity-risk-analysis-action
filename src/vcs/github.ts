@@ -334,11 +334,6 @@ export class Github implements IVersionControl {
         this.logger.error("Failed to create report: " + e);
       }
       if (analysisResults?.some((response) => {
-        if (response?.additions?.analysis_result.some((risk: Risk) => risk?.riskSeverity?.toString() == "critical")){
-          this.logger[this.stopWhenFail ? 'exit' : 'info'](
-            "The risks analysis process completed successfully with critical risks, please check report: " + commentUrl
-          );
-        }
         return response?.additions && response?.additions?.analysis_result?.length > 0
       })) {
 
