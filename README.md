@@ -31,6 +31,7 @@ jobs:
             # Github's Private Access Token
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
+            CF_REGION: 'anz'
             # CloudFlow credentials
             CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
             CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
@@ -44,12 +45,13 @@ jobs:
 |Parameter|Description|Required|Default|Type|
 |---|---|---|---|---|
 |`GITHUB_TOKEN`|Github PaT for checking diffs and commenting|Yes| |Secret Parameter|
+|`CF_REGION`|Cloudflow region|No|us |us/anz|
 |`CF_TENANT_ID`|Cloudflow tenant id|Yes| |Secret Parameter|
 |`CF_CLIENT_ID`|Cloudflow client id|Yes| |Secret Parameter|
 |`CF_CLIENT_SECRET`|Cloudflow client secret|Yes| |Secret Parameter|
 |`FULL_ANALYSIS`|Run checks on all folders with relevant file types|No|false|boolean|
-|`USE_CHECKOUT`|Use actions/checkout action to checkout the current repo<br><b>Currently required for GCP Provider to support actions/checkout action that's needed to authenticate GCP</b>|Yes|false|boolean|
-|`STOP_WHEN_FAIL`|Runs checks without failing commit, failing will be only on Critical risks|No|false|boolean|
+|`USE_CHECKOUT`|Use actions/checkout action to checkout the current repo</b>|Yes|false|boolean|
+|`STOP_WHEN_FAIL`|The check will fail in case any risks are found|No|true|boolean|
 ||||||
 |<b>Providers Parameters</b>| | | | |
 |<b>*AWS*</b>| | | | |
@@ -61,7 +63,7 @@ jobs:
 |`ARM_CLIENT_ID`|Azure access client id|No| |Secret Parameter|
 |`ARM_CLIENT_SECRET`|Azure client secret|No| |Secret Parameter|
 |<b>*GCP*</b>| | | | |
-|`GCP_CREDENTIALS`|Google's Cloud credentials as described here: https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference|No| |Secret Parameter|
+|`GCP_CREDENTIALS`|Google's Cloud credentials|No| |Secret Parameter|
 
 ### Full Analysis
 If you want to run check on all folders that contain IaC files, use the following example:
@@ -198,7 +200,13 @@ jobs:
             CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
            
             
-```      
+```  
+
+#### Important Note
+
+`USE_CHECKOUT` is currently required for GCP Provider to support actions/checkout action that's needed to authenticate GCP
+
+`GCP_CREDENTIALS` Google's Cloud credentials as described here: https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
 
 ### Advanced Configuration (includes multiple providers)
 
@@ -244,12 +252,13 @@ jobs:
 
 ### Email/Teams/Slack Integrations
 
-Github provides integrations between Github and Email/Teams/Slack, given you defined and subscribed the relevant features on your repository/organization.
-The input is the same for all integrations using Github Flavored Markdown, and the output is being renderend by each client in a different way.
-You can read more about Email/Teams/Slack integrations in the following links:
+GitHub can send notifications via email and integrate with MS Teams and Slack. See GitHub documentation for instructions to configure notifications and integrations in the following links:
+
 
 https://docs.github.com/en/account-and-profile/managing-subscriptions-and-notifications-on-github/setting-up-notifications/configuring-notifications
 
 https://github.com/marketplace/microsoft-teams-for-github
 
 https://github.com/marketplace/slack-github
+
+#### Note: Appearance of output may be subject to email/MS Teams/Slack capabilities.
