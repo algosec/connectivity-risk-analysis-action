@@ -51,7 +51,7 @@ jobs:
 |`CF_CLIENT_SECRET`|Cloudflow client secret|Yes| |Secret Parameter|
 |`FULL_ANALYSIS`|Run checks on all folders with relevant file types|No|false|boolean|
 |`USE_CHECKOUT`|Use actions/checkout action to checkout the current repo</b>|Yes|false|boolean|
-|`STOP_WHEN_FAIL`|Runs checks without failing commit, failing will be only on Critical risks|No|false|boolean|
+|`STOP_WHEN_FAIL`|The check will fail in case any risks are found|No|true|boolean|
 ||||||
 |<b>Providers Parameters</b>| | | | |
 |<b>*AWS*</b>| | | | |
