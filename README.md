@@ -26,12 +26,11 @@ jobs:
      runs-on: ubuntu-latest
      steps:
         - name: Connectivity Risk Analysis
-          uses: algosec/connectivity-risk-analysis-action@v0.0.41
+          uses: algosec/connectivity-risk-analysis-action@v0.1.0
           env:
             # Github's Private Access Token
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
-            CF_REGION: 'anz'
             # CloudFlow credentials
             CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
             CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
@@ -82,7 +81,7 @@ jobs:
      runs-on: ubuntu-latest
      steps:
         - name: Connectivity Risk Analysis
-          uses: algosec/connectivity-risk-analysis-action@v0.0.41
+          uses: algosec/connectivity-risk-analysis-action@v0.1.0
           env:
             FULL_ANALYSIS: true
             ######
@@ -115,7 +114,7 @@ jobs:
      name: 'Algosec IAC Connectivity Risk Analysis'
      runs-on: ubuntu-latest
      steps:
-          uses: algosec/connectivity-risk-analysis-action@v0.0.41
+          uses: algosec/connectivity-risk-analysis-action@v0.1.0
           env:            
             # Use AWS Environment Variables or
             # an external Action to authenticate with provider
@@ -145,7 +144,7 @@ jobs:
      runs-on: ubuntu-latest
      steps:
         - name: Connectivity Risk Analysis
-          uses: algosec/connectivity-risk-analysis-action@v0.0.41
+          uses: algosec/connectivity-risk-analysis-action@v0.1.0
           env:
             # Use Azure Environment Variables or
             # an external Action to authenticate with provider
@@ -188,7 +187,7 @@ jobs:
           with:
             credentials_json: ${{ secrets.GCP_CREDENTIALS }}
         - name: Connectivity Risk Analysis
-          uses: algosec/connectivity-risk-analysis-action@v0.0.41
+          uses: algosec/connectivity-risk-analysis-action@v0.1.0
           env:  
             # By default our action doesn't require actions/checkout, it checkouts the repository into a saved name folder
             # using GCP Auth action requires us to use actions/checkout and add USE_CHECKOUT = true
@@ -229,10 +228,11 @@ jobs:
           with:
             credentials_json: ${{ secrets.GCP_CREDENTIALS }}
         - name: Connectivity Risk Analysis
-          uses: algosec/connectivity-risk-analysis-action@v0.0.41
+          uses: algosec/connectivity-risk-analysis-action@v0.1.0
           env:  
             USE_CHECKOUT: true
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            CF_REGION: 'anz'
             CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
             CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
             CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
