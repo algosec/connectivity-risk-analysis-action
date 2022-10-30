@@ -324,7 +324,6 @@ export class Github implements IVersionControl {
     errorMessage: string,
     foldersToRunCheck?: string[] 
   ): Promise<void> {
-    this.logger.debug(`analysis result :${JSON.stringify(analysisResults)}, error: ${errorMessage}`);
     try {
       const body = this.parseCodeAnalysis(filesToUpload, analysisResults, errorMessage);
       if (body && body != "") this.steps.comment = await this.createComment(body);

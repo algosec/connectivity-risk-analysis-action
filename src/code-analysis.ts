@@ -204,12 +204,6 @@ export class AshCodeAnalysis {
     for (let i = 0; i < 60; i++) {
       if (analysisResult?.additions) {
         analysisResult.folder = file?.folder;
-        this.vcs.logger.debug(
-          `Response for folder: ${file?.folder}\n` +
-            JSON.stringify(analysisResult) +
-            "\n",
-          true
-        );
         break;
       }
       await this.wait(5000);

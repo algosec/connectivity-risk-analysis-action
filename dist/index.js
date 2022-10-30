@@ -184,9 +184,6 @@ class AshCodeAnalysis {
             for (let i = 0; i < 60; i++) {
                 if (analysisResult === null || analysisResult === void 0 ? void 0 : analysisResult.additions) {
                     analysisResult.folder = file === null || file === void 0 ? void 0 : file.folder;
-                    this.vcs.logger.debug(`Response for folder: ${file === null || file === void 0 ? void 0 : file.folder}\n` +
-                        JSON.stringify(analysisResult) +
-                        "\n", true);
                     break;
                 }
                 yield this.wait(5000);
@@ -827,7 +824,6 @@ class Github {
     parseOutput(filesToUpload, analysisResults, errorMessage, foldersToRunCheck) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
-            this.logger.debug(`analysis result :${JSON.stringify(analysisResults)}, error: ${errorMessage}`);
             try {
                 const body = this.parseCodeAnalysis(filesToUpload, analysisResults, errorMessage);
                 if (body && body != "")
