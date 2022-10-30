@@ -333,10 +333,7 @@ export class Github implements IVersionControl {
       } catch (e) {
         this.logger.error("Failed to create report: " + e);
       }
-      if (analysisResults?.some((response) => {
-        return response?.additions && response?.additions?.analysis_result?.length > 0
-      })) {
-
+      if (analysisResults?.some((response) => response?.additions && response?.additions?.analysis_result?.length > 0)) {
         this.logger[this.stopWhenFail ? 'exit' : 'info'](
           "The risks analysis process completed successfully with risks, please check report: " + commentUrl
         );
@@ -344,6 +341,8 @@ export class Github implements IVersionControl {
         this.logger[this.stopWhenFail ? 'exit' : 'info'](
           "The risks analysis process completed with errors or without any risks, please check action's logs: " + commentUrl
         );
+      } else if (analysisResults?.length == 0) {
+        this.logger.exit("The risks analysis process completed with errors, please check action's logs: " + commentUrl)
       } else {
         this.logger['info'](
           "The risks analysis process completed with errors or without any risks, please check action's logs: " + commentUrl
