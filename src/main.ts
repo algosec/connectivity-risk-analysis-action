@@ -40,17 +40,14 @@ export class Main {
             const codeAnalysisResponses = await codeAnalyzer.analyze(
               filesToAnalyze
             );
-            await vcs.parseOutput(filesToAnalyze as any, codeAnalysisResponses);
+          
+            await vcs.parseOutput(filesToAnalyze as any, codeAnalysisResponses, "", foldersToRunCheck);
           } else {
             await vcs.parseOutput([], [], "No files to analyze");
           }
         }
       } else {
-        await vcs.parseOutput(
-          [],
-          [],
-          "Authentication failed. Check logs."
-        );
+        await vcs.parseOutput([], [], "Authentication failed. Check logs.");
       }
     } catch (_e) {
       throw new Error(_e);

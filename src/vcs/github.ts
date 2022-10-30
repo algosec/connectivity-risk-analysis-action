@@ -321,7 +321,8 @@ export class Github implements IVersionControl {
   async parseOutput(
     filesToUpload: RiskAnalysisFile[],
     analysisResults: RiskAnalysisResult[],
-    errorMessage: string
+    errorMessage: string,
+    foldersToRunCheck?: string[] 
   ): Promise<void> {
     this.logger.debug(`analysis result :${JSON.stringify(analysisResults)}, error: ${errorMessage}`);
     try {
@@ -337,12 +338,12 @@ export class Github implements IVersionControl {
         this.logger[this.stopWhenFail ? 'exit' : 'info'](
           "The risks analysis process completed successfully with risks, please check report: " + commentUrl
         );
+      } else if (analysisResults?.length == 0 || filesToUpload?.length > analysisResults?.length  || (foldersToRunCheck?.length ?? 0) > filesToUpload?.length) {
+        this.logger.exit("The risks analysis process completed with errors, please check action's logs: " + commentUrl)
       } else if (errorMessage) {
         this.logger[this.stopWhenFail ? 'exit' : 'info'](
           "The risks analysis process completed with errors or without any risks, please check action's logs: " + commentUrl
         );
-      } else if (analysisResults?.length == 0) {
-        this.logger.exit("The risks analysis process completed with errors, please check action's logs: " + commentUrl)
       } else {
         this.logger['info'](
           "The risks analysis process completed with errors or without any risks, please check action's logs: " + commentUrl
