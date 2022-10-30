@@ -334,12 +334,12 @@ export class Github implements IVersionControl {
       } catch (e) {
         this.logger.error("Failed to create report: " + e);
       }
-      if (analysisResults?.some((response) => response?.additions && response?.additions?.analysis_result?.length > 0)) {
+    if (analysisResults?.length == 0 || filesToUpload?.length > analysisResults?.length  || (foldersToRunCheck?.length ?? 0) > filesToUpload?.length) {
+      this.logger.exit("The risks analysis process completed with errors, please check action's logs: " + commentUrl)
+    } else  if (analysisResults?.some((response) => response?.additions && response?.additions?.analysis_result?.length > 0)) {
         this.logger[this.stopWhenFail ? 'exit' : 'info'](
           "The risks analysis process completed successfully with risks, please check report: " + commentUrl
         );
-      } else if (analysisResults?.length == 0 || filesToUpload?.length > analysisResults?.length  || (foldersToRunCheck?.length ?? 0) > filesToUpload?.length) {
-        this.logger.exit("The risks analysis process completed with errors, please check action's logs: " + commentUrl)
       } else if (errorMessage) {
         this.logger[this.stopWhenFail ? 'exit' : 'info'](
           "The risks analysis process completed with errors or without any risks, please check action's logs: " + commentUrl
