@@ -929,7 +929,7 @@ ${(_b = (_a = risk === null || risk === void 0 ? void 0 : risk.items) === null |
                 this.count(analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result, "riskSeverity", "low") +
                 "&nbsp;Low"
             : ""}</div>`;
-        const codeAnalysisContent = `<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl}/warning.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3>${((_b = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0 ? severityCount : ""}</summary>\nThe following risks were found in this folder:\n${risksList}\n`;
+        const codeAnalysisContent = `<summary><sub><sub><sub><img height="20" width="20" src="${this.assetsUrl}/warning.svg" /></sub></sub></sub>&nbsp;&nbsp;<h3><b>${file.folder}</b></h3>${((_b = analysis === null || analysis === void 0 ? void 0 : analysis.analysis_result) === null || _b === void 0 ? void 0 : _b.length) > 0 ? severityCount : ""}</summary><br>The following risks were found in this folder:\n${risksList}\n`;
         return codeAnalysisContent;
     }
     // buildCommentReportError(result: RiskAnalysisResult | undefined): string {
@@ -1061,7 +1061,7 @@ Workflow: ${(_c = this._context) === null || _c === void 0 ? void 0 : _c.workflo
         const bodyHeading = `\n**Detailed Risks Report**
 ---\n`;
         filesToUpload.forEach((file) => {
-            const fileAnalysis = analysisResults.find((_fileAnalysis) => { var _a; return (_a = _fileAnalysis === null || _fileAnalysis === void 0 ? void 0 : _fileAnalysis.proceeded_file) === null || _a === void 0 ? void 0 : _a.includes(file.uuid); });
+            const fileAnalysis = analysisResults === null || analysisResults === void 0 ? void 0 : analysisResults.find((_fileAnalysis) => { var _a; return (_a = _fileAnalysis === null || _fileAnalysis === void 0 ? void 0 : _fileAnalysis.proceeded_file) === null || _a === void 0 ? void 0 : _a.includes(file.uuid); });
             commentBodyArray.push(this.buildCommentAnalysisBody(fileAnalysis, file));
         });
         const analysisByFolder = (commentBodyArray === null || commentBodyArray === void 0 ? void 0 : commentBodyArray.length) > 0
