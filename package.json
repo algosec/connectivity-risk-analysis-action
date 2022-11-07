@@ -15,6 +15,9 @@
     "debug": "node dist/index.js",
     "dev:debug": "nodemon src/index.ts"
   },
+  "bin": {
+    "risk-analysis": "cli.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/algosec/risk-analysis-action.git"
