@@ -8,7 +8,7 @@
     "build": "rimraf lib && tsc",
     "format": "prettier --write **/*.ts",
     "format-check": "prettier --check **/*.ts",
-    "package": "rimraf dist && ncc build lib/index.js --source-map",
+    "package": "rimraf dist && ncc build lib/cli.js",
     "test": "jest",
     "all": "npm run build && npm run format && npm run lint && npm run package ",
     "ready": "npm run build  && npm run package ",
@@ -16,7 +16,7 @@
     "dev:debug": "nodemon src/index.ts"
   },
   "bin": {
-    "risk-analysis": "cli.js"
+    "risk-analysis": "dist/index.js"
   },
   "repository": {
     "type": "git",

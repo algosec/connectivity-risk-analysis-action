@@ -13,6 +13,6 @@
     "strictNullChecks": true,
     "esModuleInterop": true
   },
-  "include": ["src/index.ts", "test"],
+  "include": ["src/cli.ts"],
   "exclude": ["node_modules", "**/*.test.ts", "test/*.ts"]
 }
