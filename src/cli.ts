@@ -1,8 +1,7 @@
 #!/usr/bin/env node
-import { Main } from "./main";
+import { terraform } from "./temp_terraform_try";
 
 const secret = process.env.TEST_SECRET;
 console.log(`secret: ${secret}`);
 
-const codeAnalyzer = new Main();
-codeAnalyzer.run();
+terraform();
