@@ -32,7 +32,7 @@ const updateTerraformVersion = async() => {
 
 export const terraform = async(): Promise<any> => {
     const folderToRun = 'tf-test-aws-gcp-azure';
-    const planOutputFile = `${process?.cwd()}\\tmp\\terraform.out`;
+    const planOutputFile = `${process?.cwd()}/tmp/terraform.out`;
 
     await updateTerraformVersion();
 
