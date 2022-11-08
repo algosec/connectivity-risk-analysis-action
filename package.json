@@ -2,31 +2,16 @@
   "name": "algosec-risk-analysis-action",
   "version": "0.0.0",
   "private": true,
-  "description": "TypeScript template action",
-  "main": "dist/index.js",
+  "description": "Algosec risk analysis action",
   "scripts": {
     "build": "rimraf lib && tsc",
-    "format": "prettier --write **/*.ts",
-    "format-check": "prettier --check **/*.ts",
-    "package": "rimraf dist && ncc build lib/cli.js",
+    "package": "rimraf dist && ncc build lib/index.js",
     "test": "jest",
-    "all": "npm run build && npm run format && npm run lint && npm run package ",
-    "ready": "npm run build  && npm run package ",
-    "debug": "node dist/index.js",
-    "dev:debug": "nodemon src/index.ts"
+    "ready": "npm run build && npm run package"
   },
   "bin": {
     "risk-analysis": "dist/index.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/algosec/risk-analysis-action.git"
-  },
-  "keywords": [
-    "actions",
-    "node",
-    "setup"
-  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
@@ -34,30 +19,14 @@
     "@actions/exec": "^1.1.1",
     "@actions/github": "^5.0.3",
     "@actions/http-client": "^2.0.1",
-    "@aws-sdk/client-s3": "^3.142.0",
-    "@aws-sdk/s3-request-presigner": "^3.142.0",
-    "@aws-sdk/types": "^3.127.0",
-    "@types/node-fetch": "^2.6.2",
-    "aws-sdk": "^2.1181.0",
-    "checkout": "github:actions/checkout",
-    "dedent": "^0.7.0",
     "dotenv": "^16.0.1",
-    "es6-promise": "^4.2.8",
-    "isomorphic-fetch": "^3.0.0",
-    "node-fetch": "^3.2.10",
-    "uuid": "^8.3.2",
-    "uuid-by-string": "^3.0.7"
+    "uuid": "^9.0.0",
+    "uuid-by-string": "^4.0.0"
   },
   "devDependencies": {
-    "@types/dedent": "^0.7.0",
     "@types/node": "^16.10.5",
     "@vercel/ncc": "^0.31.1",
     "jest": "^27.2.5",
-    "js-yaml": "^4.1.0",
-    "nodemon": "^2.0.19",
-    "prettier": "2.5.1",
-    "ts-jest": "^27.1.2",
-    "ts-node": "^10.9.1",
-    "typescript": "^4.4.4"
+    "typescript": "^4.8.4"
   }
 }
