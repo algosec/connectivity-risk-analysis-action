@@ -37,13 +37,13 @@ export const terraform = async(): Promise<any> => {
     await updateTerraformVersion();
 
     try {
+      if (!existsSync("./tmp")) {
+        await exec("mkdir", ["tmp"]);
+      }
       process.chdir(folderToRun);
       await exec("terraform", ["init"]);
       await exec("terraform", ["fmt", "-diff"]);
       await exec("terraform", ["validate", "-no-color"]);
-      if (!existsSync("./tmp")) {
-        await exec("mkdir", ["tmp"]);
-      }
       await exec("terraform", ["plan", "-input=false", "-no-color", `-out=${planOutputFile}`]);
       await exec("terraform", ["show", "-json", planOutputFile]);
     } catch (error: any) {
