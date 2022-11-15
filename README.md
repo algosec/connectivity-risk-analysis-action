@@ -7,6 +7,8 @@ The IaC Connectivity Risk Analysis GitHub Action runs on the current repositorie
 
 ### Action parameters
 |Parameter|Description|Required|Default|Type|
+||||||
+|<b>General Parameters</b>| | | | |
 |---|---|---|---|---|
 |`GITHUB_TOKEN`|Github PaT for checking diffs and commenting|Yes| |Secret Parameter|
 |`CF_TENANT_ID`|Cloudflow tenant id|Yes| |Secret Parameter|
