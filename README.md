@@ -20,15 +20,15 @@ The IaC Connectivity Risk Analysis GitHub Action runs on the current repositorie
 |`CF_TENANT_ID`|Cloudflow tenant id|Yes| |Secret Parameter|
 |`CF_CLIENT_ID`|Cloudflow client id|Yes| |Secret Parameter|
 |`CF_CLIENT_SECRET`|Cloudflow client secret|Yes| |Secret Parameter|
-|<b>*AWS*</b>| | | | |
+|<b>*aws*</b>| | | | |
 |`AWS_ACCESS_KEY_ID`|AWS access key id|No| |Secret Parameter|
 |`AWS_SECRET_ACCESS_KEY`|AWS secret access key|No| |Secret Parameter|
-|<b>*AZURE*</b>| | | | |
+|<b>*azure*</b>| | | | |
 |`ARM_SUBSCRIPTION_ID`|Azure subscription id|No| |Secret Parameter|
 |`ARM_TENANT_ID`|Azure tenant id|No| |Secret Parameter|
 |`ARM_CLIENT_ID`|Azure access client id|No| |Secret Parameter|
 |`ARM_CLIENT_SECRET`|Azure client secret|No| |Secret Parameter|
-|<b>*GCP*</b>| | | | |
+|<b>*gcp*</b>| | | | |
 |`GCP_CREDENTIALS`|Google's Cloud credentials|No| |Secret Parameter|
 
 ### Basic Configuration
