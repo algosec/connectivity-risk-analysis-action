@@ -10,16 +10,16 @@ The IaC Connectivity Risk Analysis GitHub Action runs on the current repositorie
 |---|---|---|---|---|
 ||||||
 |<b>General Parameters</b>| | | | |
-|`GITHUB_TOKEN`|Github PaT for checking diffs and commenting|Yes| |Secret Parameter|
-|`CF_TENANT_ID`|Cloudflow tenant id|Yes| |Secret Parameter|
-|`CF_CLIENT_ID`|Cloudflow client id|Yes| |Secret Parameter|
-|`CF_CLIENT_SECRET`|Cloudflow client secret|Yes| |Secret Parameter|
 |`CF_REGION`|Cloudflow region us/anz|No|us |string|
 |`FULL_ANALYSIS`|Run checks on all folders with relevant file types|No|false|boolean|
 |`USE_CHECKOUT`|Use actions/checkout action to checkout the current repo</b>|Yes|false|boolean|
 |`STOP_WHEN_FAIL`|The check will fail in case any risks are found|No|true|boolean|
 ||||||
-|<b>Providers Parameters</b>| | | | |
+|<b>Repository secrets</b>| | | | |
+|`GITHUB_TOKEN`|Github PaT for checking diffs and commenting|Yes| |Secret Parameter|
+|`CF_TENANT_ID`|Cloudflow tenant id|Yes| |Secret Parameter|
+|`CF_CLIENT_ID`|Cloudflow client id|Yes| |Secret Parameter|
+|`CF_CLIENT_SECRET`|Cloudflow client secret|Yes| |Secret Parameter|
 |<b>*AWS*</b>| | | | |
 |`AWS_ACCESS_KEY_ID`|AWS access key id|No| |Secret Parameter|
 |`AWS_SECRET_ACCESS_KEY`|AWS secret access key|No| |Secret Parameter|
