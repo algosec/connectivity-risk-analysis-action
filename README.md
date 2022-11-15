@@ -40,7 +40,7 @@ jobs:
             # as secrets or use an external action to preconfigure
             
 ```
-### Action's parameters
+### Action parameters
 |Parameter|Description|Required|Default|Type|
 |---|---|---|---|---|
 |`GITHUB_TOKEN`|Github PaT for checking diffs and commenting|Yes| |Secret Parameter|
@@ -161,7 +161,7 @@ jobs:
             
 ```
 
-### Gcp
+### GCP
 
 Example usage 
  ```yaml
