@@ -104,7 +104,7 @@ export class Github implements IVersionControl {
       per_page: 100,
       repo: this._context.repo.repo,
     });
-    const answer = result?.data?.files ?? [];
+    const answer = result?.data?.files?.filter(file => file.status != 'removed') ?? [];
     return answer;
   }
 
