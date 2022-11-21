@@ -9,6 +9,8 @@
     "format": "prettier --write **/*.ts",
     "format-check": "prettier --check **/*.ts",
     "package": "rimraf dist && ncc build lib/index.js --source-map",
+    "version": "gh release create v1.0.2 --target develop -p -n=''",
+    "release": "npm run build && npm run package && git add . && git commit -m='' && git push && npm run version",
     "test": "jest",
     "all": "npm run build && npm run format && npm run lint && npm run package ",
     "ready": "npm run build  && npm run package ",
