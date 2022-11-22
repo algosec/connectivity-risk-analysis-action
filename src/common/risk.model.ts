@@ -36,7 +36,8 @@ export interface RiskItem {
   fromPort: number;
   ipProtocol: string;
   ipRange: number[];
-  vendor?: string
+  vendor?: string;
+  source?: string;
 }
 
 
