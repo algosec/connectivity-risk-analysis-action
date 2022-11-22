@@ -408,6 +408,7 @@ export class Github implements IVersionControl {
 <thead>\n
 <tr>\n
 <th align="left" scope="col">Vendor</th>\n
+<th align="left" scope="col">Security Group</th>\n
 <th align="left" scope="col">From Port</th>\n
 <th align="left" scope="col">To Port</th>\n
 <th align="left" scope="col">Ip Protocol</th>\n
@@ -418,6 +419,7 @@ export class Github implements IVersionControl {
 ${risk?.items?.map(item => 
   `<tr>\n
   <td>${item?.vendor}</td>\n
+  <td>${item?.source}</td>\n
   <td>${item?.fromPort ?? ""}</td>\n
   <td>${item?.toPort ?? ""}</td>\n
   <td>${item?.ipProtocol}</td>\n
