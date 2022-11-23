@@ -51,7 +51,7 @@ jobs:
      runs-on: ubuntu-latest
      steps:
         - name: Checkout
-          uses: actions/checkout@master
+          uses: actions/checkout@v3
         - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v1.0.0
           env:
@@ -84,7 +84,7 @@ jobs:
      runs-on: ubuntu-latest
      steps:
         - name: Checkout
-          uses: actions/checkout@master
+          uses: actions/checkout@v3
         - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v1.0.0
           env:
@@ -120,7 +120,7 @@ jobs:
      runs-on: ubuntu-latest
      steps:
         - name: Checkout
-          uses: actions/checkout@master
+          uses: actions/checkout@v3
         - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v1.0.0
           env:            
@@ -152,7 +152,7 @@ jobs:
      runs-on: ubuntu-latest
      steps:
         - name: Checkout
-          uses: actions/checkout@master
+          uses: actions/checkout@v3
         - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v1.0.0
           env:
@@ -186,7 +186,7 @@ jobs:
      runs-on: ubuntu-latest
      steps:
         - name: Checkout
-          uses: actions/checkout@master
+          uses: actions/checkout@v3
         - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v1.0.0
           env:
@@ -219,7 +219,7 @@ jobs:
      runs-on: ubuntu-latest
      steps: 
         - name: Checkout
-          uses: actions/checkout@master
+          uses: actions/checkout@v3
         - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v1.0.0
           env:  
