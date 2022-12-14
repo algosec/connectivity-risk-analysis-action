@@ -1,4 +1,4 @@
-<img height="100" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/header.svg" />
+<img height="100" src="https://cloudflow.algosec.com/cloudflow/assets/devsecops-action/header.svg" />
 
 ## IAC connectivity risk analysis
 
@@ -240,8 +240,8 @@ jobs:
 ```      
 
 ### Output(screenshots)
-<img width="500" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/screenshot2.png" />
-<img height="500" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/screenshot1.png" />
+<img width="500" src="https://cloudflow.algosec.com/cloudflow/assets/devsecops-action/screenshot2.png" />
+<img height="500" src="https://cloudflow.algosec.com/cloudflow/assets/devsecops-action/screenshot1.png" />
 
 ### Email/Teams/Slack Integrations
 
