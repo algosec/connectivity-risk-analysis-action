@@ -8,5 +8,5 @@ runs:
   using: 'docker'
   # TODO: update to actual docker
   # image: 'docker://saraprager/test-examples:devsecops_github'
-  image: 'docker://ariknalgo/risk-analysis:latest'
+  image: '384719937521.dkr.ecr.us-east-1.amazonaws.com/devsecops-action_stage:latest'
   entrypoint: 'risk-analysis'
