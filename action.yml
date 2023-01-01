@@ -6,7 +6,5 @@ branding:
   color: 'blue'
 runs:
   using: 'docker'
-  # TODO: update to actual docker
-  # image: 'docker://saraprager/test-examples:devsecops_github'
-  image: 'docker://ariknalgo/risk-analysis:latest'
-  entrypoint: 'risk-analysis'
+  image: 'docker://public.ecr.aws/algosec/connectivity-risk-analysis:latest'
+  entrypoint: 'iac-risk-analysis'
