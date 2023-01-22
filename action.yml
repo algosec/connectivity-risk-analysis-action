@@ -6,5 +6,5 @@ branding:
   color: 'blue'
 runs:
   using: 'docker'
-  image: 'docker://public.ecr.aws/algosec/connectivity-risk-analysis:latest'
+  image: 'docker://public.ecr.aws/algosec/connectivity-risk-analysis:1.0.21'
   entrypoint: 'iac-risk-analysis'
