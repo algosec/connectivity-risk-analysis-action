@@ -1,4 +1,4 @@
-<img height="100" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/header.svg" />
+<img height="100" src="https://cloudflow.algosec.com/cloudflow/assets/devsecops-action/header.svg" />
 
 ## IAC connectivity risk analysis
 
@@ -10,30 +10,29 @@ The IaC Connectivity Risk Analysis GitHub Action runs on the current repositorie
 |---|---|---|---|---|
 ||||||
 |<b>General Parameters</b>| | | | |
-|`CF_REGION`|Cloudflow region us/anz|No|us |string|
+|`CF_REGION`|Cloudflow region us/anz/eu|No|us |string|
 |`FULL_ANALYSIS`|Run checks on all folders with relevant file types|No|false|boolean|
-|`USE_CHECKOUT`|Use actions/checkout action to checkout the current repo</b>|Yes|false|boolean|
 |`STOP_WHEN_FAIL`|The check will fail in case any risks are found|No|true|boolean|
 ||||||
 |<b>Repository secrets</b>| | | | |
 |`GITHUB_TOKEN`|Github PaT for checking diffs and commenting|Yes| |Secret Parameter|
-|`CF_TENANT_ID`|Cloudflow tenant id|Yes| |Secret Parameter|
-|`CF_CLIENT_ID`|Cloudflow client id|Yes| |Secret Parameter|
-|`CF_CLIENT_SECRET`|Cloudflow client secret|Yes| |Secret Parameter|
+|`CF_TENANT_ID`|Cloudflow Tenant ID|Yes| |Secret Parameter|
+|`CF_CLIENT_ID`|Cloudflow Client ID|Yes| |Secret Parameter|
+|`CF_CLIENT_SECRET`|Cloudflow Client Secret|Yes| |Secret Parameter|
 |<b>*aws*</b>| | | | |
-|`AWS_ACCESS_KEY_ID`|AWS access key id|No| |Secret Parameter|
-|`AWS_SECRET_ACCESS_KEY`|AWS secret access key|No| |Secret Parameter|
+|`AWS_ACCESS_KEY_ID`|AWS Access Key ID|No| |Secret Parameter|
+|`AWS_SECRET_ACCESS_KEY`|AWS Secret Access Key|No| |Secret Parameter|
 |<b>*azure*</b>| | | | |
-|`ARM_SUBSCRIPTION_ID`|Azure subscription id|No| |Secret Parameter|
-|`ARM_TENANT_ID`|Azure tenant id|No| |Secret Parameter|
-|`ARM_CLIENT_ID`|Azure access client id|No| |Secret Parameter|
-|`ARM_CLIENT_SECRET`|Azure client secret|No| |Secret Parameter|
+|`ARM_SUBSCRIPTION_ID`|Azure Subscription ID|No| |Secret Parameter|
+|`ARM_TENANT_ID`|Azure Tenant ID|No| |Secret Parameter|
+|`ARM_CLIENT_ID`|Azure Access Client ID|No| |Secret Parameter|
+|`ARM_CLIENT_SECRET`|Azure Client Secret|No| |Secret Parameter|
 |<b>*gcp*</b>| | | | |
-|`GCP_CREDENTIALS`|Google's Cloud credentials|No| |Secret Parameter|
+|`GCP_CREDENTIALS`|Google's Cloud Credentials|No| |Secret Parameter|
 
 ### Basic Configuration
 Here is an example of all possible parameters passed as environment variables to the action. 
-Take into consideration that GitHub and AlgoSec CloudFlow credentials are mandatory in order to run this action, along with the credentials of the provider/s used (you can see in the next section, Cloud Providers COnfiguration).
+Take into consideration that GitHub and AlgoSec CloudFlow credentials are mandatory in order to run this action, along with the credentials of the provider/s used (you can see in the next section, Cloud Providers Configuration).
 
 #### Example usage 
 First, create a new client id and client secret in your Algosec Cloudflow account using our access management module.<br>
@@ -51,6 +50,8 @@ jobs:
      name: 'Algosec IAC Connectivity Risk Analysis'
      runs-on: ubuntu-latest
      steps:
+        - name: Checkout
+          uses: actions/checkout@v3
         - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v1.0.0
           env:
@@ -82,6 +83,8 @@ jobs:
      name: 'Algosec IAC Connectivity Risk Analysis'
      runs-on: ubuntu-latest
      steps:
+        - name: Checkout
+          uses: actions/checkout@v3
         - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v1.0.0
           env:
@@ -116,6 +119,9 @@ jobs:
      name: 'Algosec IAC Connectivity Risk Analysis'
      runs-on: ubuntu-latest
      steps:
+        - name: Checkout
+          uses: actions/checkout@v3
+        - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v1.0.0
           env:            
             # Use AWS Environment Variables or
@@ -145,6 +151,8 @@ jobs:
      name: 'Algosec IAC Connectivity Risk Analysis'
      runs-on: ubuntu-latest
      steps:
+        - name: Checkout
+          uses: actions/checkout@v3
         - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v1.0.0
           env:
@@ -177,23 +185,16 @@ jobs:
      name: 'Algosec IAC Connectivity Risk Analysis'
      runs-on: ubuntu-latest
      steps:
-          # For GCP, there is no option to use just environment variables like other cloud providers,
-          # So we need to use a dedicated action to authenticate to GCP Cloud
-          # Read how to create GCP_CREDENTIALS key from GCP Json file:
-          # https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
-          # Auth Gcp Action https://github.com/google-github-actions/auth
-        - name: Checkout Repo
+        - name: Checkout
           uses: actions/checkout@v3
-        - name: Authenticate to Google Cloud
-          uses: google-github-actions/auth@v0.7.3
-          with:
-            credentials_json: ${{ secrets.GCP_CREDENTIALS }}
         - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v1.0.0
-          env:  
-            # By default our action doesn't require actions/checkout, it checkouts the repository into a saved name folder
-            # using GCP Auth action requires us to use actions/checkout and add USE_CHECKOUT = true
-            USE_CHECKOUT: true
+          env:
+            # Use GCP Environment Variable or
+            # an external Action to authenticate with provider
+            # Read how to create GCP_CREDENTIALS key from GCP Json file:
+            # https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
+            GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
             ######
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
@@ -201,13 +202,7 @@ jobs:
             CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
            
             
-```  
-
-#### Important Note
-
-`USE_CHECKOUT` is currently required for GCP Provider to support actions/checkout action that's needed to authenticate GCP
-
-`GCP_CREDENTIALS` Google's Cloud credentials as described here: https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference
+```
 
 ### Advanced Configuration (includes multiple providers)
 
@@ -223,16 +218,11 @@ jobs:
      name: 'Algosec IAC Connectivity Risk Analysis'
      runs-on: ubuntu-latest
      steps: 
-        - name: Checkout Repo
+        - name: Checkout
           uses: actions/checkout@v3
-        - name: Authenticate to Google Cloud
-          uses: google-github-actions/auth@v0.7.3
-          with:
-            credentials_json: ${{ secrets.GCP_CREDENTIALS }}
         - name: Connectivity Risk Analysis
           uses: algosec/connectivity-risk-analysis-action@v1.0.0
           env:  
-            USE_CHECKOUT: true
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             CF_REGION: 'anz'
             CF_TENANT_ID: ${{ secrets.CF_TENANT_ID }}
@@ -244,13 +234,14 @@ jobs:
             ARM_TENANT_ID: ${{ secrets.AZ_TENANT_ID }}
             ARM_CLIENT_ID: ${{ secrets.AZ_CLIENT_ID }}
             ARM_CLIENT_SECRET: ${{ secrets.AZ_CLIENT_SECRET }}
+            GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
            
             
 ```      
 
 ### Output(screenshots)
-<img width="500" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/screenshot2.png" />
-<img height="500" src="https://raw.githubusercontent.com/algosec/risk-analysis-action/develop/icons/screenshot1.png" />
+<img width="500" src="https://cloudflow.algosec.com/cloudflow/assets/devsecops-action/screenshot2.png" />
+<img height="500" src="https://cloudflow.algosec.com/cloudflow/assets/devsecops-action/screenshot1.png" />
 
 ### Email/Teams/Slack Integrations
 
