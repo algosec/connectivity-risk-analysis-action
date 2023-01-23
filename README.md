@@ -10,25 +10,25 @@ The IaC Connectivity Risk Analysis GitHub Action runs on the current repositorie
 |---|---|---|---|---|
 ||||||
 |<b>General Parameters</b>| | | | |
-|`CF_REGION`|Cloudflow region us/anz|No|us |string|
+|`CF_REGION`|Cloudflow region us/anz/eu|No|us |string|
 |`FULL_ANALYSIS`|Run checks on all folders with relevant file types|No|false|boolean|
 |`STOP_WHEN_FAIL`|The check will fail in case any risks are found|No|true|boolean|
 ||||||
 |<b>Repository secrets</b>| | | | |
 |`GITHUB_TOKEN`|Github PaT for checking diffs and commenting|Yes| |Secret Parameter|
-|`CF_TENANT_ID`|Cloudflow tenant id|Yes| |Secret Parameter|
-|`CF_CLIENT_ID`|Cloudflow client id|Yes| |Secret Parameter|
-|`CF_CLIENT_SECRET`|Cloudflow client secret|Yes| |Secret Parameter|
+|`CF_TENANT_ID`|Cloudflow Tenant ID|Yes| |Secret Parameter|
+|`CF_CLIENT_ID`|Cloudflow Client ID|Yes| |Secret Parameter|
+|`CF_CLIENT_SECRET`|Cloudflow Client Secret|Yes| |Secret Parameter|
 |<b>*aws*</b>| | | | |
-|`AWS_ACCESS_KEY_ID`|AWS access key id|No| |Secret Parameter|
-|`AWS_SECRET_ACCESS_KEY`|AWS secret access key|No| |Secret Parameter|
+|`AWS_ACCESS_KEY_ID`|AWS Access Key ID|No| |Secret Parameter|
+|`AWS_SECRET_ACCESS_KEY`|AWS Secret Access Key|No| |Secret Parameter|
 |<b>*azure*</b>| | | | |
-|`ARM_SUBSCRIPTION_ID`|Azure subscription id|No| |Secret Parameter|
-|`ARM_TENANT_ID`|Azure tenant id|No| |Secret Parameter|
-|`ARM_CLIENT_ID`|Azure access client id|No| |Secret Parameter|
-|`ARM_CLIENT_SECRET`|Azure client secret|No| |Secret Parameter|
+|`ARM_SUBSCRIPTION_ID`|Azure Subscription ID|No| |Secret Parameter|
+|`ARM_TENANT_ID`|Azure Tenant ID|No| |Secret Parameter|
+|`ARM_CLIENT_ID`|Azure Access Client ID|No| |Secret Parameter|
+|`ARM_CLIENT_SECRET`|Azure Client Secret|No| |Secret Parameter|
 |<b>*gcp*</b>| | | | |
-|`GCP_CREDENTIALS`|Google's Cloud credentials|No| |Secret Parameter|
+|`GCP_CREDENTIALS`|Google's Cloud Credentials|No| |Secret Parameter|
 
 ### Basic Configuration
 Here is an example of all possible parameters passed as environment variables to the action. 
