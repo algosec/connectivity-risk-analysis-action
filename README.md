@@ -13,6 +13,7 @@ The IaC Connectivity Risk Analysis GitHub Action runs on the current repositorie
 |`CF_REGION`|Cloudflow region us/anz/eu|No|us |string|
 |`FULL_ANALYSIS`|Run checks on all folders with relevant file types|No|false|boolean|
 |`STOP_WHEN_FAIL`|The check will fail in case any risks are found|No|true|boolean|
+|`TF_VERSION`|Specify the Terraform version to use (e.g. 1.4.5)|No|latest|string|
 ||||||
 |<b>Repository secrets</b>| | | | |
 |`GITHUB_TOKEN`|Github PaT for checking diffs and commenting|Yes| |Secret Parameter|
