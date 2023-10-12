@@ -8,3 +8,6 @@ runs:
   using: 'docker'
   image: 'docker://public.ecr.aws/algosec/connectivity-risk-analysis:1.0.23'
   entrypoint: 'iac-risk-analysis'
+  env:
+      PRODUCT: cloudflow
+      FRAMEWORK: terraform
